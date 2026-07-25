@@ -1,0 +1,91 @@
+@startuml
+title Use Case Diagram - Tutor
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+actor "Tutor" as Tutor
+
+User <|-- Tutor
+
+rectangle "Tutoring Management System" {
+  package "Common User Goals" {
+    usecase "Access my\naccount" as UC_ACCOUNT
+    usecase "Manage my\nprofile" as UC_PROFILE
+    usecase "Use the mobile\napplication" as UC_MOBILE
+    usecase "Receive important\nreminders" as UC_NOTIFICATIONS
+    usecase "Use the application\nwithout ads" as UC_NO_ADS
+  }
+
+  package "P1 - Core Goals" {
+    usecase "Organize cooperation\nwith students" as UC_STUDENTS
+    usecase "Plan and track\nlessons" as UC_LESSONS
+    usecase "Control settlements\nwith students" as UC_SETTLEMENTS
+    usecase "Share educational\nmaterials" as UC_SHARE_MATERIALS
+    usecase "Document the learning\nprocess" as UC_NOTES
+    usecase "Assess my work\nusing statistics" as UC_STATS
+  }
+
+  package "P2 - Optional Goals" {
+    usecase "Plan recurring\nlessons" as UC_RECURRENT
+    usecase "Settle lessons\nin packages" as UC_PACKAGES
+    usecase "Organize homework" as UC_HOMEWORK
+    usecase "Analyze progress\nwith reports" as UC_REPORTS
+    usecase "Move data to\nexternal tools" as UC_EXPORT
+    usecase "Keep one consistent\nlesson calendar" as UC_CALENDAR_SYNC
+    usecase "Work together on\na whiteboard" as UC_WHITEBOARD
+    usecase "Teach a lesson\nonline" as UC_VIDEO_LESSON
+  }
+
+  package "P3 - Future Goals" {
+    usecase "Prepare summaries\nand quizzes with AI" as UC_AI_CONTENT
+    usecase "Understand student\nprogress with AI" as UC_AI_PROGRESS
+    usecase "Keep lesson\nrecordings" as UC_RECORDINGS
+    usecase "Use a text record\nof a lesson" as UC_TRANSCRIPTION
+  }
+}
+
+User -- UC_ACCOUNT
+User -- UC_PROFILE
+User -- UC_MOBILE
+User -- UC_NOTIFICATIONS
+User -- UC_NO_ADS
+
+Tutor -- UC_STUDENTS
+Tutor -- UC_LESSONS
+Tutor -- UC_SETTLEMENTS
+Tutor -- UC_SHARE_MATERIALS
+Tutor -- UC_NOTES
+Tutor -- UC_STATS
+Tutor -- UC_RECURRENT
+Tutor -- UC_PACKAGES
+Tutor -- UC_HOMEWORK
+Tutor -- UC_REPORTS
+Tutor -- UC_EXPORT
+Tutor -- UC_CALENDAR_SYNC
+Tutor -- UC_WHITEBOARD
+Tutor -- UC_VIDEO_LESSON
+Tutor -- UC_AI_CONTENT
+Tutor -- UC_AI_PROGRESS
+Tutor -- UC_RECORDINGS
+Tutor -- UC_TRANSCRIPTION
+
+UC_RECURRENT ..> UC_LESSONS : <<extend>>
+UC_PACKAGES ..> UC_SETTLEMENTS : <<extend>>
+UC_REPORTS ..> UC_STATS : <<extend>>
+UC_EXPORT ..> UC_REPORTS : <<extend>>
+UC_CALENDAR_SYNC ..> UC_LESSONS : <<extend>>
+UC_WHITEBOARD ..> UC_LESSONS : <<extend>>
+UC_VIDEO_LESSON ..> UC_LESSONS : <<extend>>
+UC_AI_PROGRESS ..> UC_STATS : <<extend>>
+UC_TRANSCRIPTION ..> UC_RECORDINGS : <<extend>>
+
+note bottom of UC_STUDENTS
+  This diagram shows tutor goals:
+  organizing learning, settlements,
+  materials, and student work.
+end note
+
+@enduml

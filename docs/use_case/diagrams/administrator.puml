@@ -1,0 +1,43 @@
+@startuml
+title Use Case Diagram - Administrator
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+actor "Administrator" as Admin
+
+User <|-- Admin
+
+rectangle "Tutoring Management System" {
+  package "Common User Goals" {
+    usecase "Access my\naccount" as UC_ACCOUNT
+    usecase "Manage my\nprofile" as UC_PROFILE
+    usecase "Use the mobile\napplication" as UC_MOBILE
+    usecase "Receive important\nreminders" as UC_NOTIFICATIONS
+  }
+
+  package "P1 - Administrative Goals" {
+    usecase "Ensure proper\nuser permissions" as UC_PERMISSIONS
+    usecase "Protect user\ndata" as UC_DATA_SECURITY
+    usecase "Maintain stored\ndata" as UC_DATA_MAINTENANCE
+  }
+}
+
+User -- UC_ACCOUNT
+User -- UC_PROFILE
+User -- UC_MOBILE
+User -- UC_NOTIFICATIONS
+
+Admin -- UC_PERMISSIONS
+Admin -- UC_DATA_SECURITY
+Admin -- UC_DATA_MAINTENANCE
+
+note bottom of UC_PERMISSIONS
+  The administrator's goals focus on
+  access, security, and data maintenance,
+  not regular lesson management.
+end note
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml
+title Use Case Diagram - Parent
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "User" as User
+actor "Parent" as Parent
+
+User <|-- Parent
+
+rectangle "Tutoring Management System" {
+  package "Common User Goals" {
+    usecase "Access my\naccount" as UC_ACCOUNT
+    usecase "Manage my\nprofile" as UC_PROFILE
+    usecase "Use the mobile\napplication" as UC_MOBILE
+    usecase "Receive important\nreminders" as UC_NOTIFICATIONS
+    usecase "Use the application\nwithout ads" as UC_NO_ADS
+  }
+
+  package "P2 - Parent Goals" {
+    usecase "Follow my child's\nlearning" as UC_CHILD_PROGRESS
+    usecase "Know my child's\nlesson schedule" as UC_CHILD_SCHEDULE
+    usecase "Control payments\nfor my child" as UC_CHILD_PAYMENTS
+    usecase "Remember overdue\npayments" as UC_PAYMENT_REMINDER
+  }
+}
+
+User -- UC_ACCOUNT
+User -- UC_PROFILE
+User -- UC_MOBILE
+User -- UC_NOTIFICATIONS
+User -- UC_NO_ADS
+
+Parent -- UC_CHILD_PROGRESS
+Parent -- UC_CHILD_SCHEDULE
+Parent -- UC_CHILD_PAYMENTS
+Parent -- UC_PAYMENT_REMINDER
+
+UC_PAYMENT_REMINDER ..> UC_NOTIFICATIONS : <<extend>>
+
+note bottom of UC_CHILD_PROGRESS
+  The parent views the system through
+  goals related to the child: progress,
+  lesson schedule, and payments.
+end note
+
+@enduml

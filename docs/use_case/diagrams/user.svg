@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="791" viewBox="0 0 1500 791" role="img" aria-label="Use Case Diagram - User">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+  </marker>
+</defs>
+
+<style>
+  text { font-family: Arial, Helvetica, sans-serif; fill: #1f2937; }
+  .title { font-size: 24px; font-weight: 700; }
+  .subtitle { font-size: 13px; fill: #4b5563; }
+  .pkg-title { font-size: 15px; font-weight: 700; fill: #111827; }
+  .small { font-size: 12px; fill: #4b5563; }
+  .node-title { font-size: 13px; font-weight: 700; }
+  .node-meta { font-size: 10px; fill: #4b5563; }
+  .actor-label { font-size: 14px; font-weight: 700; text-anchor: middle; }
+  .package { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.4; rx: 12; }
+  .usecase { fill: #ffffff; stroke: #2563eb; stroke-width: 1.6; }
+  .line { stroke: #64748b; stroke-width: 1.1; fill: none; opacity: 0.55; }
+  .extend { stroke: #475569; stroke-width: 1.0; fill: none; stroke-dasharray: 7 5; opacity: 0.55; marker-end: url(#arrow); }
+  .actor { stroke: #111827; stroke-width: 1.8; fill: none; }
+  .boundary { fill: none; stroke: #334155; stroke-width: 1.5; rx: 16; }
+  .legend { font-size: 12px; fill: #374151; }
+  .ar { fill: #e0f2fe; stroke: #0284c7; }
+  .entity { fill: #dcfce7; stroke: #16a34a; }
+  .vo { fill: #ffedd5; stroke: #f97316; }
+  .read { fill: #f3e8ff; stroke: #9333ea; }
+  .enum { fill: #f1f5f9; stroke: #64748b; }
+  .rel { stroke: #64748b; stroke-width: 1.4; fill: none; marker-end: url(#arrow); opacity: 0.7; }
+</style>
+
+<text class="title" x="36" y="42">Use Case Diagram - User</text>
+<text class="subtitle" x="36" y="66">Exported SVG diagram for documentation. Use cases are actor goals, not UI actions.</text>
+<rect class="boundary" x="272" y="55" width="1206" height="696" />
+<line class="line" x1="158" y1="190" x2="740.0" y2="200.0" /><line class="line" x1="158" y1="190" x2="740.0" y2="300.0" /><line class="line" x1="158" y1="190" x2="740.0" y2="400.0" /><line class="line" x1="158" y1="190" x2="740.0" y2="500.0" /><line class="line" x1="158" y1="190" x2="740.0" y2="678.0" />
+<text class="small" x="290" y="79">Tutoring Management System</text>
+
+<g>
+  <circle class="actor" cx="110" cy="145" r="16" />
+  <line class="actor" x1="110" y1="161" x2="110" y2="203" />
+  <line class="actor" x1="76" y1="177" x2="144" y2="177" />
+  <line class="actor" x1="110" y1="203" x2="82" y2="237" />
+  <line class="actor" x1="110" y1="203" x2="138" y2="237" />
+  <text class="actor-label" x="110" y="263">User</text>
+</g>
+<rect class="package" x="290" y="95" width="1170" height="450" />
+<text class="pkg-title" x="310" y="124">P1 - Core Goals</text>
+
+<g>
+  <ellipse class="usecase" cx="875.0" cy="200.0" rx="135.0" ry="37.0" />
+  <text text-anchor="middle" font-size="13"><tspan x="875.0" y="197.5">Access my</tspan><tspan x="875.0" y="212.5">account</tspan></text>
+</g>
+
+<g>
+  <ellipse class="usecase" cx="875.0" cy="300.0" rx="135.0" ry="37.0" />
+  <text text-anchor="middle" font-size="13"><tspan x="875.0" y="297.5">Manage my</tspan><tspan x="875.0" y="312.5">profile</tspan></text>
+</g>
+
+<g>
+  <ellipse class="usecase" cx="875.0" cy="400.0" rx="135.0" ry="37.0" />
+  <text text-anchor="middle" font-size="13"><tspan x="875.0" y="397.5">Use the mobile</tspan><tspan x="875.0" y="412.5">application</tspan></text>
+</g>
+
+<g>
+  <ellipse class="usecase" cx="875.0" cy="500.0" rx="135.0" ry="37.0" />
+  <text text-anchor="middle" font-size="13"><tspan x="875.0" y="497.5">Receive important</tspan><tspan x="875.0" y="512.5">reminders</tspan></text>
+</g>
+<rect class="package" x="290" y="573" width="1170" height="150" />
+<text class="pkg-title" x="310" y="602">P3 - Future Goals</text>
+
+<g>
+  <ellipse class="usecase" cx="875.0" cy="678.0" rx="135.0" ry="37.0" />
+  <text text-anchor="middle" font-size="13"><tspan x="875.0" y="675.5">Use the application</tspan><tspan x="875.0" y="690.5">without ads</tspan></text>
+</g>
+</svg>

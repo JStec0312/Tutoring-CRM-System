@@ -1,0 +1,381 @@
+@startuml
+
+title Tutoring Management System — Domain Model
+
+left to right direction
+
+hide circle
+hide empty members
+
+<style>
+root {
+  BackgroundColor white
+  FontName Arial
+}
+
+classDiagram {
+  LineColor #333333
+  FontColor #111111
+}
+
+class {
+  BackgroundColor #F8F9FB
+  BorderColor #333333
+  FontColor #111111
+}
+
+package {
+  BackgroundColor #FFFFFF
+  BorderColor #666666
+  FontColor #111111
+}
+
+legend {
+  BackgroundColor #FFFFFF
+  BorderColor #666666
+  FontColor #111111
+}
+</style>
+
+legend right
+  |= Stereotype |= Meaning |
+  | <<Aggregate Root>> | Entry point and consistency boundary |
+  | <<Entity>> | Object with identity inside an aggregate |
+  | <<Value Object>> | Immutable value described by its attributes |
+
+  Identifiers and foreign keys are intentionally omitted.
+
+  Associations between separate aggregates connect aggregate roots only.
+  Composition represents ownership inside an aggregate.
+endlegend
+
+
+' ============================================================
+' IDENTITY AND ACCESS
+' ============================================================
+
+package "Identity and Access" {
+
+  class UserAccount <<Aggregate Root>> {
+    email: EmailAddress
+    roles: Set<UserRole>
+    status: AccountStatus
+    profile: PersonalProfile
+
+    --
+    register()
+    changeProfile()
+    changePassword()
+    assignRole(role)
+    removeRole(role)
+    activate()
+    suspend()
+  }
+
+  class PersonalProfile <<Value Object>> {
+    fullName: PersonName
+    phoneNumber: PhoneNumber
+  }
+
+  class EmailAddress <<Value Object>> {
+    value: String
+  }
+
+  class PersonName <<Value Object>> {
+    value: String
+  }
+
+  class PhoneNumber <<Value Object>> {
+    value: String
+  }
+
+  UserAccount "1" *-- "1" PersonalProfile
+  UserAccount "1" *-- "1" EmailAddress
+
+  PersonalProfile "1" *-- "1" PersonName
+  PersonalProfile "1" *-- "0..1" PhoneNumber
+}
+
+
+' ============================================================
+' TUTORING COOPERATION
+' ============================================================
+
+package "Tutoring Cooperation" {
+
+  class Tutor <<Aggregate Root>> {
+    status: TutorStatus
+
+    --
+    activate()
+    suspend()
+  }
+
+  class Student <<Aggregate Root>> {
+    status: StudentStatus
+
+    --
+    activate()
+    deactivate()
+  }
+
+  class Parent <<Aggregate Root>> {
+    status: ParentStatus
+
+    --
+    activate()
+    deactivate()
+  }
+
+  class StudentGuardianship <<Aggregate Root>> {
+    status: GuardianshipStatus
+    permissions: ParentPermissions
+
+    --
+    activate()
+    changePermissions(permissions)
+    revoke()
+  }
+
+  class ParentPermissions <<Value Object>> {
+    canViewSchedule: Boolean
+    canViewLessonHistory: Boolean
+    canViewPayments: Boolean
+    canViewSharedNotes: Boolean
+  }
+
+  class TutoringAgreement <<Aggregate Root>> {
+    subject: Subject
+    hourlyRate: HourlyRate
+    status: AgreementStatus
+    privateNotes: String
+
+    --
+    activate()
+    changeSubject()
+    changeHourlyRate()
+    updatePrivateNotes()
+    end()
+  }
+
+  class StudentInvitation <<Aggregate Root>> {
+    recipient: EmailAddress
+    status: InvitationStatus
+    validUntil: DateTime
+
+    --
+    send()
+    accept()
+    reject()
+    expire()
+  }
+
+  class Subject <<Value Object>> {
+    name: String
+  }
+
+  class HourlyRate <<Value Object>> {
+    pricePerHour: Money
+  }
+
+  Tutor "0..1" --> "1" UserAccount : account
+  Student "0..1" --> "1" UserAccount : account
+  Parent "0..1" --> "1" UserAccount : account
+
+  TutoringAgreement "0..*" --> "1" Tutor : tutor
+  TutoringAgreement "0..*" --> "1" Student : student
+
+  StudentGuardianship "0..*" --> "1" Parent : parent
+  StudentGuardianship "0..*" --> "1" Student : student
+  StudentGuardianship "1" *-- "1" ParentPermissions
+
+  StudentInvitation "0..*" --> "1" Tutor : sent by
+  StudentInvitation ..> UserAccount : acceptance creates account
+  StudentInvitation ..> Student : acceptance creates profile
+  StudentInvitation ..> TutoringAgreement : acceptance starts agreement
+
+  TutoringAgreement "1" *-- "1" Subject
+  TutoringAgreement "1" *-- "1" HourlyRate
+}
+
+
+' ============================================================
+' LESSON PLANNING
+' ============================================================
+
+package "Lesson Planning" {
+
+  class Lesson <<Aggregate Root>> {
+    timeSlot: TimeSlot
+    status: LessonStatus
+    cancellationReason: CancellationReason
+
+    --
+    schedule()
+    reschedule()
+    complete()
+    cancel()
+    markAsMissed()
+    addNote()
+  }
+
+  class LessonNote <<Entity>> {
+    topic: String
+    coveredTopics: String
+    studentProgress: String
+
+    --
+    revise()
+  }
+
+  class TimeSlot <<Value Object>> {
+    startsAt: DateTime
+    endsAt: DateTime
+
+    --
+    duration(): Duration
+    overlapsWith(other): Boolean
+  }
+
+  class Duration <<Value Object>> {
+    minutes: Integer
+  }
+
+  class CancellationReason <<Value Object>> {
+    text: String
+  }
+
+  Lesson "0..*" --> "1" TutoringAgreement : scheduled within
+
+  Lesson "1" *-- "1" TimeSlot
+  Lesson "1" *-- "0..1" CancellationReason
+  Lesson "1" *-- "0..1" LessonNote
+
+  TimeSlot "1" *-- "1" Duration : calculated duration
+}
+
+
+' ============================================================
+' BILLING
+' ============================================================
+
+package "Billing" {
+
+  class BillingAccount <<Aggregate Root>> {
+    status: BillingAccountStatus
+
+    --
+    chargeForCompletedLesson()
+    recordPayment()
+    cancelCharge()
+    outstandingBalance(): Money
+    overdueAmount(): Money
+  }
+
+  class LessonCharge <<Entity>> {
+    amount: Money
+    chargedAt: DateTime
+    status: ChargeStatus
+    description: String
+
+    --
+    cancel()
+  }
+
+  class Payment <<Entity>> {
+    amount: Money
+    paidAt: DateTime
+    reference: PaymentReference
+
+    --
+    correctReference()
+  }
+
+  class Money <<Value Object>> {
+    amount: Decimal
+    currency: Currency
+
+    --
+    add(other): Money
+    subtract(other): Money
+    multiply(multiplier): Money
+  }
+
+  class Currency <<Value Object>> {
+    code: String
+  }
+
+  class PaymentReference <<Value Object>> {
+    value: String
+  }
+
+  BillingAccount "1" --> "1" TutoringAgreement : settles agreement
+  BillingAccount "1" ..> "0..*" Lesson : charges completed lessons
+
+  BillingAccount "1" *-- "0..*" LessonCharge
+  BillingAccount "1" *-- "0..*" Payment
+
+  LessonCharge "1" *-- "1" Money
+  Payment "1" *-- "1" Money
+  Payment "1" *-- "0..1" PaymentReference
+
+  Money "1" *-- "1" Currency
+  HourlyRate "1" *-- "1" Money
+}
+
+
+' ============================================================
+' LEARNING MATERIALS
+' ============================================================
+
+package "Learning Materials" {
+
+  class LearningMaterial <<Aggregate Root>> {
+    title: String
+    file: FileDescriptor
+    status: MaterialStatus
+
+    --
+    publish()
+    rename()
+    replaceFile()
+    archive()
+  }
+
+  class MaterialAssignment <<Aggregate Root>> {
+    status: AssignmentStatus
+    assignedAt: DateTime
+
+    --
+    grantAccess()
+    revokeAccess()
+  }
+
+  class FileDescriptor <<Value Object>> {
+    fileName: String
+    contentType: String
+    size: FileSize
+    storageLocation: StorageLocation
+  }
+
+  class FileSize <<Value Object>> {
+    bytes: Long
+  }
+
+  class StorageLocation <<Value Object>> {
+    value: String
+  }
+
+  LearningMaterial "0..*" --> "1" Tutor : owned by
+
+  MaterialAssignment "0..*" --> "1" LearningMaterial : assigned material
+  MaterialAssignment "0..*" --> "1" TutoringAgreement : shared in agreement
+  MaterialAssignment "0..*" --> "0..1" Lesson : optionally attached to
+
+  LearningMaterial "1" *-- "1" FileDescriptor
+
+  FileDescriptor "1" *-- "1" FileSize
+  FileDescriptor "1" *-- "1" StorageLocation
+}
+
+@enduml
