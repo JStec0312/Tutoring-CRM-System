@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
+using Tutoring.Api.Features.Students.Exceptions;
+
 namespace Tutoring.Api.Features.Students.GetStudentById;
 using Infrastructure.Persistence;
 using MediatR;
-using Tutoring.Api.Features.Students.Exceptions;
 
 public sealed class GetStudentByIdHandler(
     TutoringDbContext dbContext)
@@ -12,23 +13,23 @@ public sealed class GetStudentByIdHandler(
         GetStudentByIdQuery request,
         CancellationToken cancellationToken)
     {
-        GetStudentByIdResponse? response = await dbContext.Students
-            .AsNoTracking()
-            .Where(student => student.Id == request.Id)
-            .Select(student => new GetStudentByIdResponse(
-                student.Id,
-                student.FirstName,
-                student.LastName,
-                student.Email,
-                student.PhoneNumber,
-                student.CreatedAtUtc))
-            .SingleOrDefaultAsync(cancellationToken);
+        // GetStudentByIdResponse? response = await dbContext.Students
+        //     .AsNoTracking()
+        //     .Where(student => student.Id == request.Id)
+        //     .Select(student => new GetStudentByIdResponse(
+        //         student.Id,
+        //         student.FirstName,
+        //         student.LastName,
+        //         student.Email,
+        //         student.PhoneNumber,
+        //         student.CreatedAtUtc))
+        //     .SingleOrDefaultAsync(cancellationToken);
 
-        if (response is null)
-        {
-            throw new StudentNotFoundException(request.Id);
-        }
+        // if (response is null)
+        // {
+        //     throw new StudentNotFoundException(request.Id);
+        // }
 
-        return response;
+        throw new NotImplementedException();
     }
 }

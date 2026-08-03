@@ -1,0 +1,162 @@
+@startuml
+
+title Tutoring Management System - Database Schema
+
+hide circle
+skinparam linetype ortho
+skinparam shadowing false
+
+entity UserAccounts {
+    * Id : uniqueidentifier <<PK>>
+    --
+    Email : nvarchar(320) <<UQ>>
+    FirstName : nvarchar(100)
+    LastName : nvarchar(100)
+    PhoneNumber : nvarchar(30) <<nullable>>
+    Status : nvarchar(50)
+    CreatedAtUtc : datetimeoffset
+}
+
+entity UserAccountRoles {
+    * UserAccountId : uniqueidentifier <<PK, FK>>
+    * Role : nvarchar(50) <<PK>>
+}
+
+entity Tutors {
+    * Id : uniqueidentifier <<PK>>
+    --
+    UserAccountId : uniqueidentifier <<FK, UQ>>
+    Status : nvarchar(50)
+    CreatedAtUtc : datetimeoffset
+}
+
+entity Students {
+    * Id : uniqueidentifier <<PK>>
+    --
+    UserAccountId : uniqueidentifier <<FK, UQ>>
+    Status : nvarchar(50)
+    CreatedAtUtc : datetimeoffset
+}
+
+entity TutoringAgreements {
+    * Id : uniqueidentifier <<PK>>
+    --
+    TutorId : uniqueidentifier <<FK>>
+    StudentId : uniqueidentifier <<FK>>
+    SubjectName : nvarchar(100)
+    HourlyRateAmount : decimal(18,2)
+    HourlyRateCurrencyCode : char(3)
+    Status : nvarchar(50)
+    PrivateNotes : nvarchar(2000) <<nullable>>
+    CreatedAtUtc : datetimeoffset
+}
+
+entity StudentInvitations {
+    * Id : uniqueidentifier <<PK>>
+    --
+    TutorId : uniqueidentifier <<FK>>
+    RecipientEmail : nvarchar(320)
+    Status : nvarchar(50)
+    ValidUntilUtc : datetimeoffset
+    CreatedAtUtc : datetimeoffset
+}
+
+entity Lessons {
+    * Id : uniqueidentifier <<PK>>
+    --
+    TutoringAgreementId : uniqueidentifier <<FK>>
+    StartsAtUtc : datetimeoffset
+    EndsAtUtc : datetimeoffset
+    Status : nvarchar(50)
+    CancellationReason : nvarchar(500) <<nullable>>
+    CreatedAtUtc : datetimeoffset
+}
+
+entity LessonNotes {
+    * Id : uniqueidentifier <<PK>>
+    --
+    LessonId : uniqueidentifier <<FK, UQ>>
+    Topic : nvarchar(200)
+    CoveredTopics : nvarchar(2000)
+    StudentProgress : nvarchar(2000)
+}
+
+entity BillingAccounts {
+    * Id : uniqueidentifier <<PK>>
+    --
+    TutoringAgreementId : uniqueidentifier <<FK, UQ>>
+    Status : nvarchar(50)
+    CreatedAtUtc : datetimeoffset
+}
+
+entity LessonCharges {
+    * Id : uniqueidentifier <<PK>>
+    --
+    BillingAccountId : uniqueidentifier <<FK>>
+    LessonId : uniqueidentifier <<FK, UQ>>
+    Amount : decimal(18,2)
+    CurrencyCode : char(3)
+    ChargedAtUtc : datetimeoffset
+    Status : nvarchar(50)
+    Description : nvarchar(500)
+}
+
+entity Payments {
+    * Id : uniqueidentifier <<PK>>
+    --
+    BillingAccountId : uniqueidentifier <<FK>>
+    Amount : decimal(18,2)
+    CurrencyCode : char(3)
+    PaidAtUtc : datetimeoffset
+    Reference : nvarchar(200) <<nullable>>
+}
+
+entity LearningMaterials {
+    * Id : uniqueidentifier <<PK>>
+    --
+    TutorId : uniqueidentifier <<FK>>
+    Title : nvarchar(200)
+    FileName : nvarchar(260)
+    ContentType : nvarchar(255)
+    FileSizeBytes : bigint
+    StorageLocation : nvarchar(1024)
+    Status : nvarchar(50)
+    CreatedAtUtc : datetimeoffset
+}
+
+entity MaterialAssignments {
+    * Id : uniqueidentifier <<PK>>
+    --
+    LearningMaterialId : uniqueidentifier <<FK>>
+    TutoringAgreementId : uniqueidentifier <<FK>>
+    LessonId : uniqueidentifier <<FK, nullable>>
+    Status : nvarchar(50)
+    AssignedAtUtc : datetimeoffset
+    --
+    UQ : LearningMaterialId, TutoringAgreementId, LessonId
+    UQ : LearningMaterialId, TutoringAgreementId where LessonId is null
+}
+
+UserAccounts ||--o{ UserAccountRoles
+UserAccounts ||--o| Tutors
+UserAccounts ||--o| Students
+
+Tutors ||--o{ TutoringAgreements
+Students ||--o{ TutoringAgreements
+
+Tutors ||--o{ StudentInvitations
+
+TutoringAgreements ||--o{ Lessons
+Lessons ||--o| LessonNotes
+
+TutoringAgreements ||--o| BillingAccounts
+BillingAccounts ||--o{ LessonCharges
+Lessons ||--o| LessonCharges
+BillingAccounts ||--o{ Payments
+
+Tutors ||--o{ LearningMaterials
+LearningMaterials ||--o{ MaterialAssignments
+TutoringAgreements ||--o{ MaterialAssignments
+Lessons |o--o{ MaterialAssignments
+
+@enduml

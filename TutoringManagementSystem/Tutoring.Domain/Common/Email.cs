@@ -1,11 +1,14 @@
-namespace Tutoring.Domain.Common;
-using FluentValidation;
 using System.Net.Mail;
 using Tutoring.Domain.Common.Exceptions;
 
+namespace Tutoring.Domain.Common;
 
 public sealed record EmailAddress
 {
+    private EmailAddress()
+    {
+    }
+
     public EmailAddress(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || !IsValid(value))
@@ -13,13 +16,10 @@ public sealed record EmailAddress
             throw new InvalidEmailAddressException(value);
         }
 
-        string normalizedValue = value.Trim();
-
-    
-        Value = normalizedValue;
+        Value = value.Trim();
     }
 
-    public string Value { get; }
+    public string Value { get; private set; } = null!;
 
     private static bool IsValid(string value)
     {
@@ -37,6 +37,4 @@ public sealed record EmailAddress
             return false;
         }
     }
-
-    public override string ToString() => Value;
 }

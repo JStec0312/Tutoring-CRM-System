@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Tutoring.Domain.Students;
 
 namespace Tutoring.Api.Features.Students.GetStudentById;
 
@@ -12,7 +13,7 @@ public class GetStudentByIdController(ISender sender) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<GetStudentByIdResponse>> GetStudentById(Guid id, CancellationToken cancellationToken)
     {
-        var response = await sender.Send(new GetStudentByIdQuery(id), cancellationToken);
+        var response = await sender.Send(new GetStudentByIdQuery(new StudentId(id)), cancellationToken);
         return Ok(response);
     }
 }

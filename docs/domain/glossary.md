@@ -47,13 +47,13 @@ Contains personal information shared by the roles associated with a user account
 
 | Field | Type | Meaning |
 |---|---|---|
-| `fullName` | `PersonName` | Full name of the account owner |
+| `firstName` | `String` | First name of the account owner |
+| `lastName` | `String` | Last name of the account owner |
 | `phoneNumber` | `PhoneNumber` | Optional contact phone number |
 
 **Connections:**
 
 - Belongs to one `UserAccount`.
-- Owns one `PersonName`.
 - May own one `PhoneNumber`.
 
 ---
@@ -75,25 +75,6 @@ Represents a validated and normalized email address.
 
 - Belongs to `UserAccount`.
 - Is used as the recipient of `StudentInvitation`.
-
----
-
-## PersonName
-
-**Type:** Value Object
-
-**Domain meaning:**  
-Represents a validated name of a person.
-
-**Fields:**
-
-| Field | Type | Meaning |
-|---|---|---|
-| `value` | `String` | Person's full name |
-
-**Connections:**
-
-- Belongs to `PersonalProfile`.
 
 ---
 
@@ -357,26 +338,6 @@ Represents the time interval during which a lesson takes place.
 **Connections:**
 
 - Belongs to one `Lesson`.
-- Produces one calculated `Duration`.
-
----
-
-## Duration
-
-**Type:** Value Object
-
-**Domain meaning:**  
-Represents a period of time expressed in minutes.
-
-**Fields:**
-
-| Field | Type | Meaning |
-|---|---|---|
-| `minutes` | `Integer` | Number of minutes |
-
-**Connections:**
-
-- Is calculated from `TimeSlot`.
 
 ---
 
@@ -408,7 +369,7 @@ Explains why a lesson was cancelled.
 **Domain meaning:**  
 Represents the financial settlement of one tutoring agreement.
 
-It coordinates lesson charges, payments, outstanding amounts and overdue amounts.
+It coordinates lesson charges and payments.
 
 **Fields:**
 
