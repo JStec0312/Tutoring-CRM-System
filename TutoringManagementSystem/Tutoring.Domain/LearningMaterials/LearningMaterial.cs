@@ -11,9 +11,7 @@ public sealed class LearningMaterial
     }
 
     public TutorId TutorId { get; private set; }
-
     public Tutor Tutor { get; private set; } = null!;
-
     public string Title { get; private set; } = null!;
 
     public FileDescriptor File { get; private set; } = null!;

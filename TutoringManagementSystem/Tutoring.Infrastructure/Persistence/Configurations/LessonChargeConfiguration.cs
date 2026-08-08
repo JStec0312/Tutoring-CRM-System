@@ -15,19 +15,26 @@ internal sealed class LessonChargeConfiguration
         builder.HasKey(charge => charge.Id);
 
         builder.Property(charge => charge.Id)
-            .HasGeneratedStronglyTypedId(value => new LessonChargeId(value));
+            .HasGeneratedStronglyTypedId(
+                value => new LessonChargeId(value));
 
         builder.Property(charge => charge.BillingAccountId)
-            .HasStronglyTypedId(value => new BillingAccountId(value), "BillingAccountId")
+            .HasStronglyTypedId(
+                value => new BillingAccountId(value),
+                "BillingAccountId")
             .IsRequired();
 
         builder.Property(charge => charge.LessonId)
-            .HasStronglyTypedId(value => new LessonId(value), "LessonId")
+            .HasStronglyTypedId(
+                value => new LessonId(value),
+                "LessonId")
             .IsRequired();
 
         builder.OwnsOne(charge => charge.Amount, amount =>
         {
-            amount.ConfigureMoney("Amount", "CurrencyCode");
+            amount.ConfigureMoney(
+                "Amount",
+                "CurrencyCode");
         });
 
         builder.Navigation(charge => charge.Amount)
@@ -47,11 +54,6 @@ internal sealed class LessonChargeConfiguration
             .HasColumnType("nvarchar(500)")
             .HasMaxLength(500)
             .IsRequired();
-
-        builder.HasOne<BillingAccount>()
-            .WithMany(account => account.Charges)
-            .HasForeignKey(charge => charge.BillingAccountId)
-            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(charge => charge.Lesson)
             .WithMany()

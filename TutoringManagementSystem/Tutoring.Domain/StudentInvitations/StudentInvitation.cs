@@ -11,9 +11,7 @@ public sealed class StudentInvitation
     }
 
     public TutorId TutorId { get; private set; }
-
     public Tutor Tutor { get; private set; } = null!;
-
     public EmailAddress Recipient { get; private set; } = null!;
 
     public InvitationStatus Status { get; private set; }

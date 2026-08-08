@@ -7,6 +7,7 @@ using MediatR;
 using Tutoring.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Auth.Exceptions;
+using Tutoring.Domain.Students;
 
 namespace Tutoring.Api.Features.Auth.RegisterStudent;
 
@@ -79,11 +80,13 @@ public sealed class RegisterStudentHandler(
             profile: profile
         );
         UserRole studentRole = UserRole.Student;
-
         userAccount.AssignRole(studentRole);
-        dbContext.UserAccounts.Add(userAccount);
-        await dbContext.SaveChangesAsync(cancellationToken);
 
+        Student student = new Student(userAccountId: userAccount.Id);
+
+        dbContext.UserAccounts.Add(userAccount);
+        dbContext.Students.Add(student);
+        await dbContext.SaveChangesAsync(cancellationToken);
         return new RegisterStudentResponse(
             UserId: userAccount.Id.Value
         );

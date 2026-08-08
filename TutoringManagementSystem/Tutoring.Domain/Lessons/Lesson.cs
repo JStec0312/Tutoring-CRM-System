@@ -11,7 +11,6 @@ public sealed class Lesson
     }
 
     public TutoringAgreementId TutoringAgreementId { get; private set; }
-
     public TutoringAgreement Agreement { get; private set; } = null!;
 
     public TimeSlot TimeSlot { get; private set; } = null!;

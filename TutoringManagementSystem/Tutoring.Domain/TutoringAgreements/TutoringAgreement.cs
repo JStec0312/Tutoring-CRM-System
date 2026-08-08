@@ -12,11 +12,9 @@ public sealed class TutoringAgreement
     }
 
     public TutorId TutorId { get; private set; }
-
     public Tutor Tutor { get; private set; } = null!;
 
     public StudentId StudentId { get; private set; }
-
     public Student Student { get; private set; } = null!;
 
     public Subject Subject { get; private set; } = null!;

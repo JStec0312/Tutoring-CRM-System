@@ -14,7 +14,6 @@ public sealed class BillingAccount
     }
 
     public TutoringAgreementId TutoringAgreementId { get; private set; }
-
     public TutoringAgreement Agreement { get; private set; } = null!;
 
     public BillingAccountStatus Status { get; private set; }
