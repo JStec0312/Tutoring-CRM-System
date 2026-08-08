@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tutoring.Domain\Tutoring.Domain.csproj" />
+    <ProjectReference Include="..\Tutoring.Api\Tutoring.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,9 +1,9 @@
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Students.Exceptions;
+using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Students.GetStudentById;
-using Infrastructure.Persistence;
-using MediatR;
 
 public sealed class GetStudentByIdHandler(
     TutoringDbContext dbContext)

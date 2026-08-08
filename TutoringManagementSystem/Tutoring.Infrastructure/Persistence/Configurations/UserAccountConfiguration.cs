@@ -30,8 +30,20 @@ internal sealed class UserAccountConfiguration
                 .HasDatabaseName("IX_UserAccounts_Email");
         });
 
+        builder.OwnsOne(account => account.PasswordHash, passwordHash =>
+        {
+            passwordHash.Property(valueObject => valueObject.Value)
+                .HasColumnName("PasswordHash")
+                .HasColumnType("nvarchar(256)")
+                .HasMaxLength(256)
+                .IsRequired();
+        });
+
         builder.Navigation(account => account.Email)
             .IsRequired();
+        builder.Navigation(account => account.PasswordHash)
+            .IsRequired();  
+        
 
         builder.OwnsOne(account => account.Profile, profile =>
         {
@@ -56,6 +68,8 @@ internal sealed class UserAccountConfiguration
                 .HasMaxLength(30)
                 .IsRequired(false);
         });
+
+            
 
         builder.Navigation(account => account.Profile)
             .IsRequired();

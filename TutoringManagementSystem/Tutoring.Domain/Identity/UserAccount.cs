@@ -13,6 +13,8 @@ public sealed class UserAccount
 
     public EmailAddress Email { get; private set; } = null!;
 
+    public PasswordHash PasswordHash { get; private set; } = null!;
+
     public PersonalProfile Profile { get; private set; } = null!;
 
     public AccountStatus Status { get; private set; }
