@@ -1,10 +1,15 @@
 namespace Tutoring.Domain.Common;
 
-public abstract class Entity<TId>
-    : IEquatable<Entity<TId>>
-    where TId : struct, IDomainId
+
+public abstract class Entity<TId> : IEquatable<Entity<TId>>
+    where TId : struct, DomainId<TId>
 {
     public TId Id { get; private set; }
+
+    protected Entity()
+    {
+        Id = TId.New();
+    }
 
     public bool Equals(Entity<TId>? other)
     {
@@ -30,6 +35,6 @@ public abstract class Entity<TId>
 
     public override int GetHashCode()
     {
-        return Id.GetHashCode();
+        return Id.Value.GetHashCode();
     }
 }

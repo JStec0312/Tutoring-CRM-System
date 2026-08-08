@@ -26,4 +26,28 @@ public sealed class UserAccount
     public IReadOnlyCollection<UserRole> Roles => _roleAssignments
         .Select(roleAssignment => roleAssignment.Role)
         .ToArray();
+    
+    public UserAccount(
+        EmailAddress email,
+        PasswordHash passwordHash,
+        PersonalProfile profile        
+        )
+    {
+        Email = email;
+        PasswordHash = passwordHash;
+        Status = AccountStatus.Active;
+        CreatedAtUtc = DateTimeOffset.UtcNow;
+        Profile = profile;
+    }
+
+    public void AssignRole(UserRole role)
+    {
+        if (_roleAssignments.Any(roleAssignment => roleAssignment.Role == role))
+        {
+            return;
+        }
+
+        var roleAssignment = new UserAccountRole(this.Id, role);
+        _roleAssignments.Add(roleAssignment);
+    }
 }

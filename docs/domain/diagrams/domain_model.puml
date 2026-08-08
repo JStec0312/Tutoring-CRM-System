@@ -61,11 +61,13 @@ package "Identity and Access" {
     roles: Set<UserRole>
     status: AccountStatus
     profile: PersonalProfile
+    passwordHash: PasswordHash
   }
 
   class PersonalProfile <<Value Object>> {
-    firstName: String
-    lastName: String
+    userName: String
+    firstName: Optional<String>
+    lastName: Optional<String>
     phoneNumber: PhoneNumber
   }
 
@@ -73,9 +75,15 @@ package "Identity and Access" {
     value: String
   }
 
+  class PasswordHash <<Value Object>> {
+    value: String
+  }
+  
   class PhoneNumber <<Value Object>> {
     value: String
   }
+
+  UserAccount "1" *-- "1" PasswordHash
 
   UserAccount "1" *-- "1" PersonalProfile
   UserAccount "1" *-- "1" EmailAddress

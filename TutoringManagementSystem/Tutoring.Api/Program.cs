@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Tutoring.Api;
 using Tutoring.Infrastructure.Persistence;
 using Scalar.AspNetCore;
+using Tutoring.Api.Features.Auth.RegisterStudent;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,10 +16,16 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<TutoringDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+builder.Services.AddMediatR(config =>
+    config.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

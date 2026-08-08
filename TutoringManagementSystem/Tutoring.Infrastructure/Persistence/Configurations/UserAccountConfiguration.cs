@@ -47,17 +47,22 @@ internal sealed class UserAccountConfiguration
 
         builder.OwnsOne(account => account.Profile, profile =>
         {
+            profile.Property(valueObject => valueObject.UserName)
+                .HasColumnName("UserName")
+                .HasColumnType("nvarchar(100)")
+                .HasMaxLength(100)
+                .IsRequired();
             profile.Property(valueObject => valueObject.FirstName)
                 .HasColumnName("FirstName")
                 .HasColumnType("nvarchar(100)")
                 .HasMaxLength(100)
-                .IsRequired();
+                .IsRequired(false);
 
             profile.Property(valueObject => valueObject.LastName)
                 .HasColumnName("LastName")
                 .HasColumnType("nvarchar(100)")
                 .HasMaxLength(100)
-                .IsRequired();
+                .IsRequired(false);
 
             profile.Property(valueObject => valueObject.PhoneNumber)
                 .HasConversion(

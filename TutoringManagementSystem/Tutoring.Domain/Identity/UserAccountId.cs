@@ -3,7 +3,8 @@ using Tutoring.Domain.Common;
 namespace Tutoring.Domain.Identity;
 
 public readonly record struct UserAccountId(Guid Value)
-    : IDomainId
+    : DomainId<UserAccountId>
 {
-    public static UserAccountId New() => new(Guid.NewGuid());
+    public static UserAccountId New()
+        => new(Guid.NewGuid());
 }

@@ -1,3 +1,5 @@
+using Tutoring.Domain.Common.Exceptions;
+
 namespace Tutoring.Domain.Identity;
 
 public class PasswordHash
@@ -8,9 +10,15 @@ public class PasswordHash
 
     public PasswordHash(string value)
     {
-        throw new NotImplementedException("Password hashing is not implemented yet.");
-    }
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new EmptyFieldException(nameof(PasswordHash));
+        }
 
+
+        Value = value;
+    }
+  
     public string Value { get; private set; } = null!;
     
 

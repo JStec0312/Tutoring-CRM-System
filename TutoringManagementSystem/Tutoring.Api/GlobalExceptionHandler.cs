@@ -25,6 +25,7 @@ public sealed class GlobalExceptionHandler(
                 "Resource not found",
                 notFoundException.Code,
                 notFoundException.Message),
+            
 
             ConflictException conflictException => new ErrorDetails(
                 StatusCodes.Status409Conflict,
@@ -43,6 +44,7 @@ public sealed class GlobalExceptionHandler(
                 "Request could not be completed",
                 useCaseException.Code,
                 useCaseException.Message),
+            
 
             _ => new ErrorDetails(
                 StatusCodes.Status500InternalServerError,

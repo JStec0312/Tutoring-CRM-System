@@ -11,11 +11,11 @@ public sealed record EmailAddress
 
     public EmailAddress(string value)
     {
-        if (string.IsNullOrWhiteSpace(value) || !IsValid(value))
+        if(!IsValid(value) || string.IsNullOrWhiteSpace(value)) 
         {
             throw new InvalidEmailAddressException(value);
         }
-
+        
         Value = value.Trim();
     }
 
@@ -32,7 +32,7 @@ public sealed record EmailAddress
                 value,
                 StringComparison.OrdinalIgnoreCase);
         }
-        catch (FormatException)
+        catch (Exception)
         {
             return false;
         }

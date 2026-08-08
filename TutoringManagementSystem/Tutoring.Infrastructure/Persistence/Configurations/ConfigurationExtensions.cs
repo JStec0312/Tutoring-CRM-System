@@ -11,7 +11,7 @@ internal static class ConfigurationExtensions
         this PropertyBuilder<TId> builder,
         Func<Guid, TId> factory,
         string columnName)
-        where TId : struct, IDomainId
+        where TId : struct, DomainId<TId>
     {
         return builder
             .HasConversion(
@@ -24,7 +24,7 @@ internal static class ConfigurationExtensions
     public static PropertyBuilder<TId> HasGeneratedStronglyTypedId<TId>(
         this PropertyBuilder<TId> builder,
         Func<Guid, TId> factory)
-        where TId : struct, IDomainId
+        where TId : struct, DomainId<TId>
     {
         return builder
             .HasStronglyTypedId(factory, "Id")

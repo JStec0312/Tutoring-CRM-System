@@ -3,7 +3,7 @@ using Tutoring.Domain.Common;
 namespace Tutoring.Domain.LearningMaterials;
 
 public readonly record struct LearningMaterialId(Guid Value)
-    : IDomainId
+    : DomainId<LearningMaterialId>
 {
     public static LearningMaterialId New() => new(Guid.NewGuid());
 }

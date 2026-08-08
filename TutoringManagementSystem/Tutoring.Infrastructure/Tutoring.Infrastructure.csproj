@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Tutoring.Domain\Tutoring.Domain.csproj" />
-    <ProjectReference Include="..\Tutoring.Api\Tutoring.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +18,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Persistence\Auth\" />
   </ItemGroup>
 
 </Project>
