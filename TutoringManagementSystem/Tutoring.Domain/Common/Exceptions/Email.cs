@@ -23,16 +23,26 @@ public sealed record EmailAddress
 
     private static bool IsValid(string value)
     {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
         try
         {
             var mailAddress = new MailAddress(value);
 
-            return string.Equals(
-                mailAddress.Address,
-                value,
-                StringComparison.OrdinalIgnoreCase);
+            if (!string.Equals(
+                    mailAddress.Address,
+                    value,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var domain = value.Split('@').Last();
+
+            return domain.Contains('.');
         }
-        catch (Exception)
+        catch (FormatException)
         {
             return false;
         }
