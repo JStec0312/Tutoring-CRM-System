@@ -12,6 +12,7 @@ public sealed class LessonCharge
 
     public BillingAccountId BillingAccountId { get; private set; }
 
+
     public LessonId LessonId { get; private set; }
     public Lesson Lesson { get; private set; } = null!;
     public Money Amount { get; private set; } = null!;

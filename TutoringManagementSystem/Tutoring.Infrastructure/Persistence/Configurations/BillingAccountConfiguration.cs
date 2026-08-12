@@ -15,10 +15,13 @@ internal sealed class BillingAccountConfiguration
         builder.HasKey(account => account.Id);
 
         builder.Property(account => account.Id)
-            .HasGeneratedStronglyTypedId(value => new BillingAccountId(value));
+            .HasGeneratedStronglyTypedId(
+                value => new BillingAccountId(value));
 
         builder.Property(account => account.TutoringAgreementId)
-            .HasStronglyTypedId(value => new TutoringAgreementId(value), "TutoringAgreementId")
+            .HasStronglyTypedId(
+                value => new TutoringAgreementId(value),
+                "TutoringAgreementId")
             .IsRequired();
 
         builder.Property(account => account.Status)
@@ -33,7 +36,8 @@ internal sealed class BillingAccountConfiguration
 
         builder.HasOne(account => account.Agreement)
             .WithOne()
-            .HasForeignKey<BillingAccount>(account => account.TutoringAgreementId)
+            .HasForeignKey<BillingAccount>(
+                account => account.TutoringAgreementId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(account => account.Charges)
