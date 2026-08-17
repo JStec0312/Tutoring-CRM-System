@@ -1,0 +1,48 @@
+name: "CI Pipeline"
+run-name: "CI Pipeline - ${{ github.run_number }}"
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: TutoringManagementSystem
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v6
+
+        - name: 'Set up .NET'
+          uses: actions/setup-dotnet@v5
+          with:
+            dotnet-version: '10.0.302'
+
+        - name: 'Restore nuget packages'
+          run: 'dotnet restore'
+
+        - name: 'Build'
+          run: 'dotnet build --no-restore'
+  backend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: TutoringManagementSystem
+    steps:
+        - name: Checkout code
+          uses: actions/checkout@v6
+
+        - name: Set up .NET
+          uses: actions/setup-dotnet@v5
+          with:
+            dotnet-version: '10.0.302'
+        
+        - name: 'Restore nuget packages'
+          run: 'dotnet restore'
+            
+        - name: 'Build'
+          run: 'dotnet build --no-restore'
+
+        - name: 'Unit tests'
+          run: 'dotnet test Tutoring.UnitTest/Tutoring.UnitTest.csproj --no-build'
+
+        - name: 'Integration tests'
+          run: 'dotnet test Tutoring.IntegrationTests/Tutoring.IntegrationTests.csproj --no-build'
