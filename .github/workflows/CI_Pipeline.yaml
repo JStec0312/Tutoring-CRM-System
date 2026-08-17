@@ -1,5 +1,5 @@
-name: "CI Pipeline"
-run-name: "CI Pipeline - ${{ github.run_number }}"
+name: "CI Backend Pipeline"
+run-name: "CI Backend Pipeline - ${{ github.run_number }}"
 on: [push]
 jobs:
   build:
