@@ -2,7 +2,7 @@ using Tutoring.Api.Features.Common.Exceptions;
 
 namespace Tutoring.Api.Features.Auth.Exceptions;
 
-public class EmailAlreadyTakenException : UseCaseException
+public class EmailAlreadyTakenException : ConflictException
 {
     public EmailAlreadyTakenException(string email)
         : base(
