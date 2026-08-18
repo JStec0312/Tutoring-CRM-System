@@ -4,6 +4,8 @@ using Tutoring.Api;
 using Tutoring.Infrastructure.Persistence;
 using Scalar.AspNetCore;
 using Tutoring.Api.Features.Auth.RegisterStudent;
+using Tutoring.Infrastructure.Abstraction;
+using Tutoring.Infrastructure.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,7 @@ builder.Services.AddDbContext<TutoringDbContext>(options =>
 builder.Services.AddMediatR(config =>
     config.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

@@ -4,12 +4,14 @@ using Tutoring.Api.Features.Auth.Exceptions;
 using Tutoring.Domain.Common;
 using Tutoring.Domain.Identity;
 using Tutoring.Domain.Tutors;
+using Tutoring.Infrastructure.Abstraction;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.RegisterTutor;
 
 public sealed class RegisterTutorHandler(
-    TutoringDbContext dbContext)
+    TutoringDbContext dbContext,
+    IPasswordHasher passwordHasher)
     : IRequestHandler<RegisterTutorCommand, RegisterTutorResponse>
 {
     private readonly int _passwordMinLength = AppSettings.PasswordPolicy.MinimumLength;
@@ -44,6 +46,7 @@ public sealed class RegisterTutorHandler(
         }
 
         PhoneNumber? phoneNumber = null;
+
         if (request.PhoneNumber is not null)
         {
             phoneNumber = new PhoneNumber(request.PhoneNumber);
@@ -59,13 +62,16 @@ public sealed class RegisterTutorHandler(
         }
 
         var password = ValidatePassword(request.Password);
+
         var passwordHash = new PasswordHash(
-            BCrypt.Net.BCrypt.HashPassword(password));
+            passwordHasher.Hash(password));
+
         var profile = new PersonalProfile(
             userName: request.UserName,
             firstName: request.FirstName,
             lastName: request.LastName,
             phoneNumber: phoneNumber);
+
         var userAccount = new UserAccount(
             email: email,
             passwordHash: passwordHash,
@@ -80,14 +86,16 @@ public sealed class RegisterTutorHandler(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return new RegisterTutorResponse(userAccount.Id.Value);
+        return new RegisterTutorResponse(
+            userAccount.Id.Value);
     }
 
     private string ValidatePassword(string password)
     {
         if (string.IsNullOrWhiteSpace(password))
         {
-            throw new PasswordPolicyViolationException("Password cannot be empty.");
+            throw new PasswordPolicyViolationException(
+                "Password cannot be empty.");
         }
 
         if (password.Length < _passwordMinLength)
@@ -120,7 +128,8 @@ public sealed class RegisterTutorHandler(
                 "Password must contain at least one digit.");
         }
 
-        if (_passwordRequireSpecialCharacter && !password.Any(ch => !char.IsLetterOrDigit(ch)))
+        if (_passwordRequireSpecialCharacter &&
+            !password.Any(ch => !char.IsLetterOrDigit(ch)))
         {
             throw new PasswordPolicyViolationException(
                 "Password must contain at least one special character.");

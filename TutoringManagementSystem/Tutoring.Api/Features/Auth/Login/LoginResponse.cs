@@ -1,6 +1,3 @@
 namespace Tutoring.Api.Features.Auth.Login;
 
-public class LoginResponse
-{
-    
-}
+public sealed record LoginResponse(string AccessToken, DateTime ExpiresAt);

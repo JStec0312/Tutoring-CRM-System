@@ -1,6 +1,3 @@
 namespace Tutoring.Api.Features.Auth.Login;
 
-public class LoginRequest
-{
-    
-}
+public sealed record LoginRequest(string Email, string Password);
