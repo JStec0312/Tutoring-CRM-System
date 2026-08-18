@@ -1,8 +1,5 @@
 using Tutoring.Domain.Common;
 using Tutoring.Domain.Identity;
-using Tutoring.Domain.Identity;
-
-using Tutoring.Api.Features.Common.Exceptions;
 using MediatR;
 using Tutoring.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

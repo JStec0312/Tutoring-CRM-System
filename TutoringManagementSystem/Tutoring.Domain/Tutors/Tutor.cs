@@ -15,4 +15,11 @@ public sealed class Tutor
     public TutorStatus Status { get; private set; }
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public Tutor(UserAccountId userAccountId)
+    {
+        UserAccountId = userAccountId;
+        Status = TutorStatus.Active;
+        CreatedAtUtc = DateTimeOffset.UtcNow;
+    }
 }

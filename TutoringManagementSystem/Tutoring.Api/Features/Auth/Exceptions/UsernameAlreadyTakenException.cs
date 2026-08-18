@@ -2,7 +2,7 @@ using Tutoring.Api.Features.Common.Exceptions;
 
 namespace Tutoring.Api.Features.Auth.Exceptions;
 
-public class UsernameAlreadyTakenException : UseCaseException
+public class UsernameAlreadyTakenException : ConflictException
 {
     public UsernameAlreadyTakenException(string username)
         : base(
