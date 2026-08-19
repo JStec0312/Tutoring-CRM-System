@@ -14,7 +14,8 @@ namespace Tutoring.Api.Features.Auth.RegisterStudent;
 public sealed class RegisterStudentHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
-    IOptions<PasswordPolicyOptions> passwordPolicyOptions
+    IOptions<PasswordPolicyOptions> passwordPolicyOptions,
+    ILogger<RegisterStudentHandler> logger
 ) : IRequestHandler<RegisterStudentCommand, RegisterStudentResponse>
 {
     private readonly int _passwordMinLength = passwordPolicyOptions.Value.MinimumLength;
@@ -26,7 +27,8 @@ public sealed class RegisterStudentHandler(
 
     public async Task<RegisterStudentResponse> Handle(
         RegisterStudentCommand request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+        )
     {
         var email = new EmailAddress(request.Email);
 
@@ -40,11 +42,13 @@ public sealed class RegisterStudentHandler(
 
         if (userNameAlreadyExists)
         {
+            logger.LogWarning("Registration failed for email: {Email} - username already taken: {UserName}", request.Email, request.UserName);
             throw new UsernameAlreadyTakenException(request.UserName);
         }
 
         if (emailAlreadyExists)
         {
+            logger.LogWarning("Registration failed for email: {Email} - email already taken", request.Email);
             throw new EmailAlreadyTakenException(request.Email);
         }
 
@@ -60,6 +64,7 @@ public sealed class RegisterStudentHandler(
 
             if (phoneNumberAlreadyExists)
             {
+                logger.LogWarning("Registration failed for email: {Email} - phone number already taken: {PhoneNumber}", request.Email, request.PhoneNumber);
                 throw new PhoneNumberAlreadyTakenException(request.PhoneNumber);
             }
         }
@@ -93,6 +98,7 @@ public sealed class RegisterStudentHandler(
         return new RegisterStudentResponse(
             UserId: userAccount.Id.Value);
     }
+
 
     private string ValidatePassword(string password)
     {

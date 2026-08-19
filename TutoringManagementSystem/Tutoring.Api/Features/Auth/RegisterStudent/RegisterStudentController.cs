@@ -13,8 +13,10 @@ public sealed class RegisterStudentController(
     [HttpPost]
     public async Task<ActionResult<RegisterStudentResponse>> Register(
         [FromBody] RegisterStudentRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ILogger<RegisterStudentController> logger)
     {
+        logger.LogInformation("Registering new student with email: {Email}", request.Email);
         var command = new RegisterStudentCommand(
             Email: request.Email,
             Password: request.Password,
@@ -27,7 +29,7 @@ public sealed class RegisterStudentController(
         var response = await sender.Send(
             command,
             cancellationToken);
-
+        logger.LogInformation("Successfully registered new student with email: {Email}, UserId: {UserId}", request.Email, response.UserId);
         return Created(
             $"/api/users/{response.UserId}",
             response);

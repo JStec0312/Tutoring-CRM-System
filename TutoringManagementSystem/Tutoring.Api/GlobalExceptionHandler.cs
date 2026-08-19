@@ -25,6 +25,7 @@ public sealed class GlobalExceptionHandler(
                 "Resource not found",
                 notFoundException.Code,
                 notFoundException.Message),
+                
             
 
             ConflictException conflictException => new ErrorDetails(

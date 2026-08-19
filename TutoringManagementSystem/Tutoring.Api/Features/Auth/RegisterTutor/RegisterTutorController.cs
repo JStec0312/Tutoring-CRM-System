@@ -11,8 +11,10 @@ public sealed class RegisterTutorController(
     [HttpPost]
     public async Task<ActionResult<RegisterTutorResponse>> Register(
         [FromBody] RegisterTutorRequest request,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ILogger<RegisterTutorController> logger)
     {
+        logger.LogInformation("Registering new tutor with email: {Email}", request.Email);
         var command = new RegisterTutorCommand(
             Email: request.Email,
             Password: request.Password,
@@ -25,7 +27,7 @@ public sealed class RegisterTutorController(
         var response = await sender.Send(
             command,
             cancellationToken);
-
+        logger.LogInformation("Successfully registered new tutor with email: {Email}, UserId: {UserId}", request.Email, response.UserId);
         return Created(
             $"/api/users/{response.UserId}",
             response);

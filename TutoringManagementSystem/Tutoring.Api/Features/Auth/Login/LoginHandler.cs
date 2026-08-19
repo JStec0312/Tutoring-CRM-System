@@ -9,7 +9,8 @@ namespace Tutoring.Api.Features.Auth.Login;
 public sealed class LoginHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
-    IJwtTokenGenerator jwtTokenGenerator)
+    IJwtTokenGenerator jwtTokenGenerator,
+    ILogger<LoginHandler> logger)
     : IRequestHandler<LoginCommand, LoginResponse>
 {
     public async Task<LoginResponse> Handle(
@@ -27,6 +28,7 @@ public sealed class LoginHandler(
 
         if (userAccount is null)
         {
+            logger.LogWarning("Login failed for email: {Email} - user not found", email);
             throw new InvalidCredentialsException();
         }
 
@@ -36,6 +38,7 @@ public sealed class LoginHandler(
 
         if (!passwordIsValid)
         {
+            logger.LogWarning("Login failed for email: {Email} - invalid password", email);
             throw new InvalidCredentialsException();
         }
 

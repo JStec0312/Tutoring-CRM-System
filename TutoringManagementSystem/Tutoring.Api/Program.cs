@@ -1,10 +1,19 @@
 using Scalar.AspNetCore;
+using Serilog;
 using Tutoring.Api;
 using Tutoring.Api.Configuration;
 using Tutoring.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSerilog((services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .WriteTo.Console();
+});
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 

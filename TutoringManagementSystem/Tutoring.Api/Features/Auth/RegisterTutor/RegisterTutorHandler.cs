@@ -14,7 +14,8 @@ namespace Tutoring.Api.Features.Auth.RegisterTutor;
 public sealed class RegisterTutorHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
-    IOptions<PasswordPolicyOptions> passwordPolicyOptions)
+    IOptions<PasswordPolicyOptions> passwordPolicyOptions,
+    ILogger<RegisterTutorHandler> logger)
     : IRequestHandler<RegisterTutorCommand, RegisterTutorResponse>
 {
     private readonly int _passwordMinLength = passwordPolicyOptions.Value.MinimumLength;
@@ -40,11 +41,13 @@ public sealed class RegisterTutorHandler(
 
         if (userNameAlreadyExists)
         {
+            logger.LogWarning("Registration failed for email: {Email} - username already taken: {UserName}", request.Email, request.UserName);
             throw new UsernameAlreadyTakenException(request.UserName);
         }
 
         if (emailAlreadyExists)
         {
+            logger.LogWarning("Registration failed for email: {Email} - email already taken", request.Email);
             throw new EmailAlreadyTakenException(request.Email);
         }
 
@@ -60,6 +63,7 @@ public sealed class RegisterTutorHandler(
 
             if (phoneNumberAlreadyExists)
             {
+                logger.LogWarning("Registration failed for email: {Email} - phone number already taken: {PhoneNumber}", request.Email, request.PhoneNumber);
                 throw new PhoneNumberAlreadyTakenException(request.PhoneNumber);
             }
         }
