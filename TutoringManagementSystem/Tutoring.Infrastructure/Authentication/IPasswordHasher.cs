@@ -1,4 +1,4 @@
-namespace Tutoring.Infrastructure.Abstraction;
+namespace Tutoring.Infrastructure.Authentication;
 
 public interface IPasswordHasher
 {

@@ -1,3 +1,3 @@
-namespace Tutoring.Infrastructure.Utils;
+namespace Tutoring.Infrastructure.Authentication;
 
 public sealed record JwtToken(string Value, DateTime ExpiresAtUtc);

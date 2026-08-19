@@ -1,6 +1,6 @@
 using Tutoring.Domain.Identity;
-using Tutoring.Infrastructure.Utils;
-namespace Tutoring.Infrastructure.Abstraction;
+
+namespace Tutoring.Infrastructure.Authentication;
 
 public interface IJwtTokenGenerator
 {

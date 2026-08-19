@@ -1,25 +1,28 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Tutoring.Api.Configuration;
 using Tutoring.Api.Features.Auth.Exceptions;
 using Tutoring.Domain.Common;
 using Tutoring.Domain.Identity;
 using Tutoring.Domain.Tutors;
-using Tutoring.Infrastructure.Abstraction;
+using Tutoring.Infrastructure.Authentication;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.RegisterTutor;
 
 public sealed class RegisterTutorHandler(
     TutoringDbContext dbContext,
-    IPasswordHasher passwordHasher)
+    IPasswordHasher passwordHasher,
+    IOptions<PasswordPolicyOptions> passwordPolicyOptions)
     : IRequestHandler<RegisterTutorCommand, RegisterTutorResponse>
 {
-    private readonly int _passwordMinLength = AppSettings.PasswordPolicy.MinimumLength;
-    private readonly int _passwordMaxLength = AppSettings.PasswordPolicy.MaximumLength;
-    private readonly bool _passwordRequireUppercase = AppSettings.PasswordPolicy.RequireUppercase;
-    private readonly bool _passwordRequireLowercase = AppSettings.PasswordPolicy.RequireLowercase;
-    private readonly bool _passwordRequireDigit = AppSettings.PasswordPolicy.RequireDigit;
-    private readonly bool _passwordRequireSpecialCharacter = AppSettings.PasswordPolicy.RequireSpecialCharacter;
+    private readonly int _passwordMinLength = passwordPolicyOptions.Value.MinimumLength;
+    private readonly int _passwordMaxLength = passwordPolicyOptions.Value.MaximumLength;
+    private readonly bool _passwordRequireUppercase = passwordPolicyOptions.Value.RequireUppercase;
+    private readonly bool _passwordRequireLowercase = passwordPolicyOptions.Value.RequireLowercase;
+    private readonly bool _passwordRequireDigit = passwordPolicyOptions.Value.RequireDigit;
+    private readonly bool _passwordRequireSpecialCharacter = passwordPolicyOptions.Value.RequireSpecialCharacter;
 
     public async Task<RegisterTutorResponse> Handle(
         RegisterTutorCommand request,

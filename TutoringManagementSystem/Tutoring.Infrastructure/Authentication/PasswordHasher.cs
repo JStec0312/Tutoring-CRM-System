@@ -1,6 +1,4 @@
-using Tutoring.Infrastructure.Abstraction;
-
-namespace Tutoring.Infrastructure.Utils;
+namespace Tutoring.Infrastructure.Authentication;
 
 public class PasswordHasher : IPasswordHasher
 {
