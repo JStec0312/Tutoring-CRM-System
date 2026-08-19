@@ -1,4 +1,5 @@
 using MediatR;
+using Tutoring.Api.Features.Common.Http;
 
 namespace Tutoring.Api.Features.Auth.RegisterTutor;
 
@@ -8,5 +9,6 @@ public sealed record RegisterTutorCommand(
     string UserName,
     string? FirstName,
     string? LastName,
-    string? PhoneNumber
+    string? PhoneNumber,
+    RequestMetadata Metadata
 ) : IRequest<RegisterTutorResponse>;

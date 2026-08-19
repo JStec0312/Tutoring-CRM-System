@@ -42,13 +42,26 @@ public sealed class RegisterStudentHandler(
 
         if (userNameAlreadyExists)
         {
-            logger.LogWarning("Registration failed for email: {Email} - username already taken: {UserName}", request.Email, request.UserName);
+            logger.LogWarning(
+                "Registration failed. Email: {Email}, UserName: {UserName}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, TraceId: {TraceId}",
+                request.Email,
+                request.UserName,
+                request.Metadata.IpAddress,
+                request.Metadata.UserAgent,
+                "UsernameAlreadyTaken",
+                request.Metadata.TraceId);
             throw new UsernameAlreadyTakenException(request.UserName);
         }
 
         if (emailAlreadyExists)
         {
-            logger.LogWarning("Registration failed for email: {Email} - email already taken", request.Email);
+            logger.LogWarning(
+                "Registration failed. Email: {Email}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, TraceId: {TraceId}",
+                request.Email,
+                request.Metadata.IpAddress,
+                request.Metadata.UserAgent,
+                "EmailAlreadyTaken",
+                request.Metadata.TraceId);
             throw new EmailAlreadyTakenException(request.Email);
         }
 
@@ -64,12 +77,19 @@ public sealed class RegisterStudentHandler(
 
             if (phoneNumberAlreadyExists)
             {
-                logger.LogWarning("Registration failed for email: {Email} - phone number already taken: {PhoneNumber}", request.Email, request.PhoneNumber);
+                logger.LogWarning(
+                    "Registration failed. Email: {Email}, PhoneNumber: {PhoneNumber}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, TraceId: {TraceId}",
+                    request.Email,
+                    request.PhoneNumber,
+                    request.Metadata.IpAddress,
+                    request.Metadata.UserAgent,
+                    "PhoneNumberAlreadyTaken",
+                    request.Metadata.TraceId);
                 throw new PhoneNumberAlreadyTakenException(request.PhoneNumber);
             }
         }
 
-        var password = ValidatePassword(request.Password);
+        var password = ValidatePassword(request);
 
         var passwordHash = new PasswordHash(
             passwordHasher.Hash(password));
@@ -95,45 +115,59 @@ public sealed class RegisterStudentHandler(
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        logger.LogInformation(
+            "Registration succeeded. UserId: {UserId}, IP: {IpAddress}, TraceId: {TraceId}",
+            userAccount.Id.Value,
+            request.Metadata.IpAddress,
+            request.Metadata.TraceId);
+
         return new RegisterStudentResponse(
             UserId: userAccount.Id.Value);
     }
 
 
-    private string ValidatePassword(string password)
+    private string ValidatePassword(RegisterStudentCommand request)
     {
+        var password = request.Password;
+
         if (string.IsNullOrWhiteSpace(password))
         {
+            LogPasswordPolicyViolation(request, "Password cannot be empty.");
             throw new PasswordPolicyViolationException(
                 "Password cannot be empty.");
         }
 
         if (password.Length < _passwordMinLength)
         {
+            LogPasswordPolicyViolation(request, $"Password must be at least {_passwordMinLength} characters long.");
             throw new PasswordPolicyViolationException(
                 $"Password must be at least {_passwordMinLength} characters long.");
         }
 
         if (password.Length > _passwordMaxLength)
         {
+            LogPasswordPolicyViolation(request, $"Password must be at most {_passwordMaxLength} characters long.");
             throw new PasswordPolicyViolationException(
                 $"Password must be at most {_passwordMaxLength} characters long.");
         }
 
         if (_passwordRequireUppercase && !password.Any(char.IsUpper))
         {
+            LogPasswordPolicyViolation(request, "Password must contain at least one uppercase letter.");
             throw new PasswordPolicyViolationException(
                 "Password must contain at least one uppercase letter.");
         }
 
         if (_passwordRequireLowercase && !password.Any(char.IsLower))
         {
+            LogPasswordPolicyViolation(request, "Password must contain at least one lowercase letter.");
             throw new PasswordPolicyViolationException(
                 "Password must contain at least one lowercase letter.");
         }
 
         if (_passwordRequireDigit && !password.Any(char.IsDigit))
         {
+            LogPasswordPolicyViolation(request, "Password must contain at least one digit.");
             throw new PasswordPolicyViolationException(
                 "Password must contain at least one digit.");
         }
@@ -141,10 +175,23 @@ public sealed class RegisterStudentHandler(
         if (_passwordRequireSpecialCharacter &&
             !password.Any(ch => !char.IsLetterOrDigit(ch)))
         {
+            LogPasswordPolicyViolation(request, "Password must contain at least one special character.");
             throw new PasswordPolicyViolationException(
                 "Password must contain at least one special character.");
         }
 
         return password;
+    }
+
+    private void LogPasswordPolicyViolation(RegisterStudentCommand request, string detail)
+    {
+        logger.LogWarning(
+            "Registration failed. Email: {Email}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, Detail: {Detail}, TraceId: {TraceId}",
+            request.Email,
+            request.Metadata.IpAddress,
+            request.Metadata.UserAgent,
+            "PasswordPolicyViolation",
+            detail,
+            request.Metadata.TraceId);
     }
 }

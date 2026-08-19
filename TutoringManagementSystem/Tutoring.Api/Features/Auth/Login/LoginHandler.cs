@@ -28,7 +28,13 @@ public sealed class LoginHandler(
 
         if (userAccount is null)
         {
-            logger.LogWarning("Login failed for email: {Email} - user not found", email);
+            logger.LogWarning(
+                "Login failed. Email: {Email}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, TraceId: {TraceId}",
+                email,
+                request.Metadata.IpAddress,
+                request.Metadata.UserAgent,
+                "UserNotFound",
+                request.Metadata.TraceId);
             throw new InvalidCredentialsException();
         }
 
@@ -38,11 +44,23 @@ public sealed class LoginHandler(
 
         if (!passwordIsValid)
         {
-            logger.LogWarning("Login failed for email: {Email} - invalid password", email);
+            logger.LogWarning(
+                "Login failed. UserId: {UserId}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, TraceId: {TraceId}",
+                userAccount.Id.Value,
+                request.Metadata.IpAddress,
+                request.Metadata.UserAgent,
+                "InvalidPassword",
+                request.Metadata.TraceId);
             throw new InvalidCredentialsException();
         }
 
         var token = jwtTokenGenerator.Generate(userAccount);
+
+        logger.LogInformation(
+            "Login succeeded. UserId: {UserId}, IP: {IpAddress}, TraceId: {TraceId}",
+            userAccount.Id.Value,
+            request.Metadata.IpAddress,
+            request.Metadata.TraceId);
 
         return new LoginResponse(
             AccessToken: token.Value,
