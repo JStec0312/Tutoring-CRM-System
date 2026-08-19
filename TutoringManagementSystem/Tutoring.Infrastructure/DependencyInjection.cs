@@ -18,6 +18,8 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddScoped<IPasswordHasher, PasswordHasher>();
 
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
         return services;
     }
 }
