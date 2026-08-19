@@ -10,10 +10,11 @@ public sealed class LoginHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
     IJwtTokenGenerator jwtTokenGenerator,
+    IRefreshTokenGenerator refreshTokenGenerator,
     ILogger<LoginHandler> logger)
-    : IRequestHandler<LoginCommand, LoginResponse>
+    : IRequestHandler<LoginCommand, LoginHandlerResult>
 {
-    public async Task<LoginResponse> Handle(
+    public async Task<LoginHandlerResult> Handle(
         LoginCommand request,
         CancellationToken cancellationToken)
     {
@@ -28,13 +29,7 @@ public sealed class LoginHandler(
 
         if (userAccount is null)
         {
-            logger.LogWarning(
-                "Login failed. Email: {Email}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, TraceId: {TraceId}",
-                email,
-                request.Metadata.IpAddress,
-                request.Metadata.UserAgent,
-                "UserNotFound",
-                request.Metadata.TraceId);
+            logger.LogWarning("Login failed for email: {Email} - user not found", email);
             throw new InvalidCredentialsException();
         }
 
@@ -44,26 +39,27 @@ public sealed class LoginHandler(
 
         if (!passwordIsValid)
         {
-            logger.LogWarning(
-                "Login failed. UserId: {UserId}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, TraceId: {TraceId}",
-                userAccount.Id.Value,
-                request.Metadata.IpAddress,
-                request.Metadata.UserAgent,
-                "InvalidPassword",
-                request.Metadata.TraceId);
+            logger.LogWarning("Login failed for email: {Email} - invalid password", email);
             throw new InvalidCredentialsException();
         }
+        if(!userAccount.IsActive)
+        {
+            logger.LogWarning("Login failed for email: {Email} - account is disabled", email);
+            throw new InactiveAccountException();
+        }
+        var accessToken = jwtTokenGenerator.Generate(userAccount);
 
-        var token = jwtTokenGenerator.Generate(userAccount);
+        var familyId = Guid.NewGuid();
+        var CreatedByIp = request.Metadata.IpAddress;
+        var CreatedByUserAgent = request.Metadata.UserAgent;
+        var generatedRefreshToken = refreshTokenGenerator.Generate(userAccount, familyId, CreatedByIp, CreatedByUserAgent);
+        dbContext.RefreshTokens.Add(generatedRefreshToken.Token);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation(
-            "Login succeeded. UserId: {UserId}, IP: {IpAddress}, TraceId: {TraceId}",
-            userAccount.Id.Value,
-            request.Metadata.IpAddress,
-            request.Metadata.TraceId);
-
-        return new LoginResponse(
-            AccessToken: token.Value,
-            ExpiresAt: token.ExpiresAtUtc);
+        return new LoginHandlerResult(
+            AccessToken: accessToken.Value,
+            ExpiresAt: accessToken.ExpiresAtUtc,
+            RefreshToken: generatedRefreshToken.Value,
+            RefreshTokenExpiresAt: generatedRefreshToken.Token.ExpiresAtUtc);
     }
 }

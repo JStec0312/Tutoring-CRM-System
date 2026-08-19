@@ -7,6 +7,7 @@ using Tutoring.Domain.StudentInvitations;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Domain.Tutors;
+using Tutoring.Infrastructure.Authentication;
 
 namespace Tutoring.Infrastructure.Persistence;
 
@@ -45,6 +46,7 @@ public sealed class TutoringDbContext
 
     public DbSet<MaterialAssignment> MaterialAssignments => Set<MaterialAssignment>();
 
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {
@@ -53,4 +55,6 @@ public sealed class TutoringDbContext
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(TutoringDbContext).Assembly);
     }
+
+    
 }

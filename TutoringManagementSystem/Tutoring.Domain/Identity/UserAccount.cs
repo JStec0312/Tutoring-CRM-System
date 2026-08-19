@@ -21,6 +21,8 @@ public sealed class UserAccount
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
+    public bool IsActive => Status == AccountStatus.Active;
+
     public IReadOnlyCollection<UserAccountRole> RoleAssignments => _roleAssignments.AsReadOnly();
 
     public IReadOnlyCollection<UserRole> Roles => _roleAssignments

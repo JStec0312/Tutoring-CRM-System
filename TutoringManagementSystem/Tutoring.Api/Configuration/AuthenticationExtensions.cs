@@ -49,6 +49,10 @@ public static class AuthenticationExtensions
 
                         ClockSkew = TimeSpan.Zero
                     };
+                
+                // Refresh token options are configured in appsettings.json
+                services.Configure<RefreshTokenOptions>(
+                    configuration.GetSection(RefreshTokenOptions.SectionName));
             });
 
         services.AddAuthorization();
