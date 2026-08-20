@@ -51,9 +51,9 @@ public static class AuthenticationExtensions
                     };
                 
                 // Refresh token options are configured in appsettings.json
-                services.Configure<RefreshTokenOptions>(
-                    configuration.GetSection(RefreshTokenOptions.SectionName));
             });
+            services.Configure<RefreshTokenOptions>(
+                configuration.GetSection(RefreshTokenOptions.SectionName));
 
         services.AddAuthorization();
 

@@ -11,7 +11,7 @@ public class RefreshTokenGenerator(IOptions<RefreshTokenOptions> options) : IRef
     public GeneratedRefreshToken Generate(UserAccount userAccount, Guid familyId, string? CreatedByIp = null, string? CreatedByUserAgent = null)
     {
         var tokenValue = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        var expiresAt = DateTime.UtcNow.AddDays(refreshTokenOptions.ExpirationDays);
+        var expiresAt = DateTime.UtcNow.AddDays(refreshTokenOptions.RefreshTokenExpirationDays);
         var dataBaseToken = new RefreshToken(
             userAccount.Id,
              Hash(tokenValue),
