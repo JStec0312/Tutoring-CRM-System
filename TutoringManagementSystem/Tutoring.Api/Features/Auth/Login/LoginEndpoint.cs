@@ -51,7 +51,7 @@ public sealed class LoginController(
                     _ => throw new InvalidOperationException($"Invalid SameSite value: {refreshTokenOptions.Value.SameSiteRefreshTokenCookie}")
                 },
                 Secure = refreshTokenOptions.Value.SecureRefreshTokenCookie,
-                Expires = DateTime.UtcNow.AddDays(refreshTokenOptions.Value.RefreshTokenExpirationDays),
+                Expires = new DateTimeOffset(response.RefreshTokenExpiresAt, TimeSpan.Zero),
                 Path = refreshTokenOptions.Value.RefreshTokenPath
             });
         logger.LogInformation("Login successful for email: {Email}, IP: {IpAddress}, TraceId: {TraceId}",

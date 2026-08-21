@@ -5,13 +5,15 @@ namespace Tutoring.UnitTest.Identity;
 
 public class UserAccountTest
 {
+    private static readonly DateTimeOffset CreatedAtUtc = new(2026, 8, 21, 18, 0, 0, TimeSpan.Zero);
+
     private static UserAccount CreateUserAccount()
     {
         var email = new EmailAddress("test@example.com");
         var passwordHash = new PasswordHash("hashed-value");
         var profile = new PersonalProfile("john.doe", "John", "Doe", null);
 
-        return new UserAccount(email, passwordHash, profile);
+        return new UserAccount(email, passwordHash, profile, CreatedAtUtc);
     }
 
     [Fact]
@@ -21,7 +23,7 @@ public class UserAccountTest
         var passwordHash = new PasswordHash("hashed-value");
         var profile = new PersonalProfile("john.doe", "John", "Doe", null);
 
-        var userAccount = new UserAccount(email, passwordHash, profile);
+        var userAccount = new UserAccount(email, passwordHash, profile, CreatedAtUtc);
 
         Assert.Equal(email, userAccount.Email);
         Assert.Equal(passwordHash, userAccount.PasswordHash);
@@ -30,6 +32,7 @@ public class UserAccountTest
         Assert.Empty(userAccount.Roles);
         Assert.Empty(userAccount.RoleAssignments);
         Assert.NotEqual(Guid.Empty, userAccount.Id.Value);
+        Assert.Equal(CreatedAtUtc, userAccount.CreatedAtUtc);
     }
 
     [Fact]

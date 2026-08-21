@@ -5,20 +5,24 @@ using Tutoring.Domain.Identity;
 
 namespace Tutoring.Infrastructure.Authentication;
 
-public class RefreshTokenGenerator(IOptions<RefreshTokenOptions> options) : IRefreshTokenGenerator
+public class RefreshTokenGenerator(
+    IOptions<RefreshTokenOptions> options,
+    TimeProvider timeProvider) : IRefreshTokenGenerator
 {
     public RefreshTokenOptions refreshTokenOptions => options.Value;
-    public GeneratedRefreshToken Generate(UserAccount userAccount, Guid familyId, string? CreatedByIp = null, string? CreatedByUserAgent = null)
+    public GeneratedRefreshToken Generate(UserAccount userAccount, Guid familyId, string? createdByIp = null, string? createdByUserAgent = null)
     {
         var tokenValue = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        var expiresAt = DateTime.UtcNow.AddDays(refreshTokenOptions.RefreshTokenExpirationDays);
+        var createdAtUtc = timeProvider.GetUtcNow().UtcDateTime;
+        var expiresAt = createdAtUtc.AddDays(refreshTokenOptions.RefreshTokenExpirationDays);
         var dataBaseToken = new RefreshToken(
             userAccount.Id,
-             Hash(tokenValue),
-             familyId,
+            Hash(tokenValue),
+            familyId,
+            createdAtUtc,
             expiresAt,
-            CreatedByIp ?? string.Empty,
-            CreatedByUserAgent ?? string.Empty
+            createdByIp ?? string.Empty,
+            createdByUserAgent ?? string.Empty
         );
         return new GeneratedRefreshToken(dataBaseToken, tokenValue);
     }

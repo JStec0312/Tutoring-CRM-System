@@ -16,10 +16,10 @@ public sealed class Student
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
-    public Student(UserAccountId userAccountId)
+    public Student(UserAccountId userAccountId, DateTimeOffset createdAtUtc)
     {
         UserAccountId = userAccountId;
         Status = StudentStatus.Active;
-        CreatedAtUtc = DateTimeOffset.UtcNow;
+        CreatedAtUtc = createdAtUtc;
     }
 }

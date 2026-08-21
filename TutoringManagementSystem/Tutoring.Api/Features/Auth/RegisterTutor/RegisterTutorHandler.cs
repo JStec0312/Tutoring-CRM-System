@@ -15,6 +15,7 @@ public sealed class RegisterTutorHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
     IOptions<PasswordPolicyOptions> passwordPolicyOptions,
+    TimeProvider timeProvider,
     ILogger<RegisterTutorHandler> logger)
     : IRequestHandler<RegisterTutorCommand, RegisterTutorResponse>
 {
@@ -98,15 +99,17 @@ public sealed class RegisterTutorHandler(
             firstName: request.FirstName,
             lastName: request.LastName,
             phoneNumber: phoneNumber);
+        var createdAtUtc = timeProvider.GetUtcNow();
 
         var userAccount = new UserAccount(
             email: email,
             passwordHash: passwordHash,
-            profile: profile);
+            profile: profile,
+            createdAtUtc: createdAtUtc);
 
         userAccount.AssignRole(UserRole.Tutor);
 
-        var tutor = new Tutor(userAccount.Id);
+        var tutor = new Tutor(userAccount.Id, createdAtUtc);
 
         dbContext.UserAccounts.Add(userAccount);
         dbContext.Tutors.Add(tutor);

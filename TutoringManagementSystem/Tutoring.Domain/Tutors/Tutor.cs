@@ -16,10 +16,10 @@ public sealed class Tutor
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
-    public Tutor(UserAccountId userAccountId)
+    public Tutor(UserAccountId userAccountId, DateTimeOffset createdAtUtc)
     {
         UserAccountId = userAccountId;
         Status = TutorStatus.Active;
-        CreatedAtUtc = DateTimeOffset.UtcNow;
+        CreatedAtUtc = createdAtUtc;
     }
 }

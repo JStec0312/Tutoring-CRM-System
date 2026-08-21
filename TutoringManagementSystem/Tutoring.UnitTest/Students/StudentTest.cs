@@ -9,14 +9,13 @@ public class StudentTest
     public void Create_withValidUserAccountId_ShouldSucceed()
     {
         var userAccountId = UserAccountId.New();
-        var beforeCreation = DateTimeOffset.UtcNow;
+        var createdAtUtc = new DateTimeOffset(2026, 8, 21, 18, 0, 0, TimeSpan.Zero);
 
-        var student = new Student(userAccountId);
+        var student = new Student(userAccountId, createdAtUtc);
 
-        var afterCreation = DateTimeOffset.UtcNow;
         Assert.Equal(userAccountId, student.UserAccountId);
         Assert.Equal(StudentStatus.Active, student.Status);
         Assert.NotEqual(Guid.Empty, student.Id.Value);
-        Assert.InRange(student.CreatedAtUtc, beforeCreation, afterCreation);
+        Assert.Equal(createdAtUtc, student.CreatedAtUtc);
     }
 }

@@ -32,13 +32,14 @@ public sealed class UserAccount
     public UserAccount(
         EmailAddress email,
         PasswordHash passwordHash,
-        PersonalProfile profile        
+        PersonalProfile profile,
+        DateTimeOffset createdAtUtc
         )
     {
         Email = email;
         PasswordHash = passwordHash;
         Status = AccountStatus.Active;
-        CreatedAtUtc = DateTimeOffset.UtcNow;
+        CreatedAtUtc = createdAtUtc;
         Profile = profile;
     }
 

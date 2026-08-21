@@ -8,13 +8,14 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Infrastructure.Authentication;
 
 public class JwtTokenGenerator (
-        IOptions<JwtOptions> jwtOptions
+        IOptions<JwtOptions> jwtOptions,
+        TimeProvider timeProvider
     ): IJwtTokenGenerator
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
     public JwtToken Generate(UserAccount userAccount)
     {
-        var now = DateTime.UtcNow;
+        var now = timeProvider.GetUtcNow().UtcDateTime;
         var expiresAtUtc = now.AddMinutes(_jwtOptions.ExpirationMinutes);
         var claims = new List<Claim>
         {

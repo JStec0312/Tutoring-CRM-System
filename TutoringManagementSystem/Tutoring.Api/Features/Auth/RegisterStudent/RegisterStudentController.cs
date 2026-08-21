@@ -1,7 +1,5 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading;
-using System.Threading.Tasks;
 using Tutoring.Api.Features.Common.Http;
 
 namespace Tutoring.Api.Features.Auth.RegisterStudent;

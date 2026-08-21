@@ -32,6 +32,7 @@ public sealed class RefreshToken
         UserAccountId userAccountId,
         string tokenHash,
         Guid familyId,
+        DateTime createdAtUtc,
         DateTime expiresAtUtc,
         string? createdByIp = null,
         string? createdByUserAgent = null
@@ -41,15 +42,17 @@ public sealed class RefreshToken
         UserAccountId = userAccountId;
         TokenHash = tokenHash;
         FamilyId = familyId;
-        CreatedAtUtc = DateTime.UtcNow;
+        CreatedAtUtc = createdAtUtc;
         ExpiresAtUtc = expiresAtUtc;
         CreatedByIp = createdByIp ?? string.Empty;
         CreatedByUserAgent = createdByUserAgent ?? string.Empty;
     }
 
-    public void Revoke(Guid? replacedByTokenId = null)
+    public void Revoke(DateTime revokedAtUtc, Guid? replacedByTokenId = null)
     {
-        RevokedAtUtc = DateTime.UtcNow;
+        RevokedAtUtc = revokedAtUtc;
         ReplacedByTokenId = replacedByTokenId;
     }
+
+    public bool IsExpired(DateTime now ) => now >= ExpiresAtUtc;
 }
