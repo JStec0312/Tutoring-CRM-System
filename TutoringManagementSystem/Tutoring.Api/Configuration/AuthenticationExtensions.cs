@@ -55,6 +55,9 @@ public static class AuthenticationExtensions
             services.Configure<RefreshTokenOptions>(
                 configuration.GetSection(RefreshTokenOptions.SectionName));
 
+        // Password policy options
+        services.Configure<PasswordPolicyOptions>(
+            configuration.GetSection(PasswordPolicyOptions.SectionName));
         services.AddAuthorization();
 
         return services;

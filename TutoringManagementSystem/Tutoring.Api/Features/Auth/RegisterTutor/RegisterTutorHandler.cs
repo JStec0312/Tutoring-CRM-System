@@ -1,7 +1,5 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Tutoring.Api.Configuration;
 using Tutoring.Api.Features.Auth.Exceptions;
 using Tutoring.Domain.Common;
 using Tutoring.Domain.Identity;
@@ -14,18 +12,11 @@ namespace Tutoring.Api.Features.Auth.RegisterTutor;
 public sealed class RegisterTutorHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
-    IOptions<PasswordPolicyOptions> passwordPolicyOptions,
+    IPasswordPolicyValidator passwordPolicyValidator,
     TimeProvider timeProvider,
     ILogger<RegisterTutorHandler> logger)
     : IRequestHandler<RegisterTutorCommand, RegisterTutorResponse>
 {
-    private readonly int _passwordMinLength = passwordPolicyOptions.Value.MinimumLength;
-    private readonly int _passwordMaxLength = passwordPolicyOptions.Value.MaximumLength;
-    private readonly bool _passwordRequireUppercase = passwordPolicyOptions.Value.RequireUppercase;
-    private readonly bool _passwordRequireLowercase = passwordPolicyOptions.Value.RequireLowercase;
-    private readonly bool _passwordRequireDigit = passwordPolicyOptions.Value.RequireDigit;
-    private readonly bool _passwordRequireSpecialCharacter = passwordPolicyOptions.Value.RequireSpecialCharacter;
-
     public async Task<RegisterTutorResponse> Handle(
         RegisterTutorCommand request,
         CancellationToken cancellationToken)
@@ -89,10 +80,10 @@ public sealed class RegisterTutorHandler(
             }
         }
 
-        var password = ValidatePassword(request);
+        passwordPolicyValidator.Validate(request.Password);
 
         var passwordHash = new PasswordHash(
-            passwordHasher.Hash(password));
+            passwordHasher.Hash(request.Password));
 
         var profile = new PersonalProfile(
             userName: request.UserName,
@@ -124,74 +115,5 @@ public sealed class RegisterTutorHandler(
 
         return new RegisterTutorResponse(
             userAccount.Id.Value);
-    }
-
-    private string ValidatePassword(RegisterTutorCommand request)
-    {
-        var password = request.Password;
-
-        if (string.IsNullOrWhiteSpace(password))
-        {
-            LogPasswordPolicyViolation(request, "Password cannot be empty.");
-            throw new PasswordPolicyViolationException(
-                "Password cannot be empty.");
-        }
-
-        if (password.Length < _passwordMinLength)
-        {
-            LogPasswordPolicyViolation(request, $"Password must be at least {_passwordMinLength} characters long.");
-            throw new PasswordPolicyViolationException(
-                $"Password must be at least {_passwordMinLength} characters long.");
-        }
-
-        if (password.Length > _passwordMaxLength)
-        {
-            LogPasswordPolicyViolation(request, $"Password must be at most {_passwordMaxLength} characters long.");
-            throw new PasswordPolicyViolationException(
-                $"Password must be at most {_passwordMaxLength} characters long.");
-        }
-
-        if (_passwordRequireUppercase && !password.Any(char.IsUpper))
-        {
-            LogPasswordPolicyViolation(request, "Password must contain at least one uppercase letter.");
-            throw new PasswordPolicyViolationException(
-                "Password must contain at least one uppercase letter.");
-        }
-
-        if (_passwordRequireLowercase && !password.Any(char.IsLower))
-        {
-            LogPasswordPolicyViolation(request, "Password must contain at least one lowercase letter.");
-            throw new PasswordPolicyViolationException(
-                "Password must contain at least one lowercase letter.");
-        }
-
-        if (_passwordRequireDigit && !password.Any(char.IsDigit))
-        {
-            LogPasswordPolicyViolation(request, "Password must contain at least one digit.");
-            throw new PasswordPolicyViolationException(
-                "Password must contain at least one digit.");
-        }
-
-        if (_passwordRequireSpecialCharacter &&
-            !password.Any(ch => !char.IsLetterOrDigit(ch)))
-        {
-            LogPasswordPolicyViolation(request, "Password must contain at least one special character.");
-            throw new PasswordPolicyViolationException(
-                "Password must contain at least one special character.");
-        }
-
-        return password;
-    }
-
-    private void LogPasswordPolicyViolation(RegisterTutorCommand request, string detail)
-    {
-        logger.LogWarning(
-            "Registration failed. Email: {Email}, IP: {IpAddress}, UserAgent: {UserAgent}, Reason: {Reason}, Detail: {Detail}, TraceId: {TraceId}",
-            request.Email,
-            request.Metadata.IpAddress,
-            request.Metadata.UserAgent,
-            "PasswordPolicyViolation",
-            detail,
-            request.Metadata.TraceId);
     }
 }

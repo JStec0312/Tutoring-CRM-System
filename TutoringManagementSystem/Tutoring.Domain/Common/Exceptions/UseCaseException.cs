@@ -1,5 +1,4 @@
-namespace Tutoring.Api.Features.Common.Exceptions;
-
+namespace Tutoring.Domain.Common.Exceptions;
 
 public abstract class UseCaseException : Exception
 {

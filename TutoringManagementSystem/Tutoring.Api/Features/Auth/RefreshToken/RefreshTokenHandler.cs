@@ -52,7 +52,9 @@ public sealed class RefreshTokenHandler(
         {
             token.Revoke(now);
         }
-            throw new InvalidRefreshTokenException();
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        throw new InvalidRefreshTokenException();
         }
 
 

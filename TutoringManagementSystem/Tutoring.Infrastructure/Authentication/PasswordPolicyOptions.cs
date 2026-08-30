@@ -1,4 +1,4 @@
-namespace Tutoring.Api.Configuration;
+namespace Tutoring.Infrastructure.Authentication;
 
 public sealed class PasswordPolicyOptions
 {

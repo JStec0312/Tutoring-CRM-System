@@ -20,8 +20,6 @@ builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAuthenticationServices(builder.Configuration);
 
-builder.Services.Configure<PasswordPolicyOptions>(
-    builder.Configuration.GetSection(PasswordPolicyOptions.SectionName));
 
 builder.Services.AddMediatR(config =>
     config.RegisterServicesFromAssembly(typeof(Program).Assembly));

@@ -23,6 +23,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
+
+        services.AddScoped<IPasswordPolicyValidator, PasswordPolicyValidator>();
         return services;
     }
 }
