@@ -48,17 +48,17 @@ namespace Tutoring.IntegrationTests.Features.Auth.Login
         }
 
         [Fact]
-        public async Task Login_WithNonExistentUser_ShouldReturnBadRequest()
+        public async Task Login_WithNonExistentUser_ShouldReturnUnauthorized()
         {
             var response = await Client.PostAsJsonAsync(
                 "/api/auth/login",
                 new { Email = "unknown@test.pl", Password = "Password123!" });
 
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
 
         [Fact]
-        public async Task Login_WithInvalidPassword_ShouldReturnBadRequest()
+        public async Task Login_WithInvalidPassword_ShouldReturnUnauthorized()
         {
             const string email = "student@test.pl";
 
@@ -68,7 +68,7 @@ namespace Tutoring.IntegrationTests.Features.Auth.Login
                 "/api/auth/login",
                 new { Email = email, Password = "WrongPassword123!" });
 
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         }
     }
 }

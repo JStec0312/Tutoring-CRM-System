@@ -33,8 +33,7 @@ public sealed class RefreshController(
             Request.Cookies[
                 _options.RefreshTokenCookieName];
             logger.LogInformation(
-            "Refresh token cookie value: {RefreshTokenCookieValue} IP: {IpAddress}, UserAgent: {UserAgent}, TraceId: {TraceId}",
-            refreshToken,
+            "Refresh token cookie generated for  IP: {IpAddress}, UserAgent: {UserAgent}, TraceId: {TraceId}",
             HttpContext.Connection.RemoteIpAddress?.ToString(),
             Request.Headers.UserAgent.ToString(),
             HttpContext.TraceIdentifier);

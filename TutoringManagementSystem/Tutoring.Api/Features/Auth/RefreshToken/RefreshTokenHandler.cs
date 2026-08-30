@@ -41,6 +41,17 @@ public sealed class RefreshTokenHandler(
                 storedRefreshToken.UserAccountId.Value,
                 storedRefreshToken.FamilyId,
                 request.Metadata.IpAddress);
+            // revoke old refresh token (hacker might be trying to reuse it)
+            var familyTokens = await dbContext.RefreshTokens
+            .Where(rt =>
+                rt.FamilyId == storedRefreshToken.FamilyId &&
+                rt.RevokedAtUtc == null)
+            .ToListAsync(cancellationToken);
+
+        foreach (var token in familyTokens)
+        {
+            token.Revoke(now);
+        }
             throw new InvalidRefreshTokenException();
         }
 

@@ -34,6 +34,18 @@ public sealed class GlobalExceptionHandler(
                 conflictException.Code,
                 conflictException.Message),
 
+            ForbiddenException forbiddenException => new ErrorDetails(
+                StatusCodes.Status403Forbidden,
+                "Forbidden",
+                forbiddenException.Code,
+                forbiddenException.Message),
+
+            AuthException authException => new ErrorDetails(
+                StatusCodes.Status401Unauthorized,
+                "Unauthorized",
+                authException.Code,
+                authException.Message),
+
             DomainException domainException => new ErrorDetails(
                 StatusCodes.Status422UnprocessableEntity,
                 "Business rule violation",
