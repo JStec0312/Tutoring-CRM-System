@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tutoring.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Tutoring.Infrastructure.Persistence;
 namespace Tutoring.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TutoringDbContext))]
-    partial class TutoringDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260901165254_AddOutbox")]
+    partial class AddOutbox
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -470,40 +473,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_RefreshTokens_UserAccountId");
 
                     b.ToTable("RefreshTokens", (string)null);
-                });
-
-            modelBuilder.Entity("Tutoring.Infrastructure.Mailing.OutboxMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Error")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<DateTimeOffset>("OccurredAtUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("Payload")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset?>("ProcessedAtUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProcessedAtUtc", "OccurredAtUtc");
-
-                    b.ToTable("OutboxMessages", "messaging");
                 });
 
             modelBuilder.Entity("Tutoring.Domain.Billing.BillingAccount", b =>

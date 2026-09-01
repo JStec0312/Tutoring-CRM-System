@@ -1,0 +1,37 @@
+@startuml request_flow
+title Backend Request Flow - UML Sequence Diagram
+
+hide footbox
+
+actor Client
+participant Controller
+participant "ISender / MediatR" as MediatR
+participant "Feature Handler" as Handler
+participant "Domain Model" as Domain
+participant TutoringDbContext
+participant "SQL Server" as Database
+
+Client -> Controller : HTTP request
+Controller -> MediatR : Send(command/query)
+MediatR -> Handler : Handle(request)
+opt persisted state is required
+    Handler -> TutoringDbContext : Query use-case state
+    TutoringDbContext -> Database : SQL
+    Database --> TutoringDbContext : Rows
+    TutoringDbContext --> Handler : Entities/data
+end
+opt domain construction or behavior is required
+    Handler -> Domain : Create objects / invoke behavior
+    Domain --> Handler : Valid state/result
+end
+opt request changes state
+    Handler -> TutoringDbContext : Add/update entities
+    TutoringDbContext -> Database : SaveChangesAsync()
+    Database --> TutoringDbContext : Commit result
+    TutoringDbContext --> Handler : Saved
+end
+Handler --> MediatR : Handler result
+MediatR --> Controller : Handler result
+Controller --> Client : HTTP response
+
+@enduml

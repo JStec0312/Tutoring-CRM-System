@@ -8,6 +8,7 @@ using Tutoring.Domain.Students;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Domain.Tutors;
 using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Mailing;
 
 namespace Tutoring.Infrastructure.Persistence;
 
@@ -45,7 +46,7 @@ public sealed class TutoringDbContext
     public DbSet<LearningMaterial> LearningMaterials => Set<LearningMaterial>();
 
     public DbSet<MaterialAssignment> MaterialAssignments => Set<MaterialAssignment>();
-
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)

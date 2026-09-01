@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Auth.Exceptions;
 using Tutoring.Domain.Students;
 using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Messaging.Contracts;
+using Tutoring.Infrastructure.Mailing;
+using System.Text.Json;
 
 namespace Tutoring.Api.Features.Auth.RegisterStudent;
 
@@ -107,6 +110,21 @@ public sealed class RegisterStudentHandler(
 
         dbContext.UserAccounts.Add(userAccount);
         dbContext.Students.Add(student);
+        var RegistrationEvent = new UserRegisteredIntegrationEvent(
+            UserId: userAccount.Id.Value,
+            Email: email.Value,
+            FirstName: request.FirstName);
+        var outboxMessage = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = UserRegisteredIntegrationEvent.EventType,
+            Payload = JsonSerializer.Serialize(RegistrationEvent),
+            OccurredAtUtc = createdAtUtc,
+            RetryCount = 0
+        };
+        
+
+        dbContext.OutboxMessages.Add(outboxMessage);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

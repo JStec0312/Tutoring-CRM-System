@@ -1,0 +1,59 @@
+@startuml authentication_login
+title Login - UML Sequence Diagram
+
+hide footbox
+
+actor Client
+participant LoginController
+participant GlobalExceptionHandler
+participant "ISender / MediatR" as MediatR
+participant LoginHandler
+participant TutoringDbContext
+participant "SQL Server" as Database
+participant IPasswordHasher as PasswordHasher
+participant IJwtTokenGenerator as JwtTokenGenerator
+participant IRefreshTokenGenerator as RefreshTokenGenerator
+
+Client -> LoginController : POST /api/auth/login\n(email, password)
+LoginController -> MediatR : Send(LoginCommand)
+MediatR -> LoginHandler : Handle(command)
+LoginHandler -> TutoringDbContext : Load account and roles by email\nAsNoTracking()
+TutoringDbContext -> Database : SELECT account and roles
+Database --> TutoringDbContext : Rows or none
+TutoringDbContext --> LoginHandler : Account or null
+
+alt account not found
+    LoginHandler --> MediatR : InvalidCredentialsException
+    MediatR --> LoginController : exception
+    LoginController --> GlobalExceptionHandler : exception propagates
+    GlobalExceptionHandler --> Client : 401 ProblemDetails
+else account found
+    LoginHandler -> PasswordHasher : Verify(password, hash)
+    PasswordHasher --> LoginHandler : valid / invalid
+    alt invalid password
+        LoginHandler --> MediatR : InvalidCredentialsException
+        MediatR --> LoginController : exception
+        LoginController --> GlobalExceptionHandler : exception propagates
+        GlobalExceptionHandler --> Client : 401 ProblemDetails
+    else valid password but inactive account
+        LoginHandler --> MediatR : InactiveAccountException
+        MediatR --> LoginController : exception
+        LoginController --> GlobalExceptionHandler : exception propagates
+        GlobalExceptionHandler --> Client : 403 ProblemDetails
+    else valid credentials and active account
+        LoginHandler -> JwtTokenGenerator : Generate(account)
+        JwtTokenGenerator --> LoginHandler : JWT access token
+        LoginHandler -> RefreshTokenGenerator : Generate(account, new FamilyId, metadata)
+        RefreshTokenGenerator --> LoginHandler : Raw token + hashed token record
+        LoginHandler -> TutoringDbContext : Add refresh token and SaveChangesAsync()
+        TutoringDbContext -> Database : INSERT refresh token and commit
+        Database --> TutoringDbContext : Commit result
+        TutoringDbContext --> LoginHandler : Saved
+        LoginHandler --> MediatR : Access token + raw refresh token
+        MediatR --> LoginController : LoginHandlerResult
+        LoginController -> LoginController : Append configured HttpOnly cookie
+        LoginController --> Client : 200 body: access token + expiry\nSet-Cookie: refresh token
+    end
+end
+
+@enduml

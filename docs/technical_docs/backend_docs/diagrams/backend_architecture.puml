@@ -1,0 +1,29 @@
+@startuml backend_architecture
+title Backend Architecture - UML Component Diagram
+
+skinparam componentStyle uml2
+skinparam shadowing false
+
+component "Tutoring.Api" as Api
+component "Tutoring.Infrastructure" as Infrastructure
+component "Tutoring.Domain" as Domain
+component "Tutoring.UnitTest" as UnitTests <<test>>
+component "Tutoring.IntegrationTests" as IntegrationTests <<test>>
+component "MediatR" as MediatR <<library>>
+component "SQL Server" as SqlServer <<database>>
+
+Api ..> Infrastructure : project reference
+Infrastructure ..> Domain : project reference
+Api ..> Domain : uses domain types
+Api ..> MediatR : dispatches requests
+Infrastructure ..> SqlServer : EF Core
+
+UnitTests ..> Api : project reference
+UnitTests ..> Domain : tests domain types
+UnitTests ..> Infrastructure : tests password policy
+IntegrationTests ..> Api : hosts API
+IntegrationTests ..> Infrastructure : verifies persistence
+IntegrationTests ..> Domain : creates/asserts domain state
+IntegrationTests ..> UnitTests : project reference
+
+@enduml

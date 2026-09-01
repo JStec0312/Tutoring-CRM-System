@@ -1,0 +1,75 @@
+@startuml authentication_refresh
+title Refresh Token Rotation - UML Sequence Diagram
+
+hide footbox
+
+actor Client
+participant RefreshController
+participant GlobalExceptionHandler
+participant "ISender / MediatR" as MediatR
+participant RefreshTokenHandler
+participant IRefreshTokenGenerator as RefreshTokenGenerator
+participant IJwtTokenGenerator as JwtTokenGenerator
+participant TutoringDbContext
+participant "SQL Server" as Database
+
+Client -> RefreshController : POST /api/auth/refresh\nrefresh-token cookie
+
+alt cookie missing
+    RefreshController --> GlobalExceptionHandler : InvalidRefreshTokenException
+    GlobalExceptionHandler --> Client : 401 ProblemDetails
+else cookie present
+    RefreshController -> MediatR : Send(RefreshTokenCommand)
+    MediatR -> RefreshTokenHandler : Handle(command)
+    RefreshTokenHandler -> RefreshTokenGenerator : Hash(raw token)
+    RefreshTokenGenerator --> RefreshTokenHandler : SHA-256 hash
+    RefreshTokenHandler -> TutoringDbContext : Find refresh token by hash
+    TutoringDbContext -> Database : SELECT refresh token
+    Database --> TutoringDbContext : Row or none
+    TutoringDbContext --> RefreshTokenHandler : Token or null
+
+    alt token not found
+        RefreshTokenHandler --> MediatR : InvalidRefreshTokenException
+        MediatR --> RefreshController : exception
+        RefreshController --> GlobalExceptionHandler : exception propagates
+        GlobalExceptionHandler --> Client : 401 ProblemDetails
+    else token revoked or expired (reuse detection)
+        RefreshTokenHandler -> TutoringDbContext : Load active family tokens
+        TutoringDbContext -> Database : SELECT active family tokens
+        Database --> TutoringDbContext : Rows
+        TutoringDbContext --> RefreshTokenHandler : Active family tokens
+        RefreshTokenHandler -> TutoringDbContext : Revoke family and SaveChangesAsync()
+        TutoringDbContext -> Database : UPDATE family and commit
+        Database --> TutoringDbContext : Commit result
+        RefreshTokenHandler --> MediatR : InvalidRefreshTokenException
+        MediatR --> RefreshController : exception
+        RefreshController --> GlobalExceptionHandler : exception propagates
+        GlobalExceptionHandler --> Client : 401 ProblemDetails
+    else token active
+        RefreshTokenHandler -> TutoringDbContext : Load active account and roles\nAsNoTracking()
+        TutoringDbContext -> Database : SELECT account and roles
+        Database --> TutoringDbContext : Rows or none
+        TutoringDbContext --> RefreshTokenHandler : Account or null
+        alt account missing or inactive
+            RefreshTokenHandler --> MediatR : InvalidRefreshTokenException
+            MediatR --> RefreshController : exception
+            RefreshController --> GlobalExceptionHandler : exception propagates
+            GlobalExceptionHandler --> Client : 401 ProblemDetails
+        else account active
+            RefreshTokenHandler -> JwtTokenGenerator : Generate(account)
+            JwtTokenGenerator --> RefreshTokenHandler : New access token
+            RefreshTokenHandler -> RefreshTokenGenerator : Generate(account, same FamilyId, metadata)
+            RefreshTokenGenerator --> RefreshTokenHandler : Raw token + hashed token record
+            RefreshTokenHandler -> TutoringDbContext : Revoke old with ReplacedByTokenId\nAdd new token and SaveChangesAsync()
+            TutoringDbContext -> Database : UPDATE old, INSERT new, commit
+            Database --> TutoringDbContext : Commit result
+            TutoringDbContext --> RefreshTokenHandler : Saved
+            RefreshTokenHandler --> MediatR : New access token + raw refresh token
+            MediatR --> RefreshController : RefreshTokenHandlerResult
+            RefreshController -> RefreshController : Replace configured HttpOnly cookie
+            RefreshController --> Client : 200 body: access token + expiry\nSet-Cookie: new refresh token
+        end
+    end
+end
+
+@enduml

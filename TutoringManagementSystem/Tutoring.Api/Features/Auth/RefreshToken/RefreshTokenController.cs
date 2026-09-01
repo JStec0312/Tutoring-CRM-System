@@ -64,7 +64,7 @@ public sealed class RefreshController(
                 Secure =
                     _options.SecureRefreshTokenCookie,
 
-                SameSite = SameSiteMode.Strict,
+                SameSite = ResolveSameSiteMode(),
 
                 Expires =
                     result.RefreshTokenExpiresAt,
@@ -80,5 +80,18 @@ public sealed class RefreshController(
         return Ok(new RefreshTokenResponse(
             AccessToken: result.AccessToken,
             ExpiresAt: result.ExpiresAt));
+    }
+
+    public SameSiteMode ResolveSameSiteMode()
+    {
+        string mode = _options.SameSiteRefreshTokenCookie;
+        return mode switch
+        {
+            "None" => SameSiteMode.None,
+            "Lax" => SameSiteMode.Lax,
+            "Strict" => SameSiteMode.Strict,
+            _ => SameSiteMode.Unspecified
+        };
+
     }
 }

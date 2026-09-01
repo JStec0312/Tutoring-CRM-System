@@ -22,6 +22,7 @@ Represents an account used to authenticate a person and authorize access to the 
 | Field | Type | Meaning |
 |---|---|---|
 | `email` | `EmailAddress` | Email used to identify and contact the account owner |
+| `passwordHash` | `PasswordHash` | Password hash used for authentication |
 | `roles` | `Set<UserRole>` | Roles assigned to the account |
 | `status` | `AccountStatus` | Current account state |
 | `profile` | `PersonalProfile` | Personal information of the account owner |
@@ -29,6 +30,7 @@ Represents an account used to authenticate a person and authorize access to the 
 **Connections:**
 
 - Owns one `EmailAddress`.
+- Owns one `PasswordHash`.
 - Owns one `PersonalProfile`.
 - May be connected with one `Tutor`.
 - May be connected with one `Student`.
@@ -47,6 +49,7 @@ Contains personal information shared by the roles associated with a user account
 
 | Field | Type | Meaning |
 |---|---|---|
+| `userName` | `String` | Required username stored in the account profile |
 | `firstName` | `String` | First name of the account owner |
 | `lastName` | `String` | Last name of the account owner |
 | `phoneNumber` | `PhoneNumber` | Optional contact phone number |
@@ -63,7 +66,7 @@ Contains personal information shared by the roles associated with a user account
 **Type:** Value Object
 
 **Domain meaning:**  
-Represents a validated and normalized email address.
+Represents a validated, whitespace-trimmed email address.
 
 **Fields:**
 
@@ -83,7 +86,7 @@ Represents a validated and normalized email address.
 **Type:** Value Object
 
 **Domain meaning:**  
-Represents a validated and normalized telephone number.
+Represents a non-empty, whitespace-trimmed telephone number.
 
 **Fields:**
 

@@ -10,8 +10,10 @@ entity UserAccounts {
     * Id : uniqueidentifier <<PK>>
     --
     Email : nvarchar(320) <<UQ>>
-    FirstName : nvarchar(100)
-    LastName : nvarchar(100)
+    PasswordHash : nvarchar(256)
+    UserName : nvarchar(100)
+    FirstName : nvarchar(100) <<nullable>>
+    LastName : nvarchar(100) <<nullable>>
     PhoneNumber : nvarchar(30) <<nullable>>
     Status : nvarchar(50)
     CreatedAtUtc : datetimeoffset
@@ -137,9 +139,24 @@ entity MaterialAssignments {
     UQ : LearningMaterialId, TutoringAgreementId where LessonId is null
 }
 
+entity RefreshTokens {
+    * Id : uniqueidentifier <<PK>>
+    --
+    UserAccountId : uniqueidentifier <<FK>>
+    TokenHash : nvarchar(128) <<UQ>>
+    FamilyId : uniqueidentifier
+    CreatedAtUtc : datetime2
+    ExpiresAtUtc : datetime2
+    RevokedAtUtc : datetime2 <<nullable>>
+    ReplacedByTokenId : uniqueidentifier <<nullable>>
+    CreatedByIp : nvarchar(45) <<nullable>>
+    CreatedByUserAgent : nvarchar(256) <<nullable>>
+}
+
 UserAccounts ||--o{ UserAccountRoles
 UserAccounts ||--o| Tutors
 UserAccounts ||--o| Students
+UserAccounts ||--o{ RefreshTokens
 
 Tutors ||--o{ TutoringAgreements
 Students ||--o{ TutoringAgreements

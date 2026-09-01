@@ -14,7 +14,7 @@ Source: original project PDF brief.
 
 ### Domain Model
 
-![Sprint 1 UML domain class diagram](domain/diagrams/domain_model.svg)
+[UML domain class diagram source](domain/diagrams/domain_model.puml)
 
 ### User Use Cases
 
