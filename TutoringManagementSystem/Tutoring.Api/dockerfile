@@ -1,0 +1,30 @@
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY ["Tutoring.Api/Tutoring.Api.csproj", "Tutoring.Api/"]
+COPY ["Tutoring.Infrastructure/Tutoring.Infrastructure.csproj", "Tutoring.Infrastructure/"]
+COPY ["Tutoring.Domain/Tutoring.Domain.csproj", "Tutoring.Domain/"]
+
+RUN dotnet restore "Tutoring.Api/Tutoring.Api.csproj"
+
+COPY . .
+
+WORKDIR "/src/Tutoring.Api"
+
+RUN dotnet publish "Tutoring.Api.csproj" \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+FROM base AS final
+WORKDIR /app
+
+COPY --from=build /app/publish .
+
+ENV ASPNETCORE_URLS=http://+:8080
+
+ENTRYPOINT ["dotnet", "Tutoring.Api.dll"]

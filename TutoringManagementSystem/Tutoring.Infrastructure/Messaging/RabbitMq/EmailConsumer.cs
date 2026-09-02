@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Tutoring.Infrastructure.Messaging.Contracts;
 
 namespace Tutoring.Infrastructure.Messaging.RabbitMq;
 
@@ -30,8 +31,14 @@ public sealed class EmailConsumer(
         };
 
         _connection = await factory.CreateConnectionAsync(stoppingToken);
+
         _channel = await _connection.CreateChannelAsync(
             cancellationToken: stoppingToken);
+
+        await DeclareTopologyAsync(
+            _channel,
+            rabbitOptions,
+            stoppingToken);
 
         var consumer = new AsyncEventingBasicConsumer(_channel);
 
@@ -54,6 +61,32 @@ public sealed class EmailConsumer(
             autoAck: false,
             consumer: consumer,
             cancellationToken: stoppingToken);
+    }
+
+    private static async Task DeclareTopologyAsync(
+        IChannel channel,
+        RabbitMqOptions options,
+        CancellationToken cancellationToken)
+    {
+        await channel.ExchangeDeclareAsync(
+            exchange: options.ExchangeName,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
+        await channel.QueueDeclareAsync(
+            queue: options.EmailQueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
+        await channel.QueueBindAsync(
+            queue: options.EmailQueueName,
+            exchange: options.ExchangeName,
+            routingKey: UserRegisteredIntegrationEvent.EventType,
+            cancellationToken: cancellationToken);
     }
 
     public override async Task StopAsync(

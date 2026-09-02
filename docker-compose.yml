@@ -1,0 +1,80 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: tutoring-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
+
+    ports:
+      - "1433:1433"
+
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: tutoring-rabbitmq
+
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD}"
+
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: tutoring-mailpit
+
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+
+  api:
+    profiles:
+      - full
+
+    build:
+      context: ./TutoringManagementSystem
+      dockerfile: Tutoring.Api/Dockerfile
+
+    container_name: tutoring-api
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=TutoringDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+
+      RabbitMq__HostName: rabbitmq
+      RabbitMq__Port: 5672
+      RabbitMq__UserName: "${RABBITMQ_USER}"
+      RabbitMq__Password: "${RABBITMQ_PASSWORD}"
+
+      Jwt__SecretKey: "${JWT_SECRET}"
+
+
+      Smtp__Host: mailpit
+      Smtp__Port: 1025
+
+    ports:
+      - "5106:8080"
+
+    depends_on:
+      - sqlserver
+      - rabbitmq
+      - mailpit
+
+
+volumes:
+  sqlserver-data:
+  rabbitmq-data:
