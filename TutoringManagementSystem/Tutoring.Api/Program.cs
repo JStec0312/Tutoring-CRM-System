@@ -5,6 +5,12 @@ using Tutoring.Api;
 using Tutoring.Api.Configuration;
 using Tutoring.Infrastructure;
 using Tutoring.Infrastructure.Persistence;
+using DotNetEnv;
+
+
+Env
+    .TraversePath()
+    .Load(Path.Combine(AppContext.BaseDirectory, ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 

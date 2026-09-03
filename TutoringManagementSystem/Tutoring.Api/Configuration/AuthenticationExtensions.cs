@@ -19,6 +19,10 @@ public static class AuthenticationExtensions
             configuration.GetSection(JwtOptions.SectionName));
 
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
+        if(jwtOptions == null)
+        {
+            throw new InvalidOperationException("JWT options are not configured properly.");
+        }
         // Bearer Options
         services
             .AddAuthentication(

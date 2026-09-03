@@ -110,7 +110,7 @@ public sealed class RegisterStudentHandler(
 
         dbContext.UserAccounts.Add(userAccount);
         dbContext.Students.Add(student);
-        var RegistrationEvent = new UserRegisteredIntegrationEvent(
+        var registrationEvent = new UserRegisteredIntegrationEvent(
             UserId: userAccount.Id.Value,
             Email: email.Value,
             FirstName: request.FirstName);
@@ -118,7 +118,7 @@ public sealed class RegisterStudentHandler(
         {
             Id = Guid.NewGuid(),
             Type = UserRegisteredIntegrationEvent.EventType,
-            Payload = JsonSerializer.Serialize(RegistrationEvent),
+            Payload = JsonSerializer.Serialize(registrationEvent),
             OccurredAtUtc = createdAtUtc,
             RetryCount = 0
         };
