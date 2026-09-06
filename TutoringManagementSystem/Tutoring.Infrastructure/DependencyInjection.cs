@@ -36,6 +36,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<IPasswordPolicyValidator, PasswordPolicyValidator>();
+        services.AddScoped<IEmailVerificationTokenGenerator, EmailVerificationTokenGenerator>();
         services.AddSingleton<
             IEmailEventHandler,
             UserRegisteredEmailHandler>();

@@ -38,7 +38,7 @@ public sealed class UserAccount
     {
         Email = email;
         PasswordHash = passwordHash;
-        Status = AccountStatus.Active;
+        Status = AccountStatus.PendingActivation;
         CreatedAtUtc = createdAtUtc;
         Profile = profile;
     }
@@ -52,5 +52,13 @@ public sealed class UserAccount
 
         var roleAssignment = new UserAccountRole(this.Id, role);
         _roleAssignments.Add(roleAssignment);
+    }
+
+    public void Activate()
+    {
+        if (Status == AccountStatus.PendingActivation)
+        {
+            Status = AccountStatus.Active;
+        }
     }
 }

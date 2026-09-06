@@ -48,6 +48,8 @@ public sealed class TutoringDbContext
     public DbSet<MaterialAssignment> MaterialAssignments => Set<MaterialAssignment>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {

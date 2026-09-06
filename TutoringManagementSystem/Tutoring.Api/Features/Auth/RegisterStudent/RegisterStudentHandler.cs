@@ -16,6 +16,7 @@ public sealed class RegisterStudentHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
     IPasswordPolicyValidator passwordPolicyValidator,
+    IEmailVerificationTokenGenerator emailVerificationTokenGenerator,
     TimeProvider timeProvider,
     ILogger<RegisterStudentHandler> logger
 ) : IRequestHandler<RegisterStudentCommand, RegisterStudentResponse>
@@ -103,7 +104,9 @@ public sealed class RegisterStudentHandler(
             createdAtUtc: createdAtUtc);
 
         userAccount.AssignRole(UserRole.Student);
-
+        var emailVerificationToken = emailVerificationTokenGenerator.Generate(
+            userAccount.Id,
+            createdAtUtc);
         var student = new Student(
             userAccountId: userAccount.Id,
             createdAtUtc: createdAtUtc);
@@ -113,7 +116,8 @@ public sealed class RegisterStudentHandler(
         var registrationEvent = new UserRegisteredIntegrationEvent(
             UserId: userAccount.Id.Value,
             Email: email.Value,
-            FirstName: request.FirstName);
+            FirstName: request.FirstName,
+            VerificationToken: emailVerificationToken.Value);
         var outboxMessage = new OutboxMessage
         {
             Id = Guid.NewGuid(),
@@ -122,7 +126,7 @@ public sealed class RegisterStudentHandler(
             OccurredAtUtc = createdAtUtc,
             RetryCount = 0
         };
-        
+        dbContext.EmailVerificationTokens.Add(emailVerificationToken.Token);
 
         dbContext.OutboxMessages.Add(outboxMessage);
 
