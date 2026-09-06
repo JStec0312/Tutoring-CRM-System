@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Mailing;
+using Tutoring.Infrastructure.Mailing.Handlers;
 using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.Infrastructure.Messaging.Outbox;
 using Tutoring.Infrastructure.Messaging.RabbitMq;
@@ -26,13 +28,22 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddDbContext<TutoringDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection")));
+                services.Configure<SmtpOptions>(
+            configuration.GetSection(SmtpOptions.SectionName));
 
+        services.AddSingleton<IMailer, SmtpMailer>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<IPasswordPolicyValidator, PasswordPolicyValidator>();
+        services.AddSingleton<
+            IEmailEventHandler,
+            UserRegisteredEmailHandler>();
+
+        services.AddSingleton<EmailEventDispatcher>();
 
         services.AddSingleton<IPublisher, RabbitMqPublisher>();
+
 
         return services;
     }
