@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Auth.Exceptions;
@@ -5,6 +6,8 @@ using Tutoring.Domain.Common;
 using Tutoring.Domain.Identity;
 using Tutoring.Domain.Tutors;
 using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Mailing;
+using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.RegisterTutor;
@@ -14,6 +17,7 @@ public sealed class RegisterTutorHandler(
     IPasswordHasher passwordHasher,
     IPasswordPolicyValidator passwordPolicyValidator,
     TimeProvider timeProvider,
+    IEmailVerificationTokenGenerator emailVerificationTokenGenerator,
     ILogger<RegisterTutorHandler> logger)
     : IRequestHandler<RegisterTutorCommand, RegisterTutorResponse>
 {
@@ -41,6 +45,7 @@ public sealed class RegisterTutorHandler(
                 request.Metadata.UserAgent,
                 "UsernameAlreadyTaken",
                 request.Metadata.TraceId);
+
             throw new UsernameAlreadyTakenException(request.UserName);
         }
 
@@ -53,6 +58,7 @@ public sealed class RegisterTutorHandler(
                 request.Metadata.UserAgent,
                 "EmailAlreadyTaken",
                 request.Metadata.TraceId);
+
             throw new EmailAlreadyTakenException(request.Email);
         }
 
@@ -62,9 +68,10 @@ public sealed class RegisterTutorHandler(
         {
             phoneNumber = new PhoneNumber(request.PhoneNumber);
 
-            var phoneNumberAlreadyExists = await dbContext.UserAccounts.AnyAsync(
-                user => user.Profile.PhoneNumber == phoneNumber,
-                cancellationToken);
+            var phoneNumberAlreadyExists =
+                await dbContext.UserAccounts.AnyAsync(
+                    user => user.Profile.PhoneNumber == phoneNumber,
+                    cancellationToken);
 
             if (phoneNumberAlreadyExists)
             {
@@ -76,7 +83,9 @@ public sealed class RegisterTutorHandler(
                     request.Metadata.UserAgent,
                     "PhoneNumberAlreadyTaken",
                     request.Metadata.TraceId);
-                throw new PhoneNumberAlreadyTakenException(request.PhoneNumber);
+
+                throw new PhoneNumberAlreadyTakenException(
+                    request.PhoneNumber);
             }
         }
 
@@ -90,6 +99,7 @@ public sealed class RegisterTutorHandler(
             firstName: request.FirstName,
             lastName: request.LastName,
             phoneNumber: phoneNumber);
+
         var createdAtUtc = timeProvider.GetUtcNow();
 
         var userAccount = new UserAccount(
@@ -100,10 +110,36 @@ public sealed class RegisterTutorHandler(
 
         userAccount.AssignRole(UserRole.Tutor);
 
-        var tutor = new Tutor(userAccount.Id, createdAtUtc);
+        var emailVerificationToken =
+            emailVerificationTokenGenerator.Generate(
+                userAccount.Id,
+                createdAtUtc);
+
+        var tutor = new Tutor(
+            userAccount.Id,
+            createdAtUtc);
+
+        var registrationEvent =
+            new UserRegisteredIntegrationEvent(
+                UserId: userAccount.Id.Value,
+                Email: email.Value,
+                FirstName: request.FirstName,
+                VerificationToken: emailVerificationToken.Value);
+
+        var outboxMessage = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = UserRegisteredIntegrationEvent.EventType,
+            Payload = JsonSerializer.Serialize(registrationEvent),
+            OccurredAtUtc = createdAtUtc,
+            RetryCount = 0
+        };
 
         dbContext.UserAccounts.Add(userAccount);
         dbContext.Tutors.Add(tutor);
+        dbContext.EmailVerificationTokens.Add(
+            emailVerificationToken.Token);
+        dbContext.OutboxMessages.Add(outboxMessage);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

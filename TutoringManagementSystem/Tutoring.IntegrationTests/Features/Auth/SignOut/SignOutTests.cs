@@ -22,7 +22,7 @@ public sealed class SignOutTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
 
         var refreshToken = await LoginAsync(email, password);
 
@@ -43,7 +43,7 @@ public sealed class SignOutTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
 
         var refreshToken = await LoginAsync(email, password);
 
@@ -60,22 +60,6 @@ public sealed class SignOutTests(
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         Assert.True(HasRefreshTokenDeletionCookie(response));
-    }
-
-    private async Task RegisterStudentAsync(
-        string email,
-        string password)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/register/student",
-            new
-            {
-                Email = email,
-                Username = "student1",
-                Password = password
-            });
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     private async Task<string> LoginAsync(

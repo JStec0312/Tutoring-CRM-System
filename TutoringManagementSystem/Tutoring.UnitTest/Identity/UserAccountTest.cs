@@ -28,7 +28,7 @@ public class UserAccountTest
         Assert.Equal(email, userAccount.Email);
         Assert.Equal(passwordHash, userAccount.PasswordHash);
         Assert.Equal(profile, userAccount.Profile);
-        Assert.Equal(AccountStatus.Active, userAccount.Status);
+        Assert.Equal(AccountStatus.PendingActivation, userAccount.Status);
         Assert.Empty(userAccount.Roles);
         Assert.Empty(userAccount.RoleAssignments);
         Assert.NotEqual(Guid.Empty, userAccount.Id.Value);

@@ -1,9 +1,11 @@
 namespace Tutoring.Infrastructure.Authentication;
 
 using System.Security.Cryptography;
+using Microsoft.Extensions.Options;
 using Tutoring.Domain.Identity;
 
-public sealed class EmailVerificationTokenGenerator
+public sealed class EmailVerificationTokenGenerator(
+    IOptions<EmailVerificationOptions> options)
     : IEmailVerificationTokenGenerator
 {
     public GeneratedEmailVerificationToken Generate(
@@ -20,7 +22,7 @@ public sealed class EmailVerificationTokenGenerator
         var token = new EmailVerificationToken(
             userAccountId,
             hash,
-            now.AddHours(24));
+            now.AddHours(options.Value.ConfirmationUrlActiveHours));
 
         return new GeneratedEmailVerificationToken(
             value,

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Tutoring.Api.Features.Auth.Login;
 using Tutoring.Api.Features.Common.Http;
 
 namespace Tutoring.Api.Features.Auth.ConfirmEmail;
@@ -12,7 +13,7 @@ public sealed class ConfirmEmailController(
 {
     [HttpGet("confirm")]
     public async Task<IActionResult> Confirm(
-        [FromQuery] string token,
+        [FromQuery] ConfirmEmailRequest confirmEmailRequest,
         CancellationToken cancellationToken)
     {
         RequestMetadata requestMetadata = new RequestMetadata(
@@ -20,6 +21,8 @@ public sealed class ConfirmEmailController(
             HttpContext.Request.Headers["User-Agent"].ToString(),
             HttpContext.TraceIdentifier
         );
+        string token = confirmEmailRequest.Token;
+
         logger.LogInformation("Received email confirmation request for token: {Token} from IP: {IpAddress} with User-Agent: {UserAgent} and TraceId: {TraceId}", token, requestMetadata.IpAddress, requestMetadata.UserAgent, requestMetadata.TraceId);
         await sender.Send(
             new ConfirmEmailCommand(token, requestMetadata),

@@ -4,13 +4,19 @@ namespace Tutoring.Infrastructure.Mailing.Templates;
 
 public static class UserRegisteredEmailTemplate
 {
-    public const string Subject = "Welcome to Tutoring CRM";
+    public const string Subject =
+        "Confirm your Tutoring CRM account";
 
-    public static string Render(string? firstName)
+    public static string Render(
+        string? firstName,
+        string confirmationUrl)
     {
         var greeting = string.IsNullOrWhiteSpace(firstName)
             ? "Cześć!"
             : $"Cześć {HtmlEncoder.Default.Encode(firstName)}!";
+
+        var encodedConfirmationUrl =
+            HtmlEncoder.Default.Encode(confirmationUrl);
 
         return $"""
             <!DOCTYPE html>
@@ -21,9 +27,28 @@ public static class UserRegisteredEmailTemplate
             <body>
                 <h1>{greeting}</h1>
 
-                <p>Your account has been successfully created.</p>
+                <p>
+                    Twoje konto zostało utworzone.
+                </p>
 
-                <p>Welcome to Tutoring CRM.</p>
+                <p>
+                    Kliknij poniższy link, aby potwierdzić adres e-mail:
+                </p>
+
+                <p>
+                    <a href="{encodedConfirmationUrl}">
+                        Potwierdź adres e-mail
+                    </a>
+                </p>
+
+                <p>
+                    Link jest ważny przez 24 godziny.
+                </p>
+
+                <p>
+                    Jeśli to nie Ty zakładałeś konto,
+                    zignoruj tę wiadomość.
+                </p>
             </body>
             </html>
             """;

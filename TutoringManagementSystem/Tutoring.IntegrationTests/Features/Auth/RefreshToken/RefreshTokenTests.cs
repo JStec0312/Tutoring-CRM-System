@@ -24,7 +24,7 @@ public sealed class RefreshTokenTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
         var initialRefreshToken = await LoginAsync(email, password);
 
         var response = await SendRefreshAsync(initialRefreshToken);
@@ -43,7 +43,7 @@ public sealed class RefreshTokenTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
         var initialRefreshToken = await LoginAsync(email, password);
 
         var response = await SendRefreshAsync(initialRefreshToken);
@@ -64,7 +64,7 @@ public sealed class RefreshTokenTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
         var initialRefreshToken = await LoginAsync(email, password);
 
         var response = await SendRefreshAsync(initialRefreshToken);
@@ -88,7 +88,7 @@ public sealed class RefreshTokenTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
         var initialRefreshToken = await LoginAsync(email, password);
 
         // First refresh revokes the initial token
@@ -106,7 +106,7 @@ public sealed class RefreshTokenTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
         var initialRefreshToken = await LoginAsync(email, password);
 
         await ExecuteDbAsync(async dbContext =>
@@ -134,7 +134,7 @@ public sealed class RefreshTokenTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
         var initialRefreshToken = await LoginAsync(email, password);
 
         await ExecuteDbAsync(async dbContext =>
@@ -154,7 +154,7 @@ public sealed class RefreshTokenTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
         var token1 = await LoginAsync(email, password);
 
         // Rotate token1 -> token2
@@ -189,22 +189,6 @@ public sealed class RefreshTokenTests(
         // Attempting to refresh with the previously active token3 should now also fail
         var token3Response = await SendRefreshAsync(token3);
         Assert.Equal(HttpStatusCode.Unauthorized, token3Response.StatusCode);
-    }
-
-    private async Task RegisterStudentAsync(
-        string email,
-        string password)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/register/student",
-            new
-            {
-                Email = email,
-                Username = email.Split('@')[0],
-                Password = password
-            });
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     private async Task<string> LoginAsync(
@@ -255,4 +239,5 @@ public sealed class RefreshTokenTests(
         var cookiePair = setCookie!.Split(';')[0];
         return cookiePair.Split('=', 2)[1];
     }
+
 }

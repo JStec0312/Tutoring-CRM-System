@@ -23,7 +23,7 @@ public sealed class SignOutAllTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
 
         var login = await LoginAsync(email, password);
 
@@ -39,7 +39,7 @@ public sealed class SignOutAllTests(
         const string email = "student@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(email, password);
+        await RegisterAndConfirmStudentAsync(email, password);
 
         await LoginAsync(email, password);
         await LoginAsync(email, password);
@@ -62,8 +62,8 @@ public sealed class SignOutAllTests(
         const string secondEmail = "student-b@test.pl";
         const string password = "Password123!";
 
-        await RegisterStudentAsync(firstEmail, password);
-        await RegisterStudentAsync(secondEmail, password);
+        await RegisterAndConfirmStudentAsync(firstEmail, password);
+        await RegisterAndConfirmStudentAsync(secondEmail, password);
 
         var firstLogin = await LoginAsync(firstEmail, password);
         await LoginAsync(secondEmail, password);
@@ -83,22 +83,6 @@ public sealed class SignOutAllTests(
         var response = await Client.PostAsync("/api/auth/sign-out-all", null);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    private async Task RegisterStudentAsync(
-        string email,
-        string password)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/register/student",
-            new
-            {
-                Email = email,
-                Username = email.Split('@')[0],
-                Password = password
-            });
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
     private async Task<LoginResponse> LoginAsync(

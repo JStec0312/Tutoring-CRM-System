@@ -10,7 +10,7 @@ public sealed class EmailVerificationToken
 
     public Guid Id { get; private set; }
 
-    public UserAccountId? UserAccountId { get; private set; } = null!;
+    public UserAccountId UserAccountId { get; private set; }
 
     public string TokenHash { get; private set; } = null!;
 

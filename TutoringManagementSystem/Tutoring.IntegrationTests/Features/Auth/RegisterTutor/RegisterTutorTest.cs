@@ -51,6 +51,15 @@ public sealed class RegisterTutorTests(
 
         Assert.Equal(tutor.UserAccountId, roleAssignment.UserAccountId);
         Assert.Equal(UserRole.Tutor, roleAssignment.Role);
+
+        var verificationToken = await ExecuteDbAsync(dbContext =>
+            dbContext.EmailVerificationTokens.SingleAsync(token =>
+                token.UserAccountId == tutor.UserAccountId));
+
+        Assert.Equal(AccountStatus.PendingActivation, tutor.Account.Status);
+        Assert.Equal(tutor.UserAccountId, verificationToken.UserAccountId);
+        Assert.False(string.IsNullOrWhiteSpace(
+            await GetVerificationTokenAsync(request.Email)));
     }
 
     [Fact]

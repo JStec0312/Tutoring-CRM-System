@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Tutoring.Domain.Identity;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth;
@@ -36,6 +37,18 @@ public sealed class RegisterStudentTests(
         );
 
         Assert.True(accountExists);
+
+        var account = await ExecuteDbAsync(dbContext =>
+            dbContext.UserAccounts.SingleAsync(account =>
+                account.Email.Value == request.Email));
+        var verificationToken = await ExecuteDbAsync(dbContext =>
+            dbContext.EmailVerificationTokens.SingleAsync(token =>
+                token.UserAccountId == account.Id));
+
+        Assert.Equal(AccountStatus.PendingActivation, account.Status);
+        Assert.Equal(account.Id, verificationToken.UserAccountId);
+        Assert.False(string.IsNullOrWhiteSpace(
+            await GetVerificationTokenAsync(request.Email)));
     }
 
     [Fact]

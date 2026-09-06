@@ -1,8 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using System.Threading;
-using System.Threading.Tasks;
 using Tutoring.Api.Features.Common.Http;
 using Tutoring.Infrastructure.Authentication;
 

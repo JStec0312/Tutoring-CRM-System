@@ -24,6 +24,10 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.Configure<OutboxOptions>(
             configuration.GetSection(OutboxOptions.SectionName));
+        
+        services.Configure<EmailVerificationOptions>(
+        configuration.GetSection(
+        EmailVerificationOptions.SectionName));
 
         services.AddDbContext<TutoringDbContext>(options =>
             options.UseSqlServer(
