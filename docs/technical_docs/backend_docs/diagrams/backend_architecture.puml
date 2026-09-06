@@ -1,29 +1,36 @@
 @startuml backend_architecture
-title Backend Architecture - UML Component Diagram
+title Backend Runtime - UML Component Diagram
 
 skinparam componentStyle uml2
 skinparam shadowing false
 
 component "Tutoring.Api" as Api
+component "MediatR handlers" as Handlers
 component "Tutoring.Infrastructure" as Infrastructure
 component "Tutoring.Domain" as Domain
-component "Tutoring.UnitTest" as UnitTests <<test>>
-component "Tutoring.IntegrationTests" as IntegrationTests <<test>>
-component "MediatR" as MediatR <<library>>
-component "SQL Server" as SqlServer <<database>>
+component "OutboxProcessor" as OutboxProcessor <<hosted service>>
+component "RabbitMqPublisher" as Publisher
+component "EmailConsumer" as EmailConsumer <<hosted service>>
+component "EmailEventDispatcher" as Dispatcher
+component "SmtpMailer" as Mailer
+database "SQL Server" as SqlServer
+queue "RabbitMQ" as RabbitMq
+component "SMTP / Mailpit" as Smtp
 
-Api ..> Infrastructure : project reference
-Infrastructure ..> Domain : project reference
-Api ..> Domain : uses domain types
-Api ..> MediatR : dispatches requests
-Infrastructure ..> SqlServer : EF Core
+Api --> Handlers : dispatches requests
+Handlers --> Infrastructure : TutoringDbContext and services
+Handlers --> Domain : domain behavior
+Infrastructure --> SqlServer : EF Core
+OutboxProcessor --> SqlServer : reads OutboxMessages
+OutboxProcessor --> Publisher : publishes events
+Publisher --> RabbitMq : topic exchange
+RabbitMq --> EmailConsumer : email queue
+EmailConsumer --> Dispatcher : dispatches event
+Dispatcher --> Mailer : handles UserRegistered
+Mailer --> Smtp : SMTP
 
-UnitTests ..> Api : project reference
-UnitTests ..> Domain : tests domain types
-UnitTests ..> Infrastructure : tests password policy
-IntegrationTests ..> Api : hosts API
-IntegrationTests ..> Infrastructure : verifies persistence
-IntegrationTests ..> Domain : creates/asserts domain state
-IntegrationTests ..> UnitTests : project reference
-
+note right of OutboxProcessor
+Registered only outside
+the IntegrationTests environment.
+end note
 @enduml

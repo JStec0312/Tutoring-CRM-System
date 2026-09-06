@@ -1,0 +1,41 @@
+@startuml authentication_registration
+title Registration and Email Confirmation - UML Sequence Diagram
+
+hide footbox
+
+actor Client
+participant "Tutoring.Api" as Api
+participant "Registration Handler" as RegistrationHandler
+database "SQL Server" as Database
+participant OutboxProcessor
+queue RabbitMQ
+participant EmailConsumer
+participant EmailEventDispatcher
+participant SmtpMailer
+participant "SMTP / Mailpit" as Smtp
+
+Client -> Api : POST /api/auth/register/{student|tutor}
+Api -> RegistrationHandler : MediatR command
+RegistrationHandler -> Database : Save pending account, verification-token hash,\nrole entity, and outbox event
+Database --> RegistrationHandler : committed
+RegistrationHandler --> Api : created
+Api --> Client : 201 Created
+
+OutboxProcessor -> Database : Read unprocessed outbox event
+OutboxProcessor -> RabbitMQ : Publish UserRegistered event\n(includes raw verification token)
+OutboxProcessor -> Database : Mark event processed
+RabbitMQ -> EmailConsumer : Deliver email event
+EmailConsumer -> EmailEventDispatcher : Dispatch UserRegistered
+EmailEventDispatcher -> SmtpMailer : Send confirmation email
+SmtpMailer -> Smtp : Send email
+Smtp --> Client : Confirmation link
+
+Client -> Api : GET /api/auth/email/confirm?token=...
+Api -> Database : Find token hash; validate unused and unexpired
+alt valid token
+    Api -> Database : Activate account and mark token used
+    Api --> Client : 200 OK
+else unknown, expired, or used token
+    Api --> Client : 401 ProblemDetails
+end
+@enduml

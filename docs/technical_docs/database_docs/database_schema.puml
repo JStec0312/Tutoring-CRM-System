@@ -153,10 +153,33 @@ entity RefreshTokens {
     CreatedByUserAgent : nvarchar(256) <<nullable>>
 }
 
+entity EmailVerificationTokens {
+    * Id : uniqueidentifier <<PK>>
+    --
+    UserAccountId : uniqueidentifier <<FK>>
+    TokenHash : nvarchar(128) <<UQ>>
+    ExpiresAtUtc : datetimeoffset
+    UsedAtUtc : datetimeoffset <<nullable>>
+}
+
+entity "messaging.OutboxMessages" as OutboxMessages {
+    * Id : uniqueidentifier <<PK>>
+    --
+    Type : nvarchar(500)
+    Payload : nvarchar(max)
+    OccurredAtUtc : datetimeoffset
+    ProcessedAtUtc : datetimeoffset <<nullable>>
+    RetryCount : int
+    Error : nvarchar(4000) <<nullable>>
+    --
+    IX : ProcessedAtUtc, OccurredAtUtc
+}
+
 UserAccounts ||--o{ UserAccountRoles
 UserAccounts ||--o| Tutors
 UserAccounts ||--o| Students
 UserAccounts ||--o{ RefreshTokens
+UserAccounts ||--o{ EmailVerificationTokens
 
 Tutors ||--o{ TutoringAgreements
 Students ||--o{ TutoringAgreements
