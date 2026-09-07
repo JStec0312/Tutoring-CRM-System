@@ -61,4 +61,9 @@ public sealed class UserAccount
             Status = AccountStatus.Active;
         }
     }
+
+    public void UpdateProfile(PersonalProfile profile)
+    {
+        Profile = profile;
+    }
 }

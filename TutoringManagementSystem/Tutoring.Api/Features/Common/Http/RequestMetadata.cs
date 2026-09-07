@@ -5,5 +5,7 @@ public sealed record RequestMetadata(
     string? UserAgent,
     string? TraceId)
 {
+    public override string ToString() =>
+        $"IpAddress: {IpAddress}, UserAgent: {UserAgent}, TraceId: {TraceId}";
 
 }
