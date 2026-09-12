@@ -66,4 +66,9 @@ public sealed class UserAccount
     {
         Profile = profile;
     }
+
+    public void ChangePassword(PasswordHash passwordHash)
+    {
+        PasswordHash = passwordHash;
+    }
 }

@@ -1,10 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Tutoring.Api.Features.Auth.Login;
-using Tutoring.Infrastructure.Authentication;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.SignOut;
@@ -13,9 +9,6 @@ public sealed class SignOutTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)
 {
-    private string RefreshTokenCookieName =>
-        Fixture.Services.GetRequiredService<IOptions<RefreshTokenOptions>>().Value.RefreshTokenCookieName;
-
     [Fact]
     public async Task SignOut_WithValidRefreshToken_ShouldReturnNoContent()
     {
@@ -24,7 +17,7 @@ public sealed class SignOutTests(
 
         await RegisterAndConfirmStudentAsync(email, password);
 
-        var refreshToken = await LoginAsync(email, password);
+        var refreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         var response = await SendSignOutAsync(refreshToken);
 
@@ -45,7 +38,7 @@ public sealed class SignOutTests(
 
         await RegisterAndConfirmStudentAsync(email, password);
 
-        var refreshToken = await LoginAsync(email, password);
+        var refreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         var response = await SendSignOutAsync(refreshToken);
 
@@ -62,70 +55,11 @@ public sealed class SignOutTests(
         Assert.True(HasRefreshTokenDeletionCookie(response));
     }
 
-    private async Task<string> LoginAsync(
-        string email,
-        string password)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/login",
-            new
-            {
-                Email = email,
-                Password = password
-            });
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(login);
-
-        return ExtractRefreshToken(response);
-    }
-
     private async Task<HttpResponseMessage> SendSignOutAsync(string? refreshToken)
     {
-        var request = new HttpRequestMessage(
+        return await SendWithRefreshTokenAsync(
             HttpMethod.Post,
-            "/api/auth/sign-out");
-
-        if (!string.IsNullOrWhiteSpace(refreshToken))
-        {
-            request.Headers.Add(
-                "Cookie",
-                $"{RefreshTokenCookieName}={refreshToken}");
-        }
-
-        return await Client.SendAsync(request);
+            "/api/auth/sign-out",
+            refreshToken);
     }
-
-    private string ExtractRefreshToken(HttpResponseMessage response)
-    {
-        var setCookie = response.Headers.TryGetValues("Set-Cookie", out var values)
-            ? values.FirstOrDefault(value =>
-                value.StartsWith($"{RefreshTokenCookieName}=", StringComparison.OrdinalIgnoreCase))
-            : null;
-
-        Assert.NotNull(setCookie);
-
-        var cookiePair = setCookie!.Split(';')[0];
-        return cookiePair.Split('=', 2)[1];
-    }
-
-    private bool HasRefreshTokenDeletionCookie(HttpResponseMessage response)
-    {
-        if (!response.Headers.TryGetValues("Set-Cookie", out var values))
-        {
-            return false;
-        }
-
-        var options = Fixture.Services.GetRequiredService<IOptions<RefreshTokenOptions>>().Value;
-        var sameSite = options.SameSiteRefreshTokenCookie.ToLowerInvariant();
-
-        return values.Any(value =>
-            value.Contains($"{RefreshTokenCookieName}=", StringComparison.OrdinalIgnoreCase) &&
-            value.Contains($"path={options.RefreshTokenPath}", StringComparison.OrdinalIgnoreCase) &&
-            value.Contains($"samesite={sameSite}", StringComparison.OrdinalIgnoreCase) &&
-            (!options.SecureRefreshTokenCookie || value.Contains("secure", StringComparison.OrdinalIgnoreCase)));
-    }
-
 }

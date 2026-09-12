@@ -79,19 +79,6 @@ public sealed class RabbitMqPublisher : IPublisher, IAsyncDisposable
             durable: true,
             autoDelete: false,
             cancellationToken: cancellationToken);
-
-        await _channel.QueueDeclareAsync(
-            queue: _options.EmailQueueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
-
-        await _channel.QueueBindAsync(
-            queue: _options.EmailQueueName,
-            exchange: _options.ExchangeName,
-            routingKey: UserRegisteredIntegrationEvent.EventType,
-            cancellationToken: cancellationToken);
     }
 
     public async ValueTask DisposeAsync()

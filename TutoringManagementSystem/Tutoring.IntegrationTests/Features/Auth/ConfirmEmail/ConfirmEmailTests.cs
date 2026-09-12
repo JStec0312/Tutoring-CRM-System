@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Tutoring.Api.Features.Auth.Login;
 using Tutoring.Domain.Identity;
 using Tutoring.Infrastructure.Authentication;
 using Tutoring.IntegrationTests.Infrastructure;
@@ -140,15 +139,9 @@ public sealed class ConfirmEmailTests(
 
         await RegisterAndConfirmStudentAsync(email, "Password123!");
 
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/login",
-            new { Email = email, Password = "Password123!" });
+        var login = await LoginAsync(email, "Password123!");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(login);
-        Assert.False(string.IsNullOrWhiteSpace(login!.AccessToken));
+        Assert.False(string.IsNullOrWhiteSpace(login.Login.AccessToken));
     }
 
     [Fact]

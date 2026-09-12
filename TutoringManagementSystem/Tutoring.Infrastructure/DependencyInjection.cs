@@ -26,8 +26,12 @@ public static class InfrastructureServiceCollectionExtensions
             configuration.GetSection(OutboxOptions.SectionName));
         
         services.Configure<EmailVerificationOptions>(
-        configuration.GetSection(
-        EmailVerificationOptions.SectionName));
+            configuration.GetSection(
+            EmailVerificationOptions.SectionName));
+
+        services.Configure<PasswordResetOptions>(
+            configuration.GetSection(
+            PasswordResetOptions.SectionName));
 
         services.AddDbContext<TutoringDbContext>(options =>
             options.UseSqlServer(
@@ -41,10 +45,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<IPasswordPolicyValidator, PasswordPolicyValidator>();
         services.AddScoped<IEmailVerificationTokenGenerator, EmailVerificationTokenGenerator>();
-        services.AddSingleton<
-            IEmailEventHandler,
-            UserRegisteredEmailHandler>();
-
+        services.AddScoped<IPasswordResetTokenGenerator, PasswordResetTokenGenerator>();
+        
+        
+        services.AddSingleton<IEmailEventHandler,UserRegisteredEmailHandler>();
+        services.AddSingleton<IEmailEventHandler, PasswordResetRequestedEmailHandler>();
         services.AddSingleton<EmailEventDispatcher>();
 
         services.AddSingleton<IPublisher, RabbitMqPublisher>();

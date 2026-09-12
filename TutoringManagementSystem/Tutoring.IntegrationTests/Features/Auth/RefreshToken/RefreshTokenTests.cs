@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Tutoring.Api.Features.Auth.Login;
 using Tutoring.Api.Features.Auth.RefreshToken;
 using Tutoring.Domain.Identity;
 using Tutoring.Infrastructure.Authentication;
@@ -15,9 +14,6 @@ public sealed class RefreshTokenTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)
 {
-    private string RefreshTokenCookieName =>
-        Fixture.Services.GetRequiredService<IOptions<RefreshTokenOptions>>().Value.RefreshTokenCookieName;
-
     [Fact]
     public async Task Refresh_WithValidToken_ReturnsNewAccessToken()
     {
@@ -25,7 +21,7 @@ public sealed class RefreshTokenTests(
         const string password = "Password123!";
 
         await RegisterAndConfirmStudentAsync(email, password);
-        var initialRefreshToken = await LoginAsync(email, password);
+        var initialRefreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         var response = await SendRefreshAsync(initialRefreshToken);
 
@@ -44,7 +40,7 @@ public sealed class RefreshTokenTests(
         const string password = "Password123!";
 
         await RegisterAndConfirmStudentAsync(email, password);
-        var initialRefreshToken = await LoginAsync(email, password);
+        var initialRefreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         var response = await SendRefreshAsync(initialRefreshToken);
 
@@ -65,7 +61,7 @@ public sealed class RefreshTokenTests(
         const string password = "Password123!";
 
         await RegisterAndConfirmStudentAsync(email, password);
-        var initialRefreshToken = await LoginAsync(email, password);
+        var initialRefreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         var response = await SendRefreshAsync(initialRefreshToken);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -89,7 +85,7 @@ public sealed class RefreshTokenTests(
         const string password = "Password123!";
 
         await RegisterAndConfirmStudentAsync(email, password);
-        var initialRefreshToken = await LoginAsync(email, password);
+        var initialRefreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         // First refresh revokes the initial token
         var firstResponse = await SendRefreshAsync(initialRefreshToken);
@@ -107,7 +103,7 @@ public sealed class RefreshTokenTests(
         const string password = "Password123!";
 
         await RegisterAndConfirmStudentAsync(email, password);
-        var initialRefreshToken = await LoginAsync(email, password);
+        var initialRefreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         await ExecuteDbAsync(async dbContext =>
         {
@@ -135,7 +131,7 @@ public sealed class RefreshTokenTests(
         const string password = "Password123!";
 
         await RegisterAndConfirmStudentAsync(email, password);
-        var initialRefreshToken = await LoginAsync(email, password);
+        var initialRefreshToken = (await LoginAsync(email, password)).RefreshToken;
 
         await ExecuteDbAsync(async dbContext =>
         {
@@ -155,7 +151,7 @@ public sealed class RefreshTokenTests(
         const string password = "Password123!";
 
         await RegisterAndConfirmStudentAsync(email, password);
-        var token1 = await LoginAsync(email, password);
+        var token1 = (await LoginAsync(email, password)).RefreshToken;
 
         // Rotate token1 -> token2
         var response1 = await SendRefreshAsync(token1);
@@ -191,53 +187,11 @@ public sealed class RefreshTokenTests(
         Assert.Equal(HttpStatusCode.Unauthorized, token3Response.StatusCode);
     }
 
-    private async Task<string> LoginAsync(
-        string email,
-        string password)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/login",
-            new
-            {
-                Email = email,
-                Password = password
-            });
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-        Assert.NotNull(login);
-
-        return ExtractRefreshToken(response);
-    }
-
     private async Task<HttpResponseMessage> SendRefreshAsync(string? refreshToken)
     {
-        var request = new HttpRequestMessage(
+        return await SendWithRefreshTokenAsync(
             HttpMethod.Post,
-            "/api/auth/refresh");
-
-        if (!string.IsNullOrWhiteSpace(refreshToken))
-        {
-            request.Headers.Add(
-                "Cookie",
-                $"{RefreshTokenCookieName}={refreshToken}");
-        }
-
-        return await Client.SendAsync(request);
+            "/api/auth/refresh",
+            refreshToken);
     }
-
-    private string ExtractRefreshToken(HttpResponseMessage response)
-    {
-        var setCookie = response.Headers.TryGetValues("Set-Cookie", out var values)
-            ? values.FirstOrDefault(value =>
-                value.StartsWith($"{RefreshTokenCookieName}=", StringComparison.OrdinalIgnoreCase))
-            : null;
-
-        Assert.NotNull(setCookie);
-
-        var cookiePair = setCookie!.Split(';')[0];
-        return cookiePair.Split('=', 2)[1];
-    }
-
 }

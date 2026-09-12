@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Tutoring.Api.Features.Auth.Login;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.Login
@@ -17,16 +16,9 @@ namespace Tutoring.IntegrationTests.Features.Auth.Login
 
             await RegisterAndConfirmStudentAsync(email, password);
 
-            var response = await Client.PostAsJsonAsync(
-                "/api/auth/login",
-                new { Email = email, Password = password });
+            var session = await LoginAsync(email, password);
 
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-            var login = await response.Content.ReadFromJsonAsync<LoginResponse>();
-
-            Assert.NotNull(login);
-            Assert.False(string.IsNullOrWhiteSpace(login!.AccessToken));
+            Assert.False(string.IsNullOrWhiteSpace(session.Login.AccessToken));
         }
 
         [Fact]

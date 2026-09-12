@@ -28,24 +28,34 @@ public sealed class UpdateProfileHandler(
                 "User account not found. UserId: {UserId}, RequestMetadata: {RequestMetadata}",
                 request.UserAccountId.Value,
                 request.RequestMetadata);
+
             throw new UserAccountNotFoundException(
                 request.UserAccountId.Value);
         }
 
-        var userNameAlreadyExists = await dbContext.UserAccounts
-            .AnyAsync(
-                user =>
-                    user.Id != request.UserAccountId &&
-                    user.Profile.UserName == request.UserName,
-                cancellationToken);
+        var userName = userAccount.Profile.UserName;
 
-        if (userNameAlreadyExists)
+        if (request.UserName is not null)
         {
-            logger.LogWarning(
-                "Username already taken. UserId: {UserId}, RequestMetadata: {RequestMetadata}",
-                request.UserAccountId.Value,
-                request.RequestMetadata);
-            throw new UsernameAlreadyTakenException(request.UserName);
+            var userNameAlreadyExists = await dbContext.UserAccounts
+                .AnyAsync(
+                    user =>
+                        user.Id != request.UserAccountId &&
+                        user.Profile.UserName == request.UserName,
+                    cancellationToken);
+
+            if (userNameAlreadyExists)
+            {
+                logger.LogWarning(
+                    "Username already taken. UserId: {UserId}, RequestMetadata: {RequestMetadata}",
+                    request.UserAccountId.Value,
+                    request.RequestMetadata);
+
+                throw new UsernameAlreadyTakenException(
+                    request.UserName);
+            }
+
+            userName = request.UserName;
         }
 
         PhoneNumber? phoneNumber = null;
@@ -67,13 +77,14 @@ public sealed class UpdateProfileHandler(
                     "Phone number already taken. UserId: {UserId}, RequestMetadata: {RequestMetadata}",
                     request.UserAccountId.Value,
                     request.RequestMetadata);
+
                 throw new PhoneNumberAlreadyTakenException(
                     request.PhoneNumber);
             }
         }
 
         var profile = new PersonalProfile(
-            userName: request.UserName,
+            userName: userName,
             firstName: request.FirstName,
             lastName: request.LastName,
             phoneNumber: phoneNumber);

@@ -69,4 +69,16 @@ public class UserAccountTest
         Assert.Contains(UserRole.Tutor, userAccount.Roles);
         Assert.Contains(UserRole.Student, userAccount.Roles);
     }
+
+    [Fact]
+    public void ChangePassword_withNewPasswordHash_ShouldUpdatePasswordHash()
+    {
+        var userAccount = CreateUserAccount();
+        var newPasswordHash = new PasswordHash("new-hashed-value");
+
+        userAccount.ChangePassword(newPasswordHash);
+
+        Assert.Same(newPasswordHash, userAccount.PasswordHash);
+        Assert.Equal("new-hashed-value", userAccount.PasswordHash.Value);
+    }
 }

@@ -6,7 +6,7 @@ using Common.Http;
 
 public sealed record UpdateProfileCommand(
     UserAccountId UserAccountId,
-    string UserName,
+    string? UserName,
     string? FirstName,
     string? LastName,
     string? PhoneNumber,
