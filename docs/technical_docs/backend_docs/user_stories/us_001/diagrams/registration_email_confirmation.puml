@@ -1,4 +1,4 @@
-@startuml authentication_registration
+@startuml registration_email_confirmation
 title Registration and Email Confirmation - UML Sequence Diagram
 
 hide footbox

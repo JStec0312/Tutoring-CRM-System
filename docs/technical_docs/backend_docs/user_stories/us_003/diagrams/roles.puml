@@ -1,0 +1,40 @@
+@startuml roles
+title User Roles - Class Diagram
+
+hide empty members
+
+class UserAccount {
+    +Id: UserAccountId
+    +Email: EmailAddress
+    +Status: AccountStatus
+    +Roles: UserRole[]
+    +AssignRole(role: UserRole)
+}
+
+class UserAccountRole {
+    +UserAccountId: UserAccountId
+    +Role: UserRole
+}
+
+enum UserRole {
+    Tutor
+    Student
+    Administrator
+}
+
+UserAccount "1" *-- "0..*" UserAccountRole : RoleAssignments
+UserAccountRole --> UserRole
+
+note right of UserAccount
+  RegisterStudent / RegisterTutor
+  call AssignRole() once with a
+  single role during registration.
+end note
+
+note bottom of UserRole
+  Administrator exists as a value
+  but nothing currently assigns it
+  or restricts endpoints by role.
+end note
+
+@enduml

@@ -20,7 +20,7 @@ Controllers keep HTTP concerns at the edge and send commands through MediatR. Ha
 
 Registration writes the account, verification token, and outbox event together. `OutboxProcessor` publishes pending outbox messages through `RabbitMqPublisher`. RabbitMQ delivers email events to `EmailConsumer`, which delegates to `EmailEventDispatcher`; the registered handler sends mail through `SmtpMailer`. Docker Compose provides RabbitMQ and Mailpit as the local SMTP sink.
 
-See the [backend component diagram](diagrams/backend_architecture.puml), [request sequence](diagrams/request_flow.puml), and [authentication flow](authentication.md).
+See the [backend component diagram](diagrams/backend_architecture.puml) and [request sequence](diagrams/request_flow.puml). Authentication and profile/password flows are documented per user story: [US-001](user_stories/us_001/README.md), [US-002](user_stories/us_002/README.md), [US-003](user_stories/us_003/README.md), [US-004](user_stories/us_004/README.md).
 
 ## Testing
 

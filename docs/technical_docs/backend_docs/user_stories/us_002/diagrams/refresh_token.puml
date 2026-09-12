@@ -1,4 +1,4 @@
-@startuml authentication_refresh
+@startuml refresh_token
 title Refresh Token Rotation - UML Sequence Diagram
 
 hide footbox

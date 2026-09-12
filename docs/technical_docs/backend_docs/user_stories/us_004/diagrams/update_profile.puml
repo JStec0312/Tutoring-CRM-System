@@ -1,0 +1,33 @@
+@startuml update_profile
+title Update Profile - UML Sequence Diagram
+
+hide footbox
+
+actor Client
+participant UpdateProfileController
+participant UpdateProfileHandler
+participant TutoringDbContext
+database "SQL Server" as Database
+
+Client -> UpdateProfileController : PUT /api/users/me/profile\n(JWT, username/name/phone fields)
+UpdateProfileController -> UpdateProfileHandler : Send(UpdateProfileCommand)
+UpdateProfileHandler -> TutoringDbContext : Load account by id from JWT sub
+TutoringDbContext -> Database : SELECT account
+Database --> TutoringDbContext : Row or none
+
+alt account not found
+    UpdateProfileHandler --> UpdateProfileController : UserAccountNotFoundException
+else account found
+    alt username or phone number already used by another account
+        UpdateProfileHandler --> UpdateProfileController : UsernameAlreadyTakenException /\nPhoneNumberAlreadyTakenException
+        UpdateProfileController --> Client : 409 ProblemDetails
+    else data available
+        UpdateProfileHandler -> UpdateProfileHandler : Build new PersonalProfile\n(unspecified fields keep current value)
+        UpdateProfileHandler -> TutoringDbContext : UpdateProfile() and SaveChangesAsync()
+        TutoringDbContext -> Database : UPDATE account and commit
+        UpdateProfileHandler --> UpdateProfileController : done
+        UpdateProfileController --> Client : 204 No Content
+    end
+end
+
+@enduml

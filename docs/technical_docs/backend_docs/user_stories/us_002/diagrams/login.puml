@@ -1,4 +1,4 @@
-@startuml authentication_login
+@startuml login
 title Login - UML Sequence Diagram
 
 hide footbox
