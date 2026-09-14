@@ -26,4 +26,19 @@ public sealed class TutoringAgreement
     public string? PrivateNotes { get; private set; }
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public TutoringAgreement(
+    TutorId tutorId,
+    StudentId studentId,
+    Subject subject,
+    HourlyRate hourlyRate,
+    DateTimeOffset createdAtUtc)
+    {
+        TutorId = tutorId;
+        StudentId = studentId;
+        Subject = subject;
+        HourlyRate = hourlyRate;
+        Status = AgreementStatus.Active;
+        CreatedAtUtc = createdAtUtc;
+    }
 }

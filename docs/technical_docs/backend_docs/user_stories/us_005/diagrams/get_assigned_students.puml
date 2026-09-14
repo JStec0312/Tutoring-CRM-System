@@ -1,0 +1,19 @@
+@startuml get_assigned_students
+title Get Assigned Students - UML Sequence Diagram
+
+hide footbox
+
+actor Tutor
+participant API
+participant GetAssignedStudentsHandler
+database Database
+
+Tutor -> API: GET /api/tutors/me/students
+API -> GetAssignedStudentsHandler: GetAssignedStudentsQuery
+GetAssignedStudentsHandler -> Database: Find Tutor by UserAccountId
+GetAssignedStudentsHandler -> Database: Get active/non-ended agreements + students
+Database --> GetAssignedStudentsHandler: Students
+GetAssignedStudentsHandler --> API: AssignedStudentResponse[]
+API --> Tutor: 200 OK
+
+@enduml
