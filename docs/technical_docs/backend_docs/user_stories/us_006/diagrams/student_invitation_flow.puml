@@ -1,0 +1,32 @@
+@startuml student_invitation_flow
+title Add Student by Invitation - UML Sequence Diagram
+
+hide footbox
+
+actor Tutor
+participant API
+participant InviteStudentHandler
+participant AcceptStudentInvitationHandler
+database Database
+actor Student
+
+Tutor -> API: POST /api/tutors/me/student-invitations
+API -> InviteStudentHandler: InviteStudentCommand
+InviteStudentHandler -> Database: Check active agreement for Tutor+Recipient
+InviteStudentHandler -> InviteStudentHandler: Generate raw token + TokenHash
+InviteStudentHandler -> Database: Save StudentInvitation (TokenHash only)
+InviteStudentHandler --> API: InvitationUrl (raw token)
+API --> Tutor: 200 OK + invitation link
+
+Tutor -> Student: Share invitation link (out of band)
+
+Student -> API: POST /api/student-invitations/{token}/accept
+API -> AcceptStudentInvitationHandler: AcceptStudentInvitationCommand
+AcceptStudentInvitationHandler -> Database: Find StudentInvitation by TokenHash
+AcceptStudentInvitationHandler -> AcceptStudentInvitationHandler: Validate ValidUntilUtc, Status, recipient email
+AcceptStudentInvitationHandler -> Database: Check active agreement for Tutor+Student
+AcceptStudentInvitationHandler -> Database: Create TutoringAgreement, mark invitation Accepted
+AcceptStudentInvitationHandler --> API: AgreementId
+API --> Student: 200 OK
+
+@enduml

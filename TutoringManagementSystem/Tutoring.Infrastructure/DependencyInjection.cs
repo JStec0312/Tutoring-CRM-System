@@ -8,6 +8,7 @@ using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.Infrastructure.Messaging.Outbox;
 using Tutoring.Infrastructure.Messaging.RabbitMq;
 using Tutoring.Infrastructure.Persistence;
+using Tutoring.Infrastructure.StudentInvitations;
 
 namespace Tutoring.Infrastructure;
 
@@ -32,7 +33,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.Configure<PasswordResetOptions>(
             configuration.GetSection(
             PasswordResetOptions.SectionName));
-
+        
+        services.Configure<StudentInvitationOptions>(
+            configuration.GetSection(StudentInvitationOptions.SectionName));
+        
+        
         services.AddDbContext<TutoringDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection")));
@@ -46,7 +51,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IPasswordPolicyValidator, PasswordPolicyValidator>();
         services.AddScoped<IEmailVerificationTokenGenerator, EmailVerificationTokenGenerator>();
         services.AddScoped<IPasswordResetTokenGenerator, PasswordResetTokenGenerator>();
-        
+        services.AddScoped<IStudentInvitationTokenGenerator, StudentInvitationTokenGenerator>();
         
         services.AddSingleton<IEmailEventHandler,UserRegisteredEmailHandler>();
         services.AddSingleton<IEmailEventHandler, PasswordResetRequestedEmailHandler>();

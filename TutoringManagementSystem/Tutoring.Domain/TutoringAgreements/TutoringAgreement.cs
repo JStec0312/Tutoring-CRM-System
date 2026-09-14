@@ -19,9 +19,10 @@ public sealed class TutoringAgreement
 
     public Subject Subject { get; private set; } = null!;
 
-    public HourlyRate HourlyRate { get; private set; } = null!;
+    public HourlyRate? HourlyRate { get; private set; } = null!;
 
     public AgreementStatus Status { get; private set; }
+    public AgreementTitle AgreementTitle { get; private set; } 
 
     public string? PrivateNotes { get; private set; }
 
@@ -31,13 +32,16 @@ public sealed class TutoringAgreement
     TutorId tutorId,
     StudentId studentId,
     Subject subject,
-    HourlyRate hourlyRate,
-    DateTimeOffset createdAtUtc)
+    HourlyRate? hourlyRate,
+    AgreementTitle agreementTitle,
+    DateTimeOffset createdAtUtc
+    )
     {
         TutorId = tutorId;
         StudentId = studentId;
         Subject = subject;
         HourlyRate = hourlyRate;
+        AgreementTitle = agreementTitle;
         Status = AgreementStatus.Active;
         CreatedAtUtc = createdAtUtc;
     }

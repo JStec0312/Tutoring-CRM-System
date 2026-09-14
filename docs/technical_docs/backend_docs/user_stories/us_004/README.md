@@ -1,4 +1,3 @@
-# US-004 — Edit profile data and password
 
 > As a user, I want to edit my profile data and password so that my account information stays up to date.
 

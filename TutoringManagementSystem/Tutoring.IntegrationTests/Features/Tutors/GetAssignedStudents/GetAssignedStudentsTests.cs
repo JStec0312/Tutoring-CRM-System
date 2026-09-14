@@ -298,12 +298,14 @@ public sealed class GetAssignedStudentsTests(
                 .Where(student => student.Account.Email.Value == studentEmail)
                 .Select(student => student.Id)
                 .SingleAsync();
-
+            string testTitle = "Test Agreement Title";
             var agreement = new TutoringAgreement(
                 tutorId,
                 studentId,
                 new Subject("Mathematics"),
                 new HourlyRate(new Money(100, new Currency("PLN"))),
+                new AgreementTitle(testTitle),
+
                 DateTimeOffset.UtcNow);
 
             dbContext.TutoringAgreements.Add(agreement);

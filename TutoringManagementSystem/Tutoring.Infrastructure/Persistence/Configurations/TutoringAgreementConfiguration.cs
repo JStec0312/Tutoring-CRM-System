@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Tutoring.Domain.Billing;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.Tutors;
 using Tutoring.Domain.TutoringAgreements;
@@ -9,48 +10,84 @@ namespace Tutoring.Infrastructure.Persistence.Configurations;
 internal sealed class TutoringAgreementConfiguration
     : IEntityTypeConfiguration<TutoringAgreement>
 {
-    public void Configure(EntityTypeBuilder<TutoringAgreement> builder)
+    public void Configure(
+        EntityTypeBuilder<TutoringAgreement> builder)
     {
         builder.ToTable("TutoringAgreements");
 
         builder.HasKey(agreement => agreement.Id);
 
         builder.Property(agreement => agreement.Id)
-            .HasGeneratedStronglyTypedId(value => new TutoringAgreementId(value));
+            .HasGeneratedStronglyTypedId(
+                value => new TutoringAgreementId(value));
 
         builder.Property(agreement => agreement.TutorId)
-            .HasStronglyTypedId(value => new TutorId(value), "TutorId")
+            .HasStronglyTypedId(
+                value => new TutorId(value),
+                "TutorId")
             .IsRequired();
 
         builder.Property(agreement => agreement.StudentId)
-            .HasStronglyTypedId(value => new StudentId(value), "StudentId")
+            .HasStronglyTypedId(
+                value => new StudentId(value),
+                "StudentId")
             .IsRequired();
 
-        builder.OwnsOne(agreement => agreement.Subject, subject =>
-        {
-            subject.Property(valueObject => valueObject.Name)
-                .HasColumnName("SubjectName")
-                .HasColumnType("nvarchar(100)")
-                .HasMaxLength(100)
-                .IsRequired();
-        });
-
-        builder.Navigation(agreement => agreement.Subject)
-            .IsRequired();
-
-        builder.OwnsOne(agreement => agreement.HourlyRate, hourlyRate =>
-        {
-            hourlyRate.OwnsOne(valueObject => valueObject.PricePerHour, money =>
+        builder.ComplexProperty(
+            agreement => agreement.AgreementTitle,
+            title =>
             {
-                money.ConfigureMoney("HourlyRateAmount", "HourlyRateCurrencyCode");
+                title.IsRequired();
+
+                title.Property(valueObject => valueObject.Value)
+                    .HasColumnName("AgreementTitle")
+                    .HasColumnType("nvarchar(100)")
+                    .HasMaxLength(100)
+                    .IsRequired();
             });
 
-            hourlyRate.Navigation(valueObject => valueObject.PricePerHour)
-                .IsRequired();
-        });
+        builder.ComplexProperty(
+            agreement => agreement.Subject,
+            subject =>
+            {
+                subject.IsRequired();
 
-        builder.Navigation(agreement => agreement.HourlyRate)
-            .IsRequired();
+                subject.Property(valueObject => valueObject.Name)
+                    .HasColumnName("SubjectName")
+                    .HasColumnType("nvarchar(100)")
+                    .HasMaxLength(100)
+                    .IsRequired();
+            });
+
+        builder.ComplexProperty(
+            agreement => agreement.HourlyRate,
+            hourlyRate =>
+            {
+                hourlyRate.IsRequired(false);
+                hourlyRate.HasDiscriminator();
+
+                hourlyRate.ComplexProperty(
+                    valueObject => valueObject.PricePerHour,
+                    money =>
+                    {
+                        money.IsRequired();
+
+                        money.Property(valueObject => valueObject.Amount)
+                            .HasColumnName("HourlyRateAmount")
+                            .HasColumnType("decimal(18,2)")
+                            .HasPrecision(18, 2)
+                            .IsRequired();
+
+                        money.Property(valueObject => valueObject.Currency)
+                            .HasConversion(
+                                currency => currency.Code,
+                                code => new Currency(code))
+                            .HasColumnName("HourlyRateCurrencyCode")
+                            .HasColumnType("char(3)")
+                            .HasMaxLength(3)
+                            .IsRequired();
+                    });
+            });
 
         builder.Property(agreement => agreement.Status)
             .HasConversion<string>()
