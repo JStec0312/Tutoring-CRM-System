@@ -10,15 +10,33 @@ public sealed class Student
     {
     }
 
-    public UserAccountId UserAccountId { get; private set; }
-    public UserAccount Account { get; private set; } = null!;
+    public UserAccountId? UserAccountId { get; private set; }
+
+    public UserAccount? Account { get; private set; }
+
+    public StudentDisplayName DisplayName { get; private set; } = null!;
+
     public StudentStatus Status { get; private set; }
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
-    public Student(UserAccountId userAccountId, DateTimeOffset createdAtUtc)
+    public Student(
+        UserAccountId userAccountId,
+        StudentDisplayName displayName,
+        DateTimeOffset createdAtUtc)
     {
         UserAccountId = userAccountId;
+        DisplayName = displayName;
+        Status = StudentStatus.Active;
+        CreatedAtUtc = createdAtUtc;
+    }
+
+    public Student(
+        StudentDisplayName displayName,
+        DateTimeOffset createdAtUtc)
+    {
+        UserAccountId = null;
+        DisplayName = displayName;
         Status = StudentStatus.Active;
         CreatedAtUtc = createdAtUtc;
     }

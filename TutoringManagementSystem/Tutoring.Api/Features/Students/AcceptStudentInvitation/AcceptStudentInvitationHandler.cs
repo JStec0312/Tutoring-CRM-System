@@ -72,7 +72,7 @@ public sealed class AcceptStudentInvitationHandler(
                     request.UserAccountId,
                 cancellationToken);
 
-        if (student is null)
+        if (student is null || student.Account is null)
         {
             logger.LogWarning(
                 "Student not found while accepting invitation. InvitationId: {InvitationId}, UserId: {UserId}, RequestMetadata: {RequestMetadata}",
@@ -84,8 +84,10 @@ public sealed class AcceptStudentInvitationHandler(
                 request.UserAccountId.Value);
         }
 
+        var studentAccount = student.Account;
+
         if (!string.Equals(
-                student.Account.Email.Value,
+                studentAccount.Email.Value,
                 invitation.Recipient.Value,
                 StringComparison.OrdinalIgnoreCase))
         {
@@ -120,7 +122,7 @@ public sealed class AcceptStudentInvitationHandler(
                 request.RequestMetadata);
 
             throw new StudentAlreadyAssignedException(
-                student.Account.Email.Value);
+                studentAccount.Email.Value);
         }
 
         var agreementTitle =

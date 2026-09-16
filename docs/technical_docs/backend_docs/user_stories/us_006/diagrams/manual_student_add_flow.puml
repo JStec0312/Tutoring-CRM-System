@@ -1,0 +1,25 @@
+@startuml manual_student_add_flow
+title Add Managed Student Manually - UML Sequence Diagram
+
+hide footbox
+
+actor Tutor
+participant API
+participant AddStudentManuallyHandler
+database Database
+
+Tutor -> API: POST /api/tutors/me/students
+API -> AddStudentManuallyHandler: AddStudentManuallyCommand
+AddStudentManuallyHandler -> Database: Find Tutor by UserAccountId
+AddStudentManuallyHandler -> AddStudentManuallyHandler: Create Student(DisplayName)\nwithout UserAccount
+AddStudentManuallyHandler -> AddStudentManuallyHandler: Create active TutoringAgreement\nwith optional HourlyRate
+AddStudentManuallyHandler -> Database: Save Student and TutoringAgreement
+AddStudentManuallyHandler --> API: StudentId, AgreementId
+API --> Tutor: 201 Created
+
+note right of AddStudentManuallyHandler
+  No UserAccount is created.
+  The managed student cannot log in.
+end note
+
+@enduml

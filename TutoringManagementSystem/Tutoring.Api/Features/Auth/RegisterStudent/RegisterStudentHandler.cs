@@ -107,9 +107,12 @@ public sealed class RegisterStudentHandler(
         var emailVerificationToken = emailVerificationTokenGenerator.Generate(
             userAccount.Id,
             createdAtUtc);
+        
+        var studentDisplayname = new StudentDisplayName(request.UserName);
         var student = new Student(
             userAccountId: userAccount.Id,
-            createdAtUtc: createdAtUtc);
+            createdAtUtc: createdAtUtc,
+            displayName: studentDisplayname);
 
         dbContext.UserAccounts.Add(userAccount);
         dbContext.Students.Add(student);

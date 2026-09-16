@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tutoring.Domain.Billing;
+using Tutoring.Domain.Common;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.Tutors;
 using Tutoring.Domain.TutoringAgreements;
@@ -98,6 +99,24 @@ internal sealed class TutoringAgreementConfiguration
         builder.Property(agreement => agreement.PrivateNotes)
             .HasColumnType("nvarchar(2000)")
             .HasMaxLength(2000)
+            .IsRequired(false);
+
+        builder.Property(agreement => agreement.ContactEmail)
+            .HasConversion(
+                email => email == null ? null : email.Value,
+                value => value == null ? null : new EmailAddress(value))
+            .HasColumnName("ContactEmail")
+            .HasColumnType("nvarchar(320)")
+            .HasMaxLength(320)
+            .IsRequired(false);
+
+        builder.Property(agreement => agreement.ContactPhoneNumber)
+            .HasConversion(
+                phone => phone == null ? null : phone.Value,
+                value => value == null ? null : new PhoneNumber(value))
+            .HasColumnName("ContactPhoneNumber")
+            .HasColumnType("nvarchar(30)")
+            .HasMaxLength(30)
             .IsRequired(false);
 
         builder.Property(agreement => agreement.CreatedAtUtc)

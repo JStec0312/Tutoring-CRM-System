@@ -98,12 +98,95 @@ public sealed class GetAssignedStudentsTests(
 
         var result = Assert.Single(students!);
         Assert.Equal(student.StudentId, result.StudentId);
-        Assert.Equal("student", result.UserName);
+        Assert.Equal("student", result.DisplayName);
         Assert.Equal("First", result.FirstName);
         Assert.Equal("Student", result.LastName);
         Assert.Equal(student.Email, result.Email);
         Assert.Equal("+48222222222", result.PhoneNumber);
         Assert.Equal(StudentStatus.Active.ToString(), result.Status);
+    }
+
+    [Fact]
+    public async Task GetAssignedStudents_ForStudentWithoutAccount_ShouldReturnNullPersonalFields()
+    {
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor",
+            "Tutor",
+            "One",
+            "+48111111111");
+        var managedStudentId = await CreateManagedStudentAsync("Managed Student");
+
+        await CreateAgreementAsync(tutor.Email, managedStudentId);
+
+        var response = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Get,
+                Endpoint,
+                tutor.AccessToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var students = await response.Content
+            .ReadFromJsonAsync<List<AssignedStudentResponse>>();
+
+        var result = Assert.Single(students!);
+        Assert.Equal(managedStudentId, result.StudentId);
+        Assert.Equal("Managed Student", result.DisplayName);
+        Assert.Null(result.FirstName);
+        Assert.Null(result.LastName);
+        Assert.Null(result.Email);
+        Assert.Null(result.PhoneNumber);
+        Assert.Equal(StudentStatus.Active.ToString(), result.Status);
+    }
+
+    [Fact]
+    public async Task GetAssignedStudents_WithRegisteredAndManagedStudents_ShouldReturnBoth()
+    {
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor",
+            "Tutor",
+            "One",
+            "+48111111111");
+        var registeredStudent = await CreateStudentAsync(
+            "student@test.pl",
+            "student",
+            "Registered",
+            "Student",
+            "+48222222222");
+        var managedStudentId = await CreateManagedStudentAsync("Managed Student");
+
+        await CreateAgreementAsync(tutor.Email, registeredStudent.Email);
+        await CreateAgreementAsync(tutor.Email, managedStudentId);
+
+        var response = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Get,
+                Endpoint,
+                tutor.AccessToken));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var students = await response.Content
+            .ReadFromJsonAsync<List<AssignedStudentResponse>>();
+
+        Assert.NotNull(students);
+        Assert.Equal(2, students!.Count);
+
+        var registered = students.Single(item =>
+            item.StudentId == registeredStudent.StudentId);
+        Assert.Equal("student", registered.DisplayName);
+        Assert.Equal("Registered", registered.FirstName);
+        Assert.Equal("Student", registered.LastName);
+        Assert.Equal(registeredStudent.Email, registered.Email);
+        Assert.Equal("+48222222222", registered.PhoneNumber);
+
+        var managed = students.Single(item =>
+            item.StudentId == managedStudentId);
+        Assert.Equal("Managed Student", managed.DisplayName);
+        Assert.Null(managed.FirstName);
+        Assert.Null(managed.LastName);
+        Assert.Null(managed.Email);
+        Assert.Null(managed.PhoneNumber);
     }
 
     [Fact]
@@ -277,16 +360,53 @@ public sealed class GetAssignedStudentsTests(
 
         var studentId = await ExecuteDbAsync(dbContext =>
             dbContext.Students
-                .Where(student => student.Account.Email.Value == email)
+                .Where(student =>
+                    student.Account != null &&
+                    student.Account.Email.Value == email)
                 .Select(student => student.Id.Value)
                 .SingleAsync());
 
         return new TestStudent(email, accessToken, studentId);
     }
 
+    /// <summary>
+    /// Creates a managed student that has no linked UserAccount
+    /// (e.g. added by a tutor without inviting/registering the student).
+    /// </summary>
+    private async Task<Guid> CreateManagedStudentAsync(
+        string displayName)
+    {
+        return await ExecuteDbAsync(async dbContext =>
+        {
+            var student = new Student(
+                new StudentDisplayName(displayName),
+                DateTimeOffset.UtcNow);
+
+            dbContext.Students.Add(student);
+            await dbContext.SaveChangesAsync();
+
+            return student.Id.Value;
+        });
+    }
+
     private async Task<TutoringAgreement> CreateAgreementAsync(
         string tutorEmail,
         string studentEmail)
+    {
+        var studentId = await ExecuteDbAsync(dbContext =>
+            dbContext.Students
+                .Where(student =>
+                    student.Account != null &&
+                    student.Account.Email.Value == studentEmail)
+                .Select(student => student.Id.Value)
+                .SingleAsync());
+
+        return await CreateAgreementAsync(tutorEmail, studentId);
+    }
+
+    private async Task<TutoringAgreement> CreateAgreementAsync(
+        string tutorEmail,
+        Guid studentId)
     {
         return await ExecuteDbAsync(async dbContext =>
         {
@@ -294,14 +414,10 @@ public sealed class GetAssignedStudentsTests(
                 .Where(tutor => tutor.Account.Email.Value == tutorEmail)
                 .Select(tutor => tutor.Id)
                 .SingleAsync();
-            var studentId = await dbContext.Students
-                .Where(student => student.Account.Email.Value == studentEmail)
-                .Select(student => student.Id)
-                .SingleAsync();
             string testTitle = "Test Agreement Title";
             var agreement = new TutoringAgreement(
                 tutorId,
-                studentId,
+                new StudentId(studentId),
                 new Subject("Mathematics"),
                 new HourlyRate(new Money(100, new Currency("PLN"))),
                 new AgreementTitle(testTitle),

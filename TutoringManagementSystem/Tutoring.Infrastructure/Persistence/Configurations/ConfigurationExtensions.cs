@@ -33,6 +33,24 @@ internal static class ConfigurationExtensions
             .ValueGeneratedOnAdd();
     }
 
+    public static PropertyBuilder<TId?> HasNullableStronglyTypedId<TId>(
+    this PropertyBuilder<TId?> builder,
+    Func<Guid, TId> factory,
+    string columnName)
+    where TId : struct, DomainId<TId>
+        {
+            return builder
+                .HasConversion(
+                    id => id.HasValue
+                        ? id.Value.Value
+                        : (Guid?)null,
+                    value => value.HasValue
+                        ? factory(value.Value)
+                        : (TId?)null)
+                .HasColumnName(columnName)
+                .HasColumnType("uniqueidentifier");
+        }
+
     public static void ConfigureMoney<TOwner>(
         this OwnedNavigationBuilder<TOwner, Money> builder,
         string amountColumnName,

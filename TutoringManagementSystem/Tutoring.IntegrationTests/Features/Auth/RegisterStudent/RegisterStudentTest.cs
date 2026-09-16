@@ -110,12 +110,19 @@ public sealed class RegisterStudentTests(
                 .Include(s => s.Account)
                 .SingleAsync());
 
+        Assert.NotNull(student.UserAccountId);
+        Assert.NotNull(student.Account);
+
         Assert.Equal(
             request.Email,
-            student.Account.Email.Value);
+            student.Account!.Email.Value);
 
         Assert.Equal(
             request.Username,
             student.Account.Profile.UserName);
+
+        Assert.Equal(
+            request.Username,
+            student.DisplayName.Value);
     }
 }

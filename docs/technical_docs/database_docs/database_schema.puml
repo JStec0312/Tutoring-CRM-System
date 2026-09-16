@@ -35,7 +35,8 @@ entity Tutors {
 entity Students {
     * Id : uniqueidentifier <<PK>>
     --
-    UserAccountId : uniqueidentifier <<FK, UQ>>
+    UserAccountId : uniqueidentifier <<FK, UQ, nullable>>
+    DisplayName : nvarchar(100)
     Status : nvarchar(50)
     CreatedAtUtc : datetimeoffset
 }
@@ -45,9 +46,12 @@ entity TutoringAgreements {
     --
     TutorId : uniqueidentifier <<FK>>
     StudentId : uniqueidentifier <<FK>>
+    AgreementTitle : nvarchar(100)
     SubjectName : nvarchar(100)
-    HourlyRateAmount : decimal(18,2)
-    HourlyRateCurrencyCode : char(3)
+    HourlyRateAmount : decimal(18,2) <<nullable>>
+    HourlyRateCurrencyCode : char(3) <<nullable>>
+    ContactEmail : nvarchar(320) <<nullable>>
+    ContactPhoneNumber : nvarchar(30) <<nullable>>
     Status : nvarchar(50)
     PrivateNotes : nvarchar(2000) <<nullable>>
     CreatedAtUtc : datetimeoffset
@@ -58,6 +62,11 @@ entity StudentInvitations {
     --
     TutorId : uniqueidentifier <<FK>>
     RecipientEmail : nvarchar(320)
+    AgreementTitle : nvarchar(100)
+    SubjectName : nvarchar(100)
+    HourlyRateAmount : decimal(18,2) <<nullable>>
+    HourlyRateCurrencyCode : char(3) <<nullable>>
+    TokenHash : nvarchar(256) <<UQ>>
     Status : nvarchar(50)
     ValidUntilUtc : datetimeoffset
     CreatedAtUtc : datetimeoffset
@@ -177,7 +186,7 @@ entity "messaging.OutboxMessages" as OutboxMessages {
 
 UserAccounts ||--o{ UserAccountRoles
 UserAccounts ||--o| Tutors
-UserAccounts ||--o| Students
+UserAccounts |o--o| Students
 UserAccounts ||--o{ RefreshTokens
 UserAccounts ||--o{ EmailVerificationTokens
 

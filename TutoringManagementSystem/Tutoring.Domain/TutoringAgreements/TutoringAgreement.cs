@@ -26,6 +26,10 @@ public sealed class TutoringAgreement
 
     public string? PrivateNotes { get; private set; }
 
+    public EmailAddress? ContactEmail { get; private set; }
+
+    public PhoneNumber? ContactPhoneNumber { get; private set; }
+
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
     public TutoringAgreement(
@@ -44,5 +48,19 @@ public sealed class TutoringAgreement
         AgreementTitle = agreementTitle;
         Status = AgreementStatus.Active;
         CreatedAtUtc = createdAtUtc;
+    }
+
+    public void UpdateStudentDetails(
+        Subject subject,
+        HourlyRate? hourlyRate,
+        EmailAddress? contactEmail,
+        PhoneNumber? contactPhoneNumber,
+        string? notes)
+    {
+        Subject = subject ?? throw new ArgumentNullException(nameof(subject));
+        HourlyRate = hourlyRate;
+        ContactEmail = contactEmail;
+        ContactPhoneNumber = contactPhoneNumber;
+        PrivateNotes = notes;
     }
 }

@@ -103,12 +103,19 @@ package "Tutoring Cooperation" {
   }
 
   class Student <<Aggregate Root>> {
+    displayName: StudentDisplayName
     status: StudentStatus
+  }
+
+  class StudentDisplayName <<Value Object>> {
+    value: String
   }
 
   class TutoringAgreement <<Aggregate Root>> {
     subject: Subject
-    hourlyRate: HourlyRate
+    hourlyRate: Optional<HourlyRate>
+    contactEmail: Optional<EmailAddress>
+    contactPhoneNumber: Optional<PhoneNumber>
     status: AgreementStatus
     privateNotes: String
   }
@@ -128,18 +135,19 @@ package "Tutoring Cooperation" {
   }
 
   Tutor "0..1" --> "1" UserAccount : account
-  Student "0..1" --> "1" UserAccount : account
+  Student "0..1" --> "0..1" UserAccount : account
 
   TutoringAgreement "0..*" --> "1" Tutor : tutor
   TutoringAgreement "0..*" --> "1" Student : student
 
   StudentInvitation "0..*" --> "1" Tutor : sent by
-  StudentInvitation ..> UserAccount : acceptance creates account
-  StudentInvitation ..> Student : acceptance creates profile
+  StudentInvitation ..> UserAccount : acceptance requires account
+  StudentInvitation ..> Student : acceptance requires student
   StudentInvitation ..> TutoringAgreement : acceptance starts agreement
 
   TutoringAgreement "1" *-- "1" Subject
-  TutoringAgreement "1" *-- "1" HourlyRate
+  TutoringAgreement "1" *-- "0..1" HourlyRate
+  Student "1" *-- "1" StudentDisplayName
 }
 
 

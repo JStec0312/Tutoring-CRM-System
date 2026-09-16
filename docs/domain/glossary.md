@@ -34,7 +34,7 @@ Represents an account used to authenticate a person and authorize access to the 
 - Owns one `PersonalProfile`.
 - May be connected with one `Tutor`.
 - May be connected with one `Student`.
-- Every `Tutor` and `Student` must have exactly one `UserAccount`.
+- Every `Tutor` must have exactly one `UserAccount`.
 
 ---
 
@@ -150,7 +150,7 @@ Represents a user who provides tutoring services.
 
 **Connections:**
 
-- Must be connected with exactly one `UserAccount`.
+- May be connected with zero or one `UserAccount`.
 - May participate in multiple `TutoringAgreement` aggregates.
 - May send multiple `StudentInvitation` aggregates.
 - May own multiple `LearningMaterial` aggregates.
@@ -162,14 +162,14 @@ Represents a user who provides tutoring services.
 **Type:** Aggregate Root
 
 **Domain meaning:**  
-Represents a user who receives tutoring services.
-
-A student cannot exist without a user account.
+Represents a person who receives tutoring services. A student may be registered
+and have a user account, or be managed manually by a tutor without one.
 
 **Fields:**
 
 | Field | Type | Meaning |
 |---|---|---|
+| `displayName` | `StudentDisplayName` | Required name used to identify the student independently of an account |
 | `status` | `StudentStatus` | Current business status of the student |
 
 **Connections:**
@@ -193,16 +193,18 @@ The agreement stores conditions that belong to a specific cooperation rather tha
 | Field | Type | Meaning |
 |---|---|---|
 | `subject` | `Subject` | Subject taught under the agreement |
-| `hourlyRate` | `HourlyRate` | Individual price per tutoring hour |
+| `hourlyRate` | `HourlyRate` | Optional individual price per tutoring hour |
+| `contactEmail` | `EmailAddress` | Optional tutor-maintained contact email for the cooperation |
+| `contactPhoneNumber` | `PhoneNumber` | Optional tutor-maintained contact phone for the cooperation |
 | `status` | `AgreementStatus` | Current state of the cooperation |
-| `privateNotes` | `String` | Tutor's private notes about the cooperation |
+| `privateNotes` | `String` | Optional tutor's private notes about the cooperation |
 
 **Connections:**
 
 - Refers to exactly one `Tutor`.
 - Refers to exactly one `Student`.
 - Owns one `Subject`.
-- Owns one `HourlyRate`.
+- May own one `HourlyRate`.
 - May contain multiple `Lesson` aggregates.
 - Is settled by one `BillingAccount`.
 - May receive multiple `MaterialAssignment` aggregates.
@@ -214,9 +216,7 @@ The agreement stores conditions that belong to a specific cooperation rather tha
 **Type:** Aggregate Root
 
 **Domain meaning:**  
-Represents an invitation sent by a tutor to a future student.
-
-Because every student must have an account, accepting an invitation creates or activates the required account and student profile before starting cooperation.
+Represents an invitation sent by a tutor to a registered student.
 
 **Fields:**
 
@@ -229,8 +229,7 @@ Because every student must have an account, accepting an invitation creates or a
 **Connections:**
 
 - Is sent by exactly one `Tutor`.
-- Acceptance creates or activates one `UserAccount`.
-- Acceptance creates one `Student`.
+- Acceptance requires a matching `Student` connected to a `UserAccount`.
 - Acceptance may start one `TutoringAgreement`.
 
 ---

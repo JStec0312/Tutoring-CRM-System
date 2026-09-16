@@ -233,6 +233,32 @@ public sealed class InviteStudentTests(
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
+    [Fact]
+    public async Task InviteStudent_WhenTutorHasManagedStudentAgreement_ShouldStillCreateInvitation()
+    {
+        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        var managedStudentId = await CreateManagedStudentAsync("Managed Student");
+
+        await CreateAgreementForStudentIdAsync(tutor.Email, managedStudentId);
+
+        var response = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Post,
+                Endpoint,
+                tutor.AccessToken,
+                new
+                {
+                    Email = "student@test.pl",
+                    Title = "Math tutoring",
+                    Subject = "Mathematics",
+                    HourlyRate = (decimal?)100
+                }));
+
+        // A managed student without an Account/Email must not be matched by
+        // recipient email and must not cause a translation/NRE failure.
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
     private static string ExtractTokenFromInvitationUrl(string invitationUrl)
     {
         var uri = new Uri(invitationUrl);
@@ -287,16 +313,53 @@ public sealed class InviteStudentTests(
 
         var studentId = await ExecuteDbAsync(dbContext =>
             dbContext.Students
-                .Where(student => student.Account.Email.Value == email)
+                .Where(student =>
+                    student.Account != null &&
+                    student.Account.Email.Value == email)
                 .Select(student => student.Id.Value)
                 .SingleAsync());
 
         return new TestStudent(email, accessToken, studentId);
     }
 
+    /// <summary>
+    /// Creates a managed student that has no linked UserAccount
+    /// (e.g. added by a tutor without inviting/registering the student).
+    /// </summary>
+    private async Task<Guid> CreateManagedStudentAsync(
+        string displayName)
+    {
+        return await ExecuteDbAsync(async dbContext =>
+        {
+            var student = new Student(
+                new StudentDisplayName(displayName),
+                DateTimeOffset.UtcNow);
+
+            dbContext.Students.Add(student);
+            await dbContext.SaveChangesAsync();
+
+            return student.Id.Value;
+        });
+    }
+
     private async Task CreateAgreementAsync(
         string tutorEmail,
         string studentEmail)
+    {
+        var studentId = await ExecuteDbAsync(dbContext =>
+            dbContext.Students
+                .Where(student =>
+                    student.Account != null &&
+                    student.Account.Email.Value == studentEmail)
+                .Select(student => student.Id.Value)
+                .SingleAsync());
+
+        await CreateAgreementForStudentIdAsync(tutorEmail, studentId);
+    }
+
+    private async Task CreateAgreementForStudentIdAsync(
+        string tutorEmail,
+        Guid studentId)
     {
         await ExecuteDbAsync(async dbContext =>
         {
@@ -304,14 +367,10 @@ public sealed class InviteStudentTests(
                 .Where(tutor => tutor.Account.Email.Value == tutorEmail)
                 .Select(tutor => tutor.Id)
                 .SingleAsync();
-            var studentId = await dbContext.Students
-                .Where(student => student.Account.Email.Value == studentEmail)
-                .Select(student => student.Id)
-                .SingleAsync();
 
             var agreement = new TutoringAgreement(
                 tutorId,
-                studentId,
+                new StudentId(studentId),
                 new Subject("Mathematics"),
                 new HourlyRate(new Money(100, new Currency("PLN"))),
                 new AgreementTitle("Existing agreement"),

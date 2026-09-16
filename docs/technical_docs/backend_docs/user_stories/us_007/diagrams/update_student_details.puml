@@ -1,0 +1,24 @@
+@startuml
+
+title US-007 - Update student details
+
+actor Tutor
+participant "UpdateStudentDetailsController" as Controller
+participant "UpdateStudentDetailsHandler" as Handler
+database "TutoringDbContext" as Db
+participant "TutoringAgreement" as Agreement
+
+Tutor -> Controller: PUT /api/tutors/students/{studentId}/details
+Controller -> Controller: Read tutor identity from JWT sub
+Controller -> Handler: UpdateStudentDetailsCommand
+Handler -> Db: Find Tutor by UserAccountId
+Handler -> Db: Find active agreement by TutorId + StudentId
+alt agreement belongs to authenticated tutor
+    Handler -> Agreement: UpdateStudentDetails(...)
+    Handler -> Db: SaveChangesAsync()
+    Controller --> Tutor: 204 No Content
+else no matching agreement
+    Controller --> Tutor: 404 Not Found
+end
+
+@enduml

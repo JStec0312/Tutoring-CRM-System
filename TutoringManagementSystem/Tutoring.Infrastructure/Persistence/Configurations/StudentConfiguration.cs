@@ -15,11 +15,27 @@ internal sealed class StudentConfiguration
         builder.HasKey(student => student.Id);
 
         builder.Property(student => student.Id)
-            .HasGeneratedStronglyTypedId(value => new StudentId(value));
+            .HasGeneratedStronglyTypedId(
+                value => new StudentId(value));
 
         builder.Property(student => student.UserAccountId)
-            .HasStronglyTypedId(value => new UserAccountId(value), "UserAccountId")
-            .IsRequired();
+            .HasNullableStronglyTypedId(
+                value => new UserAccountId(value),
+                "UserAccountId")
+            .IsRequired(false);
+
+        builder.ComplexProperty(
+            student => student.DisplayName,
+            displayName =>
+            {
+                displayName.IsRequired();
+
+                displayName.Property(valueObject => valueObject.Value)
+                    .HasColumnName("DisplayName")
+                    .HasColumnType("nvarchar(100)")
+                    .HasMaxLength(100)
+                    .IsRequired();
+            });
 
         builder.Property(student => student.Status)
             .HasConversion<string>()
@@ -33,10 +49,13 @@ internal sealed class StudentConfiguration
 
         builder.HasOne(student => student.Account)
             .WithOne()
-            .HasForeignKey<Student>(student => student.UserAccountId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey<Student>(
+                student => student.UserAccountId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
 
         builder.HasIndex(student => student.UserAccountId)
-            .IsUnique();
+            .IsUnique()
+            .HasFilter("[UserAccountId] IS NOT NULL");
     }
 }

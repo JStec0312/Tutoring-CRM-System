@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tutoring.Infrastructure.Persistence;
 
@@ -12,9 +13,11 @@ using Tutoring.Infrastructure.Persistence;
 namespace Tutoring.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TutoringDbContext))]
-    partial class TutoringDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260915183153_AllowStudentsWithoutAccount")]
+    partial class AllowStudentsWithoutAccount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -409,16 +412,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("Id")
                         .HasDefaultValueSql("newsequentialid()");
-
-                    b.Property<string>("ContactEmail")
-                        .HasMaxLength(320)
-                        .HasColumnType("nvarchar(320)")
-                        .HasColumnName("ContactEmail");
-
-                    b.Property<string>("ContactPhoneNumber")
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)")
-                        .HasColumnName("ContactPhoneNumber");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");

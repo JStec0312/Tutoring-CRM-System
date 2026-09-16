@@ -57,6 +57,12 @@ public sealed class GlobalExceptionHandler(
                 "Request could not be completed",
                 useCaseException.Code,
                 useCaseException.Message),
+
+            ArgumentException argumentException => new ErrorDetails(
+                StatusCodes.Status400BadRequest,
+                "Invalid request",
+                "Request.Invalid",
+                argumentException.Message),
             
 
             _ => new ErrorDetails(

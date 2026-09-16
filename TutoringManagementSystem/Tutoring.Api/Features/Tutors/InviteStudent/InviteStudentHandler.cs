@@ -53,6 +53,7 @@ public sealed class InviteStudentHandler(
                     agreement =>
                         agreement.TutorId == tutor.Id &&
                         agreement.Status != AgreementStatus.Ended &&
+                        agreement.Student.Account != null &&
                         agreement.Student.Account.Email.Value ==
                         recipient.Value,
                     cancellationToken);

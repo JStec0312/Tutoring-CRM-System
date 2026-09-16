@@ -440,7 +440,9 @@ public sealed class AcceptStudentInvitationTests(
                 .Select(tutor => tutor.Id)
                 .SingleAsync();
             var studentId = await dbContext.Students
-                .Where(student => student.Account.Email.Value == studentEmail)
+                .Where(student =>
+                    student.Account != null &&
+                    student.Account.Email.Value == studentEmail)
                 .Select(student => student.Id)
                 .SingleAsync();
 
@@ -504,7 +506,9 @@ public sealed class AcceptStudentInvitationTests(
 
         var studentId = await ExecuteDbAsync(dbContext =>
             dbContext.Students
-                .Where(student => student.Account.Email.Value == email)
+                .Where(student =>
+                    student.Account != null &&
+                    student.Account.Email.Value == email)
                 .Select(student => student.Id.Value)
                 .SingleAsync());
 
