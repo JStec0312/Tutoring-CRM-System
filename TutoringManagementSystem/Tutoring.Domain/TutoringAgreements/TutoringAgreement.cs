@@ -63,4 +63,24 @@ public sealed class TutoringAgreement
         ContactPhoneNumber = contactPhoneNumber;
         PrivateNotes = notes;
     }
+
+    public void Activate()
+    {
+        if (Status == AgreementStatus.Ended)
+        {
+            throw new TutoringAgreementEndedException(Id.Value);
+        }
+
+        Status = AgreementStatus.Active;
+    }
+
+    public void Deactivate()
+    {
+        if (Status == AgreementStatus.Ended)
+        {
+            throw new TutoringAgreementEndedException(Id.Value);
+        }
+
+        Status = AgreementStatus.Suspended;
+    }
 }
