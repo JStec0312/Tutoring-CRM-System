@@ -1,0 +1,52 @@
+@startuml
+
+title US-008 - Update tutoring agreement status
+
+actor Tutor
+participant Controller
+participant Handler
+database Db
+participant Agreement
+participant "GlobalExceptionHandler" as ErrorHandler
+
+Tutor -> Controller: PUT /api/tutors/tutoring-agreements/{id}/status\n{ isActive: boolean }
+Controller -> Controller: Read tutor identity from JWT sub
+
+alt missing or invalid sub claim
+    Controller --> Tutor: 401 Unauthorized
+else authenticated tutor
+    Controller -> Handler: UpdateTutoringAgreementStatusCommand
+    activate Handler
+    Handler -> Db: Find tutor by UserAccountId
+    Db --> Handler: Tutor or null
+
+    alt tutor does not exist
+        deactivate Handler
+        Handler -->> ErrorHandler: TutorNotFoundException
+        ErrorHandler --> Tutor: 404 Not Found
+    else tutor exists
+        Handler -> Db: Find agreement by Id + TutorId\nand Status != Ended
+        Db --> Handler: Agreement or null
+
+        alt no matching agreement
+            deactivate Handler
+            Handler -->> ErrorHandler: TutoringAgreementNotFoundByIdException
+            ErrorHandler --> Tutor: 404 Not Found
+        else matching agreement
+            alt isActive = true
+                Handler -> Agreement: Activate()
+                Agreement --> Handler
+            else isActive = false
+                Handler -> Agreement: Deactivate()
+                Agreement --> Handler
+            end
+            Handler -> Db: SaveChangesAsync()
+            Db --> Handler: changes saved
+            Handler --> Controller
+            deactivate Handler
+            Controller --> Tutor: 204 No Content
+        end
+    end
+end
+
+@enduml

@@ -53,7 +53,7 @@ public sealed class UpdateTutoringAgreementStatusHandler(
                 tutor.Id.Value,
                 request.TutoringAgreementId);
         }
-
+        
         if (request.IsActive)
         {
             agreement.Activate();
