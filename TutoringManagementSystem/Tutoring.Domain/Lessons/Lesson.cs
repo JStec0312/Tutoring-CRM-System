@@ -12,6 +12,7 @@ public sealed class Lesson
 
     public TutoringAgreementId TutoringAgreementId { get; private set; }
     public TutoringAgreement Agreement { get; private set; } = null!;
+    public LessonSeriesId? LessonSeriesId { get; private set; }
 
     public TimeSlot TimeSlot { get; private set; } = null!;
 
@@ -22,4 +23,20 @@ public sealed class Lesson
     public LessonNote? Note { get; private set; }
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public Lesson(
+        TutoringAgreementId tutoringAgreementId,
+        TimeSlot timeSlot,
+        DateTimeOffset createdAtUtc,
+        LessonSeriesId? lessonSeriesId = null)
+    {
+        TutoringAgreementId = tutoringAgreementId;
+        TimeSlot = timeSlot ?? throw new ArgumentNullException(nameof(timeSlot));
+
+        LessonSeriesId = lessonSeriesId;
+
+        Status = LessonStatus.Scheduled;
+        CreatedAtUtc = createdAtUtc;
+    }
+
 }

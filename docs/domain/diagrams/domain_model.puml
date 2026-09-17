@@ -178,6 +178,15 @@ package "Lesson Planning" {
     text: String
   }
 
+  class LessonSeries <<Aggregate Root>> {
+    dayOfWeek: DayOfWeek
+    startsAt: TimeOnly
+    duration: TimeSpan
+    startsOn: DateOnly
+    endsOn: Optional<DateOnly>
+  }
+  LessonSeries "0..*" --> "1" TutoringAgreement : scheduled within
+  Lesson "0..*" --> "0..1" LessonSeries : occurrence of
   Lesson "0..*" --> "1" TutoringAgreement : scheduled within
 
   Lesson "1" *-- "1" TimeSlot
@@ -185,6 +194,7 @@ package "Lesson Planning" {
   Lesson "1" *-- "0..1" LessonNote
 
 }
+
 
 
 ' ============================================================

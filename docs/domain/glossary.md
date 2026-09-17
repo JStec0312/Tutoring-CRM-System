@@ -301,6 +301,33 @@ Represents a tutoring session scheduled within one tutoring agreement.
 
 ---
 
+## LessonSeries
+
+**Type:** Aggregate Root
+
+**Domain meaning:**  
+Represents a recurring lesson schedule defined for one tutoring agreement.
+It describes when repeated lessons should occur, while each generated
+Lesson remains an independent lesson occurrence.
+
+**Fields:**
+
+| Field | Type | Meaning |
+|---|---|---|
+| `dayOfWeek` | `DayOfWeek` | Day on which lessons repeat |
+| `startsAt` | `TimeOnly` | Local start time of each occurrence |
+| `duration` | `TimeSpan` | Duration of each lesson |
+| `startsOn` | `DateOnly` | First date covered by the series |
+| `endsOn` | `DateOnly?` | Optional last date covered by the series |
+
+**Connections:**
+
+- Refers to exactly one `TutoringAgreement`.
+- May generate multiple `Lesson` aggregates.
+- Each generated `Lesson` may refer to one `LessonSeries`.
+
+---
+
 ## LessonNote
 
 **Type:** Entity

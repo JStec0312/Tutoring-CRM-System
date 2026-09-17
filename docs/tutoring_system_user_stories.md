@@ -74,7 +74,6 @@ Source: original project PDF brief.
 | US-032 | Statistics | As a tutor, I want to see statistics for a specific student, including lessons, attendance, and payments, so that I can assess cooperation individually. |
 | US-033 | Notifications | As a user, I want to receive lesson reminders so that I do not miss upcoming sessions. |
 | US-034 | Notifications | As a student, I want to be informed about lesson rescheduling or cancellation so that I know my current schedule. |
-
 ## P2 - Optional Features
 
 | ID | Module | User Story |
