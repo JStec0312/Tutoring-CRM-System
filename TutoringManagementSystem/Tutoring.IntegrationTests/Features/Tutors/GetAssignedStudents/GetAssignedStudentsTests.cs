@@ -336,7 +336,7 @@ public sealed class GetAssignedStudentsTests(
             new
             {
                 Email = email,
-                UserName = userName,
+                Username = userName,
                 Password
             });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);

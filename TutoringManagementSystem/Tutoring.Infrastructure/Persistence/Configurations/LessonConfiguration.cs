@@ -71,12 +71,13 @@ internal sealed class LessonConfiguration
                 "LessonSeriesId")
             .IsRequired(false);
 
-
         builder.HasOne(lesson => lesson.Note)
             .WithOne()
             .HasForeignKey<LessonNote>(note => note.LessonId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(lesson => lesson.TutoringAgreementId);
+
+        builder.HasIndex(lesson => lesson.LessonSeriesId);
     }
 }
