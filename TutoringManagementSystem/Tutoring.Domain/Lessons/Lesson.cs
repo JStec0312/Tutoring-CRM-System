@@ -1,4 +1,5 @@
 using Tutoring.Domain.Common;
+using Tutoring.Domain.LessonSeries;
 using Tutoring.Domain.TutoringAgreements;
 
 namespace Tutoring.Domain.Lessons;
