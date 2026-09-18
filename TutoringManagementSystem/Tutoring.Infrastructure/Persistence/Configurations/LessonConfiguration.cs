@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tutoring.Domain.Lessons;
+using Tutoring.Domain.LessonSeries;
 using Tutoring.Domain.TutoringAgreements;
 
 namespace Tutoring.Infrastructure.Persistence.Configurations;
@@ -63,6 +64,13 @@ internal sealed class LessonConfiguration
             .WithMany()
             .HasForeignKey(lesson => lesson.TutoringAgreementId)
             .OnDelete(DeleteBehavior.Restrict);
+    
+        builder.Property(lesson => lesson.LessonSeriesId)
+            .HasNullableStronglyTypedId(
+                value => new LessonSeriesId(value),
+                "LessonSeriesId")
+            .IsRequired(false);
+
 
         builder.HasOne(lesson => lesson.Note)
             .WithOne()
