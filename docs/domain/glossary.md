@@ -293,6 +293,7 @@ Represents a tutoring session scheduled within one tutoring agreement.
 **Connections:**
 
 - Refers to exactly one `TutoringAgreement`.
+- May optionally refer to one `LessonSeries` as a recurring occurrence.
 - Owns one `TimeSlot`.
 - May own one `CancellationReason`.
 - May own one `LessonNote`.

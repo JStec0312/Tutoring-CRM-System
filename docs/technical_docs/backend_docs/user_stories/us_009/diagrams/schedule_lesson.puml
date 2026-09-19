@@ -1,0 +1,50 @@
+@startuml
+
+title US-009 - Schedule a lesson
+
+actor Tutor
+participant ScheduleLessonController as Controller
+participant MediatR
+participant ScheduleLessonHandler as Handler
+database TutoringDbContext as Db
+
+Tutor -> Controller: POST /api/tutors/me/lessons
+Controller -> Controller: Read UserAccountId from JWT sub
+Controller -> MediatR: ScheduleLessonCommand
+MediatR -> Handler: Handle(command)
+activate Handler
+Handler -> Db: Find Tutor by UserAccountId
+Db --> Handler: Tutor or null
+
+alt tutor missing
+    Handler --> Tutor: 404 Tutors.NotFound
+else tutor found
+    Handler -> Db: Find agreement by ID + TutorId
+    Db --> Handler: Agreement or null
+
+    alt agreement missing or not owned
+        Handler --> Tutor: 404 TutoringAgreements.NotFound
+    else agreement found
+        Handler -> Handler: Validate Active status,\npositive duration, future UTC start
+
+        alt agreement inactive
+            Handler --> Tutor: 400 TutoringAgreements.NotActive
+        else valid request
+            Handler -> Db: Find overlapping scheduled\nlessons for tutor
+            Db --> Handler: Conflict or none
+
+            alt time conflict
+                Handler --> Tutor: 409 Lessons.TimeConflict
+            else no conflict
+                Handler -> Handler: Create TimeSlot and Lesson
+                Handler -> Db: SaveChangesAsync()
+                Db --> Handler: Saved
+                Handler --> Controller: ScheduleLessonResponse
+                Controller --> Tutor: 201 Created
+            end
+        end
+    end
+end
+deactivate Handler
+
+@enduml
