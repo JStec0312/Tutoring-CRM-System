@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Tutoring.Domain.Identity;
 using Tutoring.Domain.Lessons;
 using Tutoring.Domain.LessonSeries;
 using Tutoring.Domain.TutoringAgreements;
@@ -71,7 +72,32 @@ internal sealed class LessonConfiguration
                 "LessonSeriesId")
             .IsRequired(false);
 
-        builder.HasOne(lesson => lesson.Note)
+
+        builder.Property(lesson => lesson.LessonCancellationParty)
+            .HasConversion<string>()
+            .HasColumnName("LessonCancellationParty")
+            .HasColumnType("nvarchar(50)")
+            .HasMaxLength(50)
+            .IsRequired(false);
+
+        builder.Property(lesson => lesson.CancelledAtUtc)
+            .HasColumnType("datetimeoffset")
+            .IsRequired(false);
+
+        builder.Property(lesson => lesson.CancelledByUserAccountId)
+            .HasNullableStronglyTypedId(
+                value => new UserAccountId(value),
+                "CancelledByUserAccountId")
+            .IsRequired(false);
+
+        builder.HasOne<UserAccount>()
+            .WithMany()
+            .HasForeignKey(lesson => lesson.CancelledByUserAccountId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .IsRequired(false);
+
+        builder.HasIndex(lesson => lesson.CancelledByUserAccountId);
+                builder.HasOne(lesson => lesson.Note)
             .WithOne()
             .HasForeignKey<LessonNote>(note => note.LessonId)
             .OnDelete(DeleteBehavior.Cascade);

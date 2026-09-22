@@ -1,4 +1,5 @@
 using Tutoring.Domain.Common;
+using Tutoring.Domain.Identity;
 using Tutoring.Domain.LessonSeries;
 using Tutoring.Domain.TutoringAgreements;
 
@@ -14,9 +15,10 @@ public sealed class Lesson
     public TutoringAgreementId TutoringAgreementId { get; private set; }
     public TutoringAgreement Agreement { get; private set; } = null!;
     public LessonSeriesId? LessonSeriesId { get; private set; }
-
     public TimeSlot TimeSlot { get; private set; } = null!;
-
+    public LessonCancellationParty? LessonCancellationParty { get; private set; }
+    public DateTimeOffset? CancelledAtUtc { get; private set; }
+    public UserAccountId? CancelledByUserAccountId { get; private set; }
     public LessonStatus Status { get; private set; }
 
     public CancellationReason? CancellationReason { get; private set; }
@@ -48,6 +50,24 @@ public sealed class Lesson
         }
 
         TimeSlot = newTimeSlot;
+    }
+
+    public void Cancel(
+        LessonCancellationParty lessonCancellationParty,
+        CancellationReason? cancellationReason,
+        UserAccountId cancelledByUserAccountId,
+        DateTimeOffset cancelledAtUtc)
+    {
+        if(Status != LessonStatus.Scheduled)
+        {
+            throw new CanNotCancelActiveLessonException();
+        }
+
+        Status = LessonStatus.Cancelled;
+        LessonCancellationParty = lessonCancellationParty;
+        CancellationReason = cancellationReason ?? throw new ArgumentNullException(nameof(cancellationReason));
+        CancelledAtUtc = cancelledAtUtc;
+        CancelledByUserAccountId = cancelledByUserAccountId;
     }
 
 }

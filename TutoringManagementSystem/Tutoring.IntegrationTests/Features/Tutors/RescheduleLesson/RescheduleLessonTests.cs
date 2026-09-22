@@ -61,7 +61,7 @@ public sealed class RescheduleLessonTests(
             60);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemCodeAsync(response, "Lessons.NotFound");
+        await AssertProblemCodeAsync(response, "Lessons.LessonNotFound");
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public sealed class RescheduleLessonTests(
             60);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        await AssertProblemCodeAsync(response, "Lessons.NotFound");
+        await AssertProblemCodeAsync(response, "Lessons.LessonNotFound");
         Assert.Equal(before, await GetLessonAsync(lessonId));
         Assert.NotEqual(owner.AccessToken, otherTutor.AccessToken);
     }
