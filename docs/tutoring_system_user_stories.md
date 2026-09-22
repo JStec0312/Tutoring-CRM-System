@@ -50,7 +50,7 @@ Source: original project PDF brief.
 | US-008 | Students | As a tutor, I want to mark a tutoring agreement with a student as active or inactive so that I can manage whether that specific teaching relationship is currently active. |
 | US-009 | Calendar | As a tutor, I want to schedule a lesson with a date, student, subject, and duration so that I can plan tutoring sessions. |
 | US-010 | Calendar | As a tutor, I want to edit a scheduled lesson so that I can correct its time or details. |
-| US-011 | Calendar | As a tutor, I want to cancel a lesson and provide a reason so that schedule changes are documented. |
+| US-011 | Calendar | As a tutor/student, I want to cancel a lesson and provide a reason so that schedule changes are documented. |
 | US-012 | Calendar | As a tutor, I want to set a lesson status as scheduled, completed, cancelled, or missed so that the lesson history is accurate. |
 | US-013 | Calendar | As a user, I want daily, weekly, and monthly calendar views so that I can review my lesson schedule conveniently. |
 | US-014 | Calendar | As a tutor, I want to review a student's lesson history so that I can understand previous work with that student. |
