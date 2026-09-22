@@ -12,6 +12,11 @@ A tutor can start cooperation in either of two ways:
 Both paths create an active `TutoringAgreement`. A managed student has a
 `DisplayName` but no login credentials or account-derived contact details.
 
+## FILES
+
+- Implementation: [AddStudentManually](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/AddStudentManually/), [InviteStudent](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/InviteStudent/), [AcceptStudentInvitation](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Students/AcceptStudentInvitation/)
+- Tests: [AddStudentManually](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Tutors/AddStudentManually/), [InviteStudent](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Tutors/InviteStudent/), [AcceptStudentInvitation](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Students/AcceptStudentInvitation/)
+
 ## API
 
 | Method | Endpoint | Auth | Result |

@@ -40,4 +40,14 @@ public sealed class Lesson
         CreatedAtUtc = createdAtUtc;
     }
 
+    public void Reschedule(TimeSlot newTimeSlot)
+    {
+        if(Status != LessonStatus.Scheduled)
+        {
+            throw new CanNotRescheduleInactiveLessonException();
+        }
+
+        TimeSlot = newTimeSlot;
+    }
+
 }

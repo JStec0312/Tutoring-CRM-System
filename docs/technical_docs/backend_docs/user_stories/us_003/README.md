@@ -6,6 +6,11 @@
 
 `UserAccount` supports multiple role assignments through `UserAccountRole`/`UserRole` (`Tutor`, `Student`, `Administrator`). Registration assigns exactly one role (`Student` or `Tutor`) and the JWT carries the assigned roles as claims. There is no Administrator registration path and no role-based authorization yet — endpoints only check that a caller is authenticated (`[Authorize]`), not which role they hold.
 
+## FILES
+
+- Implementation: [Identity domain](../../../../../TutoringManagementSystem/Tutoring.Domain/Identity/), [authentication infrastructure](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/)
+- Tests: [Identity unit tests](../../../../../TutoringManagementSystem/Tutoring.UnitTest/Identity/)
+
 ## Implementation
 
 - `UserAccount.AssignRole(UserRole role)` adds a `UserAccountRole` if not already present; it is idempotent per role.

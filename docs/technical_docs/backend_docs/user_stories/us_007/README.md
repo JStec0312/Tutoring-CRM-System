@@ -12,6 +12,11 @@ itself, because it is specific to a given tutor and a given student:
 details (`ContactEmail`, `ContactPhoneNumber`), and optional `Notes`. In this
 MVP, an agreement holds exactly one subject and one rate.
 
+## FILES
+
+- Implementation: [UpdateStudentDetails](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/UpdateStudentDetails/)
+- Tests: [integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Tutors/UpdateStudentDetails/), [domain unit tests](../../../../../TutoringManagementSystem/Tutoring.UnitTest/TutoringAgreements/)
+
 ## API
 
 | Method | Endpoint | Auth | Result |

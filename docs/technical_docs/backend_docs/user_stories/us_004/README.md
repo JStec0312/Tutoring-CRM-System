@@ -5,6 +5,11 @@
 
 An authenticated user can update their username, first/last name, and phone number. Password changes go through a separate reset-token flow (request → emailed link → reset), independent of the profile update endpoint; there is no "change password while logged in" endpoint.
 
+## FILES
+
+- Implementation: [UpdateProfile](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Users/UpdateProfile/), [RequestPasswordReset](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RequestPasswordReset/), [ResetPassword](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/ResetPassword/)
+- Tests: [UpdateProfile](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Users/UpdateProfile/), [RequestPasswordReset](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/RequestPasswordReset/), [ResetPassword](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/ResetPassword/)
+
 ## API
 
 | Method | Endpoint | Auth | Result |

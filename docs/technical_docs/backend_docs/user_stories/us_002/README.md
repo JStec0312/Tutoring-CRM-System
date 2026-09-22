@@ -6,6 +6,11 @@
 
 An active user logs in with email/password and receives a JWT access token plus an `HttpOnly` refresh-token cookie. The refresh endpoint rotates the token and issues a new access token. Sign-out revokes the current refresh token (or all of a user's active tokens) and clears the cookie.
 
+## FILES
+
+- Implementation: [Login](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login/), [RefreshToken](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RefreshToken/), [SignOut](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOut/), [SignOutAll](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOutAll/)
+- Tests: [Login](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/Login/), [RefreshToken](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/RefreshToken/), [SignOut](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/SignOut/), [SignOutAll](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/SignOutAll/)
+
 ## API
 
 | Method | Endpoint | Auth | Result |

@@ -6,6 +6,11 @@
 
 `GET /api/tutors/me/students` returns the students assigned to the authenticated tutor. The endpoint requires the `Tutor` role; students and unauthenticated callers are rejected.
 
+## FILES
+
+- Implementation: [GetAssignedStudents](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/GetAssignedStudents/)
+- Tests: [GetAssignedStudents](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Tutors/GetAssignedStudents/)
+
 ## Implementation
 a caller's `sub` claim and sends `GetAssignedStudentsQuery` with the resolved `UserAccountId`.
 - `GetAssignedStudentsHandler` looks up the `Tutor` by `UserAccountId`; if none exists, it returns an empty list instead of failing.

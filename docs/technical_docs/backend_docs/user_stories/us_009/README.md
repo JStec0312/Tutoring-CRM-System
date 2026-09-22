@@ -8,6 +8,11 @@ An authenticated tutor can schedule one future lesson within an active `Tutoring
 
 Only positive durations are accepted. Scheduled lessons for the same tutor cannot overlap, while adjacent time slots are allowed. US-009 creates standalone lessons only, so `LessonSeriesId` is `null`; recurring lesson schedules belong to US-035.
 
+## FILES
+
+- Implementation: [ScheduleLesson](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/ScheduleLesson/)
+- Tests: [ScheduleLesson](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Tutors/ScheduleLesson/)
+
 ## API
 
 | Method | Endpoint | Auth | Result |

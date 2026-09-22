@@ -6,6 +6,11 @@
 
 A new user registers as a Student or Tutor. The account starts as `PendingActivation` and a role-specific entity (`Student`/`Tutor`) is created in the same transaction. A verification email is sent asynchronously through the outbox/RabbitMQ pipeline; confirming the link activates the account.
 
+## FILES
+
+- Implementation: [RegisterStudent](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RegisterStudent/), [RegisterTutor](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RegisterTutor/), [ConfirmEmail](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/ConfirmEmail/)
+- Tests: [RegisterStudent](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/RegisterStudent/), [RegisterTutor](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/RegisterTutor/), [ConfirmEmail](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/ConfirmEmail/)
+
 ## API
 
 | Method | Endpoint | Auth | Result |

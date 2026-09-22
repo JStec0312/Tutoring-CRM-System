@@ -6,6 +6,11 @@
 
 This endpoint manages the lifecycle of a single `TutoringAgreement`. A tutor may have multiple agreements with the same student, so the status belongs to the agreement itself rather than to the `Student` aggregate. Only the owning tutor can change the agreement state; a closed agreement (`Ended`) cannot be reopened or suspended through this API, and the student/tutor profiles remain untouched by this operation.
 
+## FILES
+
+- Implementation: [UpdateTutoringAgreementStatus](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/UpdateTutoringAgreementStatus/)
+- Tests: [integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Tutors/UpdateTutoringAgreementStatus/), [domain unit tests](../../../../../TutoringManagementSystem/Tutoring.UnitTest/TutoringAgreements/)
+
 ## API
 
 | Method | Endpoint | Auth | Result |
