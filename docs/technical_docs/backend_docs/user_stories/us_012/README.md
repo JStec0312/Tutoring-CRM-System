@@ -1,5 +1,5 @@
 # US-012
 
-> As a tutor, I want to set a lesson status as scheduled, completed, cancelled, or missed so that the lesson history is accurate.
+>As a tutor, I want to mark a scheduled lesson as completed or missed so that the lesson history accurately reflects what happened
 
 Not implemented yet.
