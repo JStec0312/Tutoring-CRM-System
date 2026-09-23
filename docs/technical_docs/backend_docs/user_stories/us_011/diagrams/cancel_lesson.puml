@@ -1,0 +1,52 @@
+@startuml
+title US-011 - Cancel lesson
+
+actor Tutor
+actor Student
+participant "CancelLessonController" as Controller
+participant "CancelLessonHandler" as Handler
+database "TutoringDbContext" as Db
+participant "Lesson" as Lesson
+
+Tutor -> Controller: POST /api/lessons/{lessonId}/cancel
+Student -> Controller: POST /api/lessons/{lessonId}/cancel
+
+Controller -> Controller: Read UserAccountId from JWT sub
+Controller -> Handler: CancelLessonCommand
+
+Handler -> Db: Load Lesson + Agreement\n+ Tutor + Student
+
+alt Lesson missing or user not assigned
+    Handler --> Controller: Lessons.NotFoundForUser
+    Controller --> Tutor: 404 Not Found
+else Lesson accessible
+
+    alt Caller is Student
+        alt CancellationParty == Tutor
+            Handler --> Controller: Lessons.CanNotCancelAsTutorBeingStudent
+            Controller --> Student: 401 Unauthorized
+        else Valid student cancellation
+            Handler -> Handler: party = Student
+        end
+
+    else Caller is Tutor
+        Handler -> Handler: party = request party\nor Tutor by default
+    end
+
+    Handler -> Handler: Build optional CancellationReason
+    Handler -> Lesson: Cancel(party, reason,\nuserAccountId, cancelledAtUtc)
+
+    alt Lesson is not Scheduled
+        Lesson --> Handler: DomainException
+        Handler --> Controller: Business rule violation
+    else Lesson is Scheduled
+        Lesson -> Lesson: Status = Cancelled
+        Lesson -> Lesson: Store cancellation metadata
+        Handler -> Db: SaveChangesAsync()
+        Handler --> Controller
+        Controller --> Tutor: 204 No Content
+        Controller --> Student: 204 No Content
+    end
+end
+
+@enduml

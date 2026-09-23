@@ -4,7 +4,7 @@ namespace Tutoring.Domain.Lessons;
 
 public sealed class CanNotCancelActiveLessonException : DomainException
 {
-    public CanNotCancelActiveLessonException() : base("Lesson.CancelActive", "Cannot cancel an active lesson.")
+    public CanNotCancelActiveLessonException() : base("Lessons.CanNotBeCancelled", "Cannot cancel an active lesson.")
     {
     }
 }

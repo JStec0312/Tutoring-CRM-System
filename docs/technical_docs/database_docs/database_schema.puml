@@ -80,6 +80,9 @@ entity Lessons {
     EndsAtUtc : datetimeoffset
     Status : nvarchar(50)
     CancellationReason : nvarchar(500) <<nullable>>
+    LessonCancellationParty : nvarchar(50) <<nullable>> 
+    CancelledAtUtc : datetimeoffset <<nullable>>
+    CancelledByUserAccountId : uniqueidentifier <<FK, nullable>>
     CreatedAtUtc : datetimeoffset
 }
 

@@ -65,7 +65,7 @@ public sealed class Lesson
 
         Status = LessonStatus.Cancelled;
         LessonCancellationParty = lessonCancellationParty;
-        CancellationReason = cancellationReason ?? throw new ArgumentNullException(nameof(cancellationReason));
+        CancellationReason = cancellationReason;
         CancelledAtUtc = cancelledAtUtc;
         CancelledByUserAccountId = cancelledByUserAccountId;
     }

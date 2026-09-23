@@ -87,6 +87,7 @@ public sealed class CancelLessonHandler(
                 new CancellationReason(request.Reason);
         }
 
+        var cancelledAtUtc = DateTimeOffset.UtcNow;
 
         lesson.Cancel(
             cancellationParty,
