@@ -70,4 +70,31 @@ public sealed class Lesson
         CancelledByUserAccountId = cancelledByUserAccountId;
     }
 
+    public void Complete(DateTimeOffset nowUtc)
+    {
+        EnsureCanBeFinalized(nowUtc);
+
+        Status = LessonStatus.Completed;
+    }
+
+    public void MarkAsMissed(DateTimeOffset nowUtc)
+    {
+        EnsureCanBeFinalized(nowUtc);
+
+        Status = LessonStatus.Missed;
+    }
+
+    private void EnsureCanBeFinalized(DateTimeOffset nowUtc)
+    {
+        if (Status != LessonStatus.Scheduled)
+        {
+            throw new CanNotFinalizeLessonException(Status);
+        }
+
+        if (nowUtc < TimeSlot.EndsAtUtc)
+        {
+            throw new CanNotFinalizeLessonBeforeEndException();
+        }
+    }
+
 }

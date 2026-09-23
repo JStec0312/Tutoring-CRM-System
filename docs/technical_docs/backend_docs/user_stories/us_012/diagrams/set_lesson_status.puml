@@ -1,0 +1,24 @@
+@startuml
+
+title US-012 - Finalize lesson
+
+[*] --> Scheduled
+
+Scheduled --> Completed : Complete()
+Scheduled --> Missed : MarkAsMissed()
+Scheduled --> Cancelled : Cancel()\nUS-011
+
+Completed --> [*]
+Missed --> [*]
+Cancelled --> [*]
+
+note right of Scheduled
+US-012 allows finalization only
+after TimeSlot.EndsAtUtc.
+end note
+
+note right of Cancelled
+Cancellation belongs to US-011.
+end note
+
+@enduml
