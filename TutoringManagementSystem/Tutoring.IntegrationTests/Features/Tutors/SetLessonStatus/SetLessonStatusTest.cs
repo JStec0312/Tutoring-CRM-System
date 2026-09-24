@@ -10,6 +10,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.SetLessonStatus;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class SetLessonStatusTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

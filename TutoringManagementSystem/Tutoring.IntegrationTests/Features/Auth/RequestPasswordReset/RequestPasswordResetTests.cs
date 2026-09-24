@@ -5,6 +5,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.RequestPasswordReset;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class RequestPasswordResetTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

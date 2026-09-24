@@ -11,6 +11,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.AddStudentManually;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class AddStudentManuallyTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

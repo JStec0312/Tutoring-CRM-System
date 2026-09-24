@@ -5,6 +5,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.SignOut;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class SignOutTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

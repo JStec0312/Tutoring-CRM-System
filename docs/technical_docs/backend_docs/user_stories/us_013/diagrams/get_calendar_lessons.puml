@@ -1,0 +1,47 @@
+@startuml
+
+title US-013 - View calendar lessons
+
+actor User
+participant "GetCalendarLessonsController" as Controller
+participant MediatR
+participant "GetCalendarLessonsHandler" as Handler
+database "TutoringDbContext" as Db
+
+User -> Controller: GET /api/calendar?from={from}&to={to}
+
+Controller -> Controller: Read UserAccountId from JWT sub
+Controller -> Controller: Build RequestMetadata\nIP + UserAgent + TraceId
+
+alt invalid UserAccountId
+    Controller --> User: 401 Unauthorized
+else authenticated user
+
+    alt from >= to
+        Controller --> User: 400 Bad Request
+    else valid range
+        Controller -> Controller: Convert from/to to UTC
+
+        Controller -> MediatR: GetCalendarLessonsQuery\n(UserAccountId, FromUtc, ToUtc,\nRequestMetadata)
+
+        MediatR -> Handler: Handle(query)
+        activate Handler
+
+
+        Handler -> Db: Query Lessons AsNoTracking\nwhere user belongs to Agreement\nand time ranges overlap\norder by StartsAtUtc
+
+        Db --> Handler: Calendar lessons
+
+        Handler -> Handler: Project CalendarLessonResponse
+
+        Handler --> MediatR: IReadOnlyCollection<CalendarLessonResponse>
+        deactivate Handler
+
+        MediatR --> Controller: Calendar lessons
+
+
+        Controller --> User: 200 OK\nCalendarLessonResponse[]
+    end
+end
+
+@enduml

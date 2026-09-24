@@ -11,6 +11,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.ScheduleLesson;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class ScheduleLessonTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

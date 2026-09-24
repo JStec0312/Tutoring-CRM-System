@@ -10,6 +10,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.GetAssignedStudents;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class GetAssignedStudentsTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

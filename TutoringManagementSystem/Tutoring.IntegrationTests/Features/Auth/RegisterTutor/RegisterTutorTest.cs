@@ -7,6 +7,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class RegisterTutorTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

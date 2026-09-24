@@ -4,6 +4,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.Login
 {
+    [Collection(IntegrationTestCollection.Name)]
     public sealed class LoginTests(
         IntegrationTestFixture fixture)
         : IntegrationTestBase(fixture)

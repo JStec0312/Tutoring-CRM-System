@@ -11,6 +11,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.RescheduleLesson;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class RescheduleLessonTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

@@ -6,6 +6,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.ResetPassword;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class ResetPasswordTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

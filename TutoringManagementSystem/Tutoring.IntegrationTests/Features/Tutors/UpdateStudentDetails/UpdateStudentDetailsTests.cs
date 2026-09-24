@@ -7,6 +7,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.UpdateStudentDetails;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class UpdateStudentDetailsTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

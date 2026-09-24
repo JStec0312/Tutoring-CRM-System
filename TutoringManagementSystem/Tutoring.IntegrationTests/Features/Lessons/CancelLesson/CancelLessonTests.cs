@@ -10,6 +10,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Lessons.CancelLesson;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class CancelLessonTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

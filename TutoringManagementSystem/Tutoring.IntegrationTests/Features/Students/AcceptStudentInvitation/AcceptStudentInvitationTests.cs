@@ -12,6 +12,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Students.AcceptStudentInvitation;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class AcceptStudentInvitationTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

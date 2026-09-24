@@ -8,6 +8,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.UpdateTutoringAgreementStatus;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class UpdateTutoringAgreementStatusTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

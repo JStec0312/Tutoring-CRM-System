@@ -5,6 +5,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Users.UpdateProfile;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class UpdateProfileTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

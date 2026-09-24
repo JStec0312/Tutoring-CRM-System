@@ -10,6 +10,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.RefreshToken;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class RefreshTokenTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)

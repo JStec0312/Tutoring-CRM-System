@@ -9,6 +9,7 @@ using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.ConfirmEmail;
 
+[Collection(IntegrationTestCollection.Name)]
 public sealed class ConfirmEmailTests(
     IntegrationTestFixture fixture)
     : IntegrationTestBase(fixture)
