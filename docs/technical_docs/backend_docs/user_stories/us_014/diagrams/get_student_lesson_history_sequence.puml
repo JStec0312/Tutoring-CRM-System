@@ -1,0 +1,50 @@
+@startuml
+
+title US-014 - Review student lesson history
+
+actor Tutor
+participant "GetStudentLessonHistoryController" as Controller
+participant MediatR
+participant "GetStudentLessonHistoryHandler" as Handler
+database "TutoringDbContext / SQL Server" as Db
+
+Tutor -> Controller: GET /api/tutors/students/{studentId}/lessons/history
+Controller -> Controller: Read sub from JWT
+Controller -> Controller: Build RequestMetadata\nIP + UserAgent + TraceId
+
+alt missing or invalid authentication
+    Controller --> Tutor: 401 Unauthorized
+else authenticated Tutor
+    Controller -> MediatR: GetStudentLessonHistoryQuery\n(UserAccountId, StudentId, RequestMetadata)
+    MediatR -> Handler: Handle(query)
+    activate Handler
+
+    Handler -> Db: Find Tutor by UserAccountId\nAsNoTracking
+    Db --> Handler: Tutor
+
+    alt tutor not found
+        Handler --> MediatR: TutorNotFoundException
+        MediatR --> Controller: NotFoundException
+        Controller --> Tutor: 404 Not Found
+    else tutor found
+        Handler -> Db: Check TutoringAgreement\nfor TutorId + StudentId
+        Db --> Handler: Relationship exists?
+
+        alt student / relationship not found
+            Handler --> MediatR: TutoringAgreementNotFoundException
+            MediatR --> Controller: NotFoundException
+            Controller --> Tutor: 404 Not Found
+        else relationship found
+            Handler -> Handler: nowUtc = TimeProvider.GetUtcNow()
+            Handler -> Db: Query matching Lessons\nAsNoTracking\nstartsAtUtc < nowUtc\norder newest-first
+            Db --> Handler: Lessons
+            Handler -> Handler: Select StudentLessonHistoryResponse
+            Handler --> MediatR: IReadOnlyCollection<Response>
+            deactivate Handler
+            MediatR --> Controller: IReadOnlyCollection<Response>
+            Controller --> Tutor: 200 OK\nResponse[]
+        end
+    end
+end
+
+@enduml

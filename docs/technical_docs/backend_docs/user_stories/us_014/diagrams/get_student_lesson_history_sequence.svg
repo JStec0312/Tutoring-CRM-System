@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     contentStyleType="text/css" preserveAspectRatio="none"
+     width="1240px" height="1010px" viewBox="0 0 1240 1010"
+     style="width:1240px;height:1010px;background:#FFFFFF;" version="1.1" zoomAndPan="magnify">
+<defs/>
+<g>
+  <text fill="#000000" font-family="sans-serif" font-size="14" font-weight="bold" x="420" y="16">US-014 - Review student lesson history</text>
+
+  <!-- Lifelines -->
+  <line x1="60" x2="60" y1="55" y2="970" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/>
+  <line x1="300" x2="300" y1="55" y2="970" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/>
+  <line x1="520" x2="520" y1="55" y2="970" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/>
+  <line x1="760" x2="760" y1="55" y2="970" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/>
+  <line x1="1060" x2="1060" y1="55" y2="970" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/>
+
+  <!-- Actor: Tutor -->
+  <ellipse cx="60" cy="28" rx="8" ry="8" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/>
+  <path d="M60,36 L60,58 M48,44 L72,44 M60,58 L48,70 M60,58 L72,70" fill="none" style="stroke:#181818;stroke-width:0.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="13" x="42" y="82">Tutor</text>
+
+  <!-- Participant boxes -->
+  <rect x="178" y="18" width="244" height="34" rx="2.5" ry="2.5" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="188" y="39">GetStudentLessonHistoryController</text>
+
+  <rect x="490" y="18" width="60" height="34" rx="2.5" ry="2.5" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="500" y="39">MediatR</text>
+
+  <rect x="648" y="18" width="224" height="34" rx="2.5" ry="2.5" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="658" y="39">GetStudentLessonHistoryHandler</text>
+
+  <rect x="948" y="18" width="224" height="34" rx="2.5" ry="2.5" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="958" y="39">TutoringDbContext / SQL Server</text>
+
+  <!-- Step 1: Tutor -> Controller -->
+  <line x1="60" x2="296" y1="90" y2="90" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="286,85 296,90 286,95" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="66" y="85">GET /api/tutors/students/{studentId}/lessons/history</text>
+
+  <!-- Step 2: Controller self - read sub -->
+  <path d="M300,115 L340,115 L340,128 L300,128" fill="none" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="306,123 296,128 306,133" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="112">Read sub from JWT</text>
+
+  <!-- Step 3: Controller self - build metadata -->
+  <path d="M300,150 L340,150 L340,163 L300,163" fill="none" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="306,158 296,163 306,168" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="140">Build RequestMetadata</text>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="153">(IP + UserAgent + TraceId)</text>
+
+  <!-- Outer alt frame -->
+  <rect x="20" y="185" width="1190" height="770" fill="none" style="stroke:#000000;stroke-width:1.5;"/>
+  <path d="M20,185 L80,185 L80,198 L70,208 L20,208 Z" fill="#EEEEEE" style="stroke:#000000;stroke-width:1.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" x="28" y="200">alt</text>
+  <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" x="90" y="200">[missing or invalid authentication]</text>
+
+  <!-- 401 inside outer alt (if branch) -->
+  <line x1="296" x2="60" y1="228" y2="228" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="70,223 60,228 70,233" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="66" y="222">401 Unauthorized</text>
+
+  <!-- outer else divider -->
+  <line x1="20" x2="1210" y1="248" y2="248" style="stroke:#000000;stroke-width:1;stroke-dasharray:4,4;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" x="28" y="262">[authenticated Tutor]</text>
+
+  <!-- Step: Controller -> MediatR -->
+  <line x1="300" x2="516" y1="290" y2="290" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="506,285 516,290 506,295" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="278">GetStudentLessonHistoryQuery</text>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="285">(UserAccountId, StudentId, RequestMetadata)</text>
+
+  <!-- MediatR -> Handler -->
+  <line x1="520" x2="756" y1="310" y2="310" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="746,305 756,310 746,315" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="526" y="304">Handle(query)</text>
+
+  <!-- activate Handler -->
+  <rect x="756" y="310" width="8" height="330" fill="#FFFFFF" style="stroke:#181818;stroke-width:1;"/>
+
+  <!-- Handler -> Db: find tutor -->
+  <line x1="764" x2="1056" y1="335" y2="335" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="1046,330 1056,335 1046,340" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="323">Find Tutor by UserAccountId</text>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="330">(AsNoTracking)</text>
+
+  <!-- Db --> Handler: Tutor -->
+  <line x1="1056" x2="764" y1="355" y2="355" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="774,350 764,355 774,360" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="960" y="349">Tutor</text>
+
+  <!-- Inner alt frame (tutor not found) -->
+  <rect x="40" y="375" width="1150" height="580" fill="none" style="stroke:#000000;stroke-width:1.5;"/>
+  <path d="M40,375 L100,375 L100,388 L90,398 L40,398 Z" fill="#EEEEEE" style="stroke:#000000;stroke-width:1.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" x="48" y="390">alt</text>
+  <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" x="110" y="390">[tutor not found]</text>
+
+  <!-- Handler --> MediatR: TutorNotFoundException -->
+  <line x1="764" x2="520" y1="418" y2="418" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="530,413 520,418 530,423" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="526" y="412">TutorNotFoundException</text>
+
+  <!-- MediatR --> Controller: NotFoundException -->
+  <line x1="520" x2="300" y1="438" y2="438" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="310,433 300,438 310,443" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="432">NotFoundException</text>
+
+  <!-- Controller --> Tutor: 404 -->
+  <line x1="296" x2="60" y1="458" y2="458" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="70,453 60,458 70,463" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="66" y="452">404 Not Found</text>
+
+  <!-- inner else divider -->
+  <line x1="40" x2="1190" y1="478" y2="478" style="stroke:#000000;stroke-width:1;stroke-dasharray:4,4;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" x="48" y="492">[tutor found]</text>
+
+  <!-- Handler -> Db: check agreement -->
+  <line x1="764" x2="1056" y1="520" y2="520" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="1046,515 1056,520 1046,525" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="508">Check TutoringAgreement</text>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="515">(TutorId + StudentId)</text>
+
+  <!-- Db --> Handler: relationship exists? -->
+  <line x1="1056" x2="764" y1="540" y2="540" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="774,535 764,540 774,545" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="920" y="534">Relationship exists?</text>
+
+  <!-- Innermost alt frame (relationship not found) -->
+  <rect x="60" y="560" width="1110" height="380" fill="none" style="stroke:#000000;stroke-width:1.5;"/>
+  <path d="M60,560 L120,560 L120,573 L110,583 L60,583 Z" fill="#EEEEEE" style="stroke:#000000;stroke-width:1.5;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" font-weight="bold" x="68" y="575">alt</text>
+  <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" x="130" y="575">[student / relationship not found]</text>
+
+  <!-- Handler --> MediatR: TutoringAgreementNotFoundException -->
+  <line x1="764" x2="520" y1="603" y2="603" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="530,598 520,603 530,608" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="526" y="597">TutoringAgreementNotFoundException</text>
+
+  <!-- MediatR --> Controller: NotFoundException -->
+  <line x1="520" x2="300" y1="623" y2="623" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="310,618 300,623 310,628" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="617">NotFoundException</text>
+
+  <!-- Controller --> Tutor: 404 -->
+  <line x1="296" x2="60" y1="643" y2="643" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="70,638 60,643 70,648" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="66" y="637">404 Not Found</text>
+
+  <!-- innermost else divider -->
+  <line x1="60" x2="1170" y1="663" y2="663" style="stroke:#000000;stroke-width:1;stroke-dasharray:4,4;"/>
+  <text fill="#000000" font-family="sans-serif" font-size="11" font-weight="bold" x="68" y="677">[relationship found]</text>
+
+  <!-- Handler self: nowUtc -->
+  <path d="M764,700 L804,700 L804,713 L764,713" fill="none" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="770,708 760,713 770,718" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="697">nowUtc = TimeProvider.GetUtcNow()</text>
+
+  <!-- Handler -> Db: query lessons -->
+  <line x1="764" x2="1056" y1="740" y2="740" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="1046,735 1056,740 1046,745" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="723">Query matching Lessons (AsNoTracking)</text>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="730">StartsAtUtc &lt; nowUtc, order newest-first</text>
+
+  <!-- Db --> Handler: Lessons -->
+  <line x1="1056" x2="764" y1="760" y2="760" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="774,755 764,760 774,765" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="960" y="754">Lessons</text>
+
+  <!-- Handler self: select response -->
+  <path d="M764,785 L804,785 L804,798 L764,798" fill="none" style="stroke:#181818;stroke-width:1;"/>
+  <polygon points="770,793 760,798 770,803" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="770" y="782">Select StudentLessonHistoryResponse</text>
+
+  <!-- Handler --> MediatR: Response -->
+  <line x1="764" x2="520" y1="823" y2="823" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="530,818 520,823 530,828" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="526" y="817">IReadOnlyCollection&lt;Response&gt;</text>
+
+  <!-- MediatR --> Controller: Response -->
+  <line x1="520" x2="300" y1="853" y2="853" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="310,848 300,853 310,858" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="306" y="847">IReadOnlyCollection&lt;Response&gt;</text>
+
+  <!-- Controller --> Tutor: 200 OK -->
+  <line x1="296" x2="60" y1="883" y2="883" style="stroke:#181818;stroke-width:1;stroke-dasharray:4,4;"/>
+  <polygon points="70,878 60,883 70,888" fill="#181818"/>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="66" y="872">200 OK</text>
+  <text fill="#000000" font-family="sans-serif" font-size="12" x="66" y="879">Response[]</text>
+
+  <text fill="#000000" font-family="sans-serif" font-size="13" x="30" y="1002">Diagram source: get_student_lesson_history_sequence.puml</text>
+</g>
+</svg>
