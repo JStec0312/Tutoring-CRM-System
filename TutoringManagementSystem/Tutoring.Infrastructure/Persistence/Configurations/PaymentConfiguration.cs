@@ -15,7 +15,7 @@ internal sealed class PaymentConfiguration
         builder.HasKey(payment => payment.Id);
 
         builder.Property(payment => payment.Id)
-            .HasGeneratedStronglyTypedId(value => new PaymentId(value));
+            .HasStronglyTypedEntityId(value => new PaymentId(value));
 
         builder.Property(payment => payment.BillingAccountId)
             .HasStronglyTypedId(value => new BillingAccountId(value), "BillingAccountId")

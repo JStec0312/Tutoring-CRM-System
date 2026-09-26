@@ -15,7 +15,7 @@ internal sealed class TutorConfiguration
         builder.HasKey(tutor => tutor.Id);
 
         builder.Property(tutor => tutor.Id)
-            .HasGeneratedStronglyTypedId(value => new TutorId(value));
+            .HasStronglyTypedEntityId(value => new TutorId(value));
 
         builder.Property(tutor => tutor.UserAccountId)
             .HasStronglyTypedId(value => new UserAccountId(value), "UserAccountId")

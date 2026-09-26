@@ -16,10 +16,8 @@ internal sealed class LessonChargeConfiguration
         builder.HasKey(charge => charge.Id);
 
         builder.Property(charge => charge.Id)
-            .HasStronglyTypedId(
-                value => new LessonChargeId(value),
-                "Id")
-            .ValueGeneratedNever();
+            .HasStronglyTypedEntityId(
+                value => new LessonChargeId(value));
 
         builder.Property(charge => charge.BillingAccountId)
             .HasStronglyTypedId(

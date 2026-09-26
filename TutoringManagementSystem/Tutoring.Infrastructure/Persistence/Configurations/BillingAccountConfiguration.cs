@@ -16,10 +16,8 @@ internal sealed class BillingAccountConfiguration
         builder.HasKey(account => account.Id);
 
         builder.Property(account => account.Id)
-            .HasStronglyTypedId(
-                value => new BillingAccountId(value),
-                "Id")
-            .ValueGeneratedNever();
+            .HasStronglyTypedEntityId(
+                value => new BillingAccountId(value));
 
         builder.Property(account => account.TutoringAgreementId)
             .HasStronglyTypedId(

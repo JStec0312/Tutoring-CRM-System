@@ -15,7 +15,7 @@ internal sealed class StudentConfiguration
         builder.HasKey(student => student.Id);
 
         builder.Property(student => student.Id)
-            .HasGeneratedStronglyTypedId(
+            .HasStronglyTypedEntityId(
                 value => new StudentId(value));
 
         builder.Property(student => student.UserAccountId)

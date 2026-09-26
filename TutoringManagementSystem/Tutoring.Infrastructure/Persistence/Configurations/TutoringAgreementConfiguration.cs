@@ -19,7 +19,7 @@ internal sealed class TutoringAgreementConfiguration
         builder.HasKey(agreement => agreement.Id);
 
         builder.Property(agreement => agreement.Id)
-            .HasGeneratedStronglyTypedId(
+            .HasStronglyTypedEntityId(
                 value => new TutoringAgreementId(value));
 
         builder.Property(agreement => agreement.TutorId)

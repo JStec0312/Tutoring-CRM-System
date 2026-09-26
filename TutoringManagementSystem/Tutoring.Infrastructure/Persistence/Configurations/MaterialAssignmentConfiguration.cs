@@ -17,7 +17,7 @@ internal sealed class MaterialAssignmentConfiguration
         builder.HasKey(assignment => assignment.Id);
 
         builder.Property(assignment => assignment.Id)
-            .HasGeneratedStronglyTypedId(value => new MaterialAssignmentId(value));
+            .HasStronglyTypedEntityId(value => new MaterialAssignmentId(value));
 
         builder.Property(assignment => assignment.LearningMaterialId)
             .HasStronglyTypedId(value => new LearningMaterialId(value), "LearningMaterialId")

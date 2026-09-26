@@ -18,7 +18,7 @@ internal sealed class LessonConfiguration
         builder.HasKey(lesson => lesson.Id);
 
         builder.Property(lesson => lesson.Id)
-            .HasGeneratedStronglyTypedId(value => new LessonId(value));
+            .HasStronglyTypedEntityId(value => new LessonId(value));
 
         builder.Property(lesson => lesson.TutoringAgreementId)
             .HasStronglyTypedId(value => new TutoringAgreementId(value), "TutoringAgreementId")

@@ -15,7 +15,7 @@ internal sealed class UserAccountConfiguration
         builder.HasKey(account => account.Id);
 
         builder.Property(account => account.Id)
-            .HasGeneratedStronglyTypedId(value => new UserAccountId(value));
+            .HasStronglyTypedEntityId(value => new UserAccountId(value));
 
         builder.OwnsOne(account => account.Email, email =>
         {

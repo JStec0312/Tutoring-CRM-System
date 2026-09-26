@@ -17,7 +17,7 @@ internal sealed class StudentInvitationConfiguration
         builder.HasKey(invitation => invitation.Id);
 
         builder.Property(invitation => invitation.Id)
-            .HasGeneratedStronglyTypedId(
+            .HasStronglyTypedEntityId(
                 value => new StudentInvitationId(value));
 
         builder.Property(invitation => invitation.TutorId)

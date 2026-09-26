@@ -32,7 +32,9 @@ public sealed class BillingAccount
     }
 
     public LessonCharge AddLessonCharge(LessonId lessonId, Money amount, DateTimeOffset chargedAtUtc)
-    {
+    {   
+        ArgumentNullException.ThrowIfNull(amount);
+
         if (_charges.Any(charge => charge.LessonId == lessonId))
         {
             throw new LessonAlreadyChargedException();

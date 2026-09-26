@@ -3,6 +3,7 @@ using Tutoring.Domain.Billing;
 using Tutoring.Domain.Identity;
 using Tutoring.Domain.LearningMaterials;
 using Tutoring.Domain.Lessons;
+using Tutoring.Domain.LessonSeries;
 using Tutoring.Domain.StudentInvitations;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.TutoringAgreements;
@@ -50,6 +51,7 @@ public sealed class TutoringDbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+    public DbSet<LessonSeries> LessonSeries => Set<LessonSeries>();
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {

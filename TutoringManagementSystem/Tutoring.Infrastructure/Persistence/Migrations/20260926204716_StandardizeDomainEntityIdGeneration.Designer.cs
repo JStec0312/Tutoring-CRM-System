@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tutoring.Infrastructure.Persistence;
 
@@ -12,9 +13,11 @@ using Tutoring.Infrastructure.Persistence;
 namespace Tutoring.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TutoringDbContext))]
-    partial class TutoringDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926204716_StandardizeDomainEntityIdGeneration")]
+    partial class StandardizeDomainEntityIdGeneration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -218,43 +221,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasFilter("[LessonId] IS NOT NULL");
 
                     b.ToTable("MaterialAssignments", (string)null);
-                });
-
-            modelBuilder.Entity("Tutoring.Domain.LessonSeries.LessonSeries", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("Id");
-
-                    b.Property<DateTimeOffset>("CreatedAtUtc")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("DayOfWeek")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("time");
-
-                    b.Property<DateOnly?>("EndsOn")
-                        .HasColumnType("date");
-
-                    b.Property<TimeOnly>("StartsAt")
-                        .HasColumnType("time");
-
-                    b.Property<DateOnly>("StartsOn")
-                        .HasColumnType("date");
-
-                    b.Property<Guid>("TutoringAgreementId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("TutoringAgreementId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TutoringAgreementId");
-
-                    b.ToTable("LessonSeries", (string)null);
                 });
 
             modelBuilder.Entity("Tutoring.Domain.Lessons.Lesson", b =>
@@ -995,15 +961,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.Navigation("LearningMaterial");
 
                     b.Navigation("Lesson");
-                });
-
-            modelBuilder.Entity("Tutoring.Domain.LessonSeries.LessonSeries", b =>
-                {
-                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", null)
-                        .WithMany()
-                        .HasForeignKey("TutoringAgreementId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Tutoring.Domain.Lessons.Lesson", b =>

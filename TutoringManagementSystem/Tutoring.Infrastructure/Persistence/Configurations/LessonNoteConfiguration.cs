@@ -14,7 +14,7 @@ internal sealed class LessonNoteConfiguration
         builder.HasKey(note => note.Id);
 
         builder.Property(note => note.Id)
-            .HasGeneratedStronglyTypedId(value => new LessonNoteId(value));
+            .HasStronglyTypedEntityId(value => new LessonNoteId(value));
 
         builder.Property(note => note.LessonId)
             .HasStronglyTypedId(value => new LessonId(value), "LessonId")
