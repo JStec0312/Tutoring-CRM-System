@@ -64,6 +64,11 @@ public sealed class TutoringAgreement
         PrivateNotes = notes;
     }
 
+    public void UpdateHourlyRate(HourlyRate? hourlyRate)
+    {
+        HourlyRate = hourlyRate;
+    }
+
     public void Activate()
     {
         if (Status == AgreementStatus.Ended)

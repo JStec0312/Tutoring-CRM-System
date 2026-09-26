@@ -1,0 +1,37 @@
+@startuml
+
+title US-015 - Update student hourly rate
+
+actor Tutor
+participant "UpdateStudentHourlyRateController" as Controller
+participant MediatR
+participant "UpdateStudentHourlyRateHandler" as Handler
+database "TutoringDbContext" as Db
+participant "TutoringAgreement" as Agreement
+
+Tutor -> Controller: PUT /api/tutors/students/{studentId}/hourly-rate\nJWT sub + request body
+Controller -> Controller: Read UserAccountId from sub\nBuild RequestMetadata (IP, User-Agent, TraceId)
+Controller -> MediatR: Send UpdateStudentHourlyRateCommand\n(UserAccountId, StudentId, HourlyRate, RequestMetadata)
+MediatR -> Handler: Handle(command, CancellationToken)
+
+Handler -> Db: Find Tutor by UserAccountId
+Db --> Handler: Tutor
+Handler -> Db: Find agreement by TutorId + StudentId\nwhere Status != Ended
+Db --> Handler: TutoringAgreement or none
+
+alt agreement not found or not owned by tutor
+    Handler --> MediatR: TutoringAgreementNotFoundException
+    MediatR --> Controller: NotFoundException
+    Controller --> Tutor: 404 Not Found
+else tutor-owned non-ended agreement found
+    Handler -> Handler: Create HourlyRate(Money(amount, PLN))\nor use null to clear
+    Handler -> Agreement: UpdateHourlyRate(hourlyRate or null)
+    Agreement --> Handler: Updated tracked entity
+    Handler -> Db: SaveChangesAsync(CancellationToken)
+    Db --> Handler: Saved
+    Handler --> MediatR: Completed
+    MediatR --> Controller: Completed
+    Controller --> Tutor: 204 No Content
+end
+
+@enduml

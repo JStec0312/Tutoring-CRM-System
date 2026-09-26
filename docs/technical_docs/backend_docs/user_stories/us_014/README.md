@@ -81,9 +81,6 @@ Each item is a `StudentLessonHistoryResponse` containing:
 
 `GlobalExceptionHandler` maps `NotFoundException` to `404` and includes the exception code in the Problem Details `code` extension.
 
-## Logging
-
-The controller and handler use structured logging. Logged fields include `StudentId`, `UserAccountId`, `TutorId`, `LessonCount`, and the serialized `RequestMetadata` containing `IpAddress`, `UserAgent`, and `TraceId`. JWT contents and secrets are not logged.
 
 ## Diagram
 
