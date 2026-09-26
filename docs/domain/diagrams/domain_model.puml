@@ -242,12 +242,12 @@ package "Billing" {
     value: String
   }
 
-  BillingAccount "1" --> "1" TutoringAgreement : settles agreement
-  BillingAccount "1" ..> "0..*" Lesson : charges completed lessons
+  BillingAccount "1" --> "1" TutoringAgreement : 
 
   BillingAccount "1" *-- "0..*" LessonCharge
   BillingAccount "1" *-- "0..*" Payment
 
+  LessonCharge "1" --> "1" Lesson : references by LessonId
   LessonCharge "1" *-- "1" Money
   Payment "1" *-- "1" Money
   Payment "1" *-- "0..1" PaymentReference
