@@ -33,9 +33,9 @@ internal sealed class BillingAccountConfiguration
         builder.Property(account => account.CreatedAtUtc)
             .HasColumnType("datetimeoffset")
             .IsRequired();
-
+        
         builder.HasOne(account => account.Agreement)
-            .WithOne()
+            .WithOne(agreement => agreement.BillingAccount)
             .HasForeignKey<BillingAccount>(
                 account => account.TutoringAgreementId)
             .OnDelete(DeleteBehavior.Restrict);

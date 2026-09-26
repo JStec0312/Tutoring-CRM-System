@@ -1,4 +1,5 @@
 using Tutoring.Domain.Common;
+using Tutoring.Domain.Lessons;
 using Tutoring.Domain.TutoringAgreements;
 
 namespace Tutoring.Domain.Billing;
@@ -23,4 +24,37 @@ public sealed class BillingAccount
     public IReadOnlyCollection<LessonCharge> Charges => _charges.AsReadOnly();
 
     public IReadOnlyCollection<Payment> Payments => _payments.AsReadOnly();
+
+    public BillingAccount(TutoringAgreementId tutoringAgreementId, DateTimeOffset createdAtUtc)
+    {
+        TutoringAgreementId = tutoringAgreementId;
+        Status = BillingAccountStatus.Active;
+        CreatedAtUtc = createdAtUtc;
+    }
+
+    public LessonCharge AddLessonCharge(Lesson lesson, HourlyRate hourlyRate, DateTimeOffset chargedAtUtc)
+    {
+        if (_charges.Any(x => x.LessonId == lesson.Id))
+        {
+            throw new LessonAlreadyChargedException();
+        }
+        if (!lesson.IsCompleted)
+        {
+            throw new CanNotChargeUncompletedLessonException();
+        }
+
+        var amount =
+            hourlyRate.CalculateCost(
+                lesson.TimeSlot.Duration);
+
+        var charge = new LessonCharge(
+            Id,
+            lesson.Id,
+            amount,
+            chargedAtUtc);
+
+        _charges.Add(charge);
+
+        return charge;
+    }
 }

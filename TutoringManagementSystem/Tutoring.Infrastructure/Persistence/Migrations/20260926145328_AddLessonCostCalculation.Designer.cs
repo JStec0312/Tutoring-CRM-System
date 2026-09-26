@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tutoring.Infrastructure.Persistence;
 
@@ -12,9 +13,11 @@ using Tutoring.Infrastructure.Persistence;
 namespace Tutoring.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TutoringDbContext))]
-    partial class TutoringDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926145328_AddLessonCostCalculation")]
+    partial class AddLessonCostCalculation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,10 +46,17 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("TutoringAgreementId");
 
+                    b.Property<Guid?>("TutoringAgreementId1")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
                     b.HasIndex("TutoringAgreementId")
                         .IsUnique();
+
+                    b.HasIndex("TutoringAgreementId1")
+                        .IsUnique()
+                        .HasFilter("[TutoringAgreementId1] IS NOT NULL");
 
                     b.ToTable("BillingAccounts", (string)null);
                 });
@@ -696,10 +706,14 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tutoring.Domain.Billing.BillingAccount", b =>
                 {
                     b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", "Agreement")
-                        .WithOne("BillingAccount")
+                        .WithOne()
                         .HasForeignKey("Tutoring.Domain.Billing.BillingAccount", "TutoringAgreementId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", null)
+                        .WithOne("BillingAccount")
+                        .HasForeignKey("Tutoring.Domain.Billing.BillingAccount", "TutoringAgreementId1");
 
                     b.Navigation("Agreement");
                 });

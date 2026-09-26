@@ -14,4 +14,11 @@ public sealed record HourlyRate
     }
 
     public Money PricePerHour { get; private set; } = null!;
+
+    public Money CalculateCost(TimeSpan duration)
+    {
+        var hours = (decimal)duration.TotalMinutes / 60;
+        var amount = decimal.Round(PricePerHour.Amount * hours, 2, MidpointRounding.AwayFromZero); // 2.4 -> 2 2.5 -> 3 
+        return new Money(amount, PricePerHour.Currency); 
+    }
 }

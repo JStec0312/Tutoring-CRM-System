@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.Exceptions;
+using Tutoring.Domain.Billing;
 using Tutoring.Domain.Lessons;
 using Tutoring.Infrastructure.Persistence;
 
@@ -31,6 +32,7 @@ public sealed class SetLessonStatusHandler(
         var lessonId = new LessonId(request.LessonId);
 
         var lesson = await dbContext.Lessons
+            .Include(l => l.Agreement)
             .SingleOrDefaultAsync(
                 lesson =>
                     lesson.Id == lessonId &&
@@ -56,6 +58,23 @@ public sealed class SetLessonStatusHandler(
         {
             case LessonStatus.Completed:
                 lesson.Complete(nowUtc);
+                // Implementation of US - 016 charging for lesson 
+                // lazy creation of billing account and adding lesson charge
+                var lessonTutoringAgreement = lesson.Agreement;
+                if (lessonTutoringAgreement.HasHourlyRate)
+                {
+                    var lessonbillingAccount = lessonTutoringAgreement.GetBillingAccount();
+                    if(lessonbillingAccount is null)
+                    {
+
+                        var now = timeProvider.GetUtcNow();
+                        BillingAccount billingAccount = new BillingAccount(lessonTutoringAgreement.Id, now);
+                        lessonTutoringAgreement.AddBillingAccount(billingAccount);
+                        lessonbillingAccount = billingAccount;
+                    }
+                    lessonbillingAccount.AddLessonCharge(lesson, lessonTutoringAgreement.HourlyRate!, nowUtc);
+                }
+
                 break;
 
             case LessonStatus.Missed:

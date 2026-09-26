@@ -22,4 +22,15 @@ public sealed class LessonCharge
     public ChargeStatus Status { get; private set; }
 
     public string Description { get; private set; } = null!;
+
+    public LessonCharge(BillingAccountId billingAccountId, LessonId lessonId, Money amount, DateTimeOffset chargedAtUtc)
+    {
+        BillingAccountId = billingAccountId;
+        LessonId = lessonId;
+        Amount = amount;
+        ChargedAtUtc = chargedAtUtc;
+
+        Status = ChargeStatus.Active;
+        Description = "Lesson charge";
+}
 }

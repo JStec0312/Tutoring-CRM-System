@@ -22,4 +22,6 @@ public sealed record TimeSlot
     public DateTimeOffset StartsAtUtc { get; private set; }
 
     public DateTimeOffset EndsAtUtc { get; private set; }
+
+    public TimeSpan Duration => EndsAtUtc - StartsAtUtc;
 }
