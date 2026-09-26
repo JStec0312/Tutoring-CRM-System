@@ -92,11 +92,15 @@ public sealed class TutoringAgreement
     }
 
     public bool HasHourlyRate => HourlyRate is not null;
-    public BillingAccount? GetBillingAccount() => BillingAccount;
 
     public bool HasBillingAccount => BillingAccount is not null;
     public void AddBillingAccount(BillingAccount billingAccount)
     {
+        if (billingAccount is null)
+        {
+            throw new ArgumentNullException(nameof(billingAccount));
+        }
+
         if (HasBillingAccount)
         {
             throw new BillingAccountAlreadyExistsException();

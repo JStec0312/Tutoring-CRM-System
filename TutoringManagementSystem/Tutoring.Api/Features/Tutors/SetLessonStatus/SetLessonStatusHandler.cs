@@ -32,13 +32,13 @@ public sealed class SetLessonStatusHandler(
         var lessonId = new LessonId(request.LessonId);
 
         var lesson = await dbContext.Lessons
-            .Include(l => l.Agreement)
+            .Include(lesson => lesson.Agreement)
+                .ThenInclude(agreement => agreement.BillingAccount)
             .SingleOrDefaultAsync(
                 lesson =>
                     lesson.Id == lessonId &&
                     lesson.Agreement.TutorId == tutor.Id,
                 cancellationToken);
-
         if (lesson is null)
         {
             logger.LogWarning(
@@ -63,12 +63,11 @@ public sealed class SetLessonStatusHandler(
                 var lessonTutoringAgreement = lesson.Agreement;
                 if (lessonTutoringAgreement.HasHourlyRate)
                 {
-                    var lessonbillingAccount = lessonTutoringAgreement.GetBillingAccount();
+                    var lessonbillingAccount = lessonTutoringAgreement.BillingAccount;
                     if(lessonbillingAccount is null)
                     {
 
-                        var now = timeProvider.GetUtcNow();
-                        BillingAccount billingAccount = new BillingAccount(lessonTutoringAgreement.Id, now);
+                        BillingAccount billingAccount = new BillingAccount(lessonTutoringAgreement.Id, nowUtc);
                         lessonTutoringAgreement.AddBillingAccount(billingAccount);
                         lessonbillingAccount = billingAccount;
                     }

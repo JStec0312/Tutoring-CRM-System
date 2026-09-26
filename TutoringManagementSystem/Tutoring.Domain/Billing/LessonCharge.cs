@@ -23,7 +23,7 @@ public sealed class LessonCharge
 
     public string Description { get; private set; } = null!;
 
-    public LessonCharge(BillingAccountId billingAccountId, LessonId lessonId, Money amount, DateTimeOffset chargedAtUtc)
+    internal LessonCharge(BillingAccountId billingAccountId, LessonId lessonId, Money amount, DateTimeOffset chargedAtUtc)
     {
         BillingAccountId = billingAccountId;
         LessonId = lessonId;
