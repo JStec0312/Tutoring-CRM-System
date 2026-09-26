@@ -1,4 +1,3 @@
-using Tutoring.Domain.Billing;
 using Tutoring.Domain.Common;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.Tutors;
@@ -33,7 +32,6 @@ public sealed class TutoringAgreement
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
-    public BillingAccount? BillingAccount { get; private set; } = null!;
     public TutoringAgreement(
     TutorId tutorId,
     StudentId studentId,
@@ -92,21 +90,4 @@ public sealed class TutoringAgreement
     }
 
     public bool HasHourlyRate => HourlyRate is not null;
-
-    public bool HasBillingAccount => BillingAccount is not null;
-    public void AddBillingAccount(BillingAccount billingAccount)
-    {
-        if (billingAccount is null)
-        {
-            throw new ArgumentNullException(nameof(billingAccount));
-        }
-
-        if (HasBillingAccount)
-        {
-            throw new BillingAccountAlreadyExistsException();
-        }
-
-        BillingAccount = billingAccount;
-
-    }
 }

@@ -8,15 +8,18 @@ namespace Tutoring.Infrastructure.Persistence.Configurations;
 internal sealed class LessonChargeConfiguration
     : IEntityTypeConfiguration<LessonCharge>
 {
-    public void Configure(EntityTypeBuilder<LessonCharge> builder)
+    public void Configure(
+        EntityTypeBuilder<LessonCharge> builder)
     {
         builder.ToTable("LessonCharges");
 
         builder.HasKey(charge => charge.Id);
 
         builder.Property(charge => charge.Id)
-            .HasGeneratedStronglyTypedId(
-                value => new LessonChargeId(value));
+            .HasStronglyTypedId(
+                value => new LessonChargeId(value),
+                "Id")
+            .ValueGeneratedNever();
 
         builder.Property(charge => charge.BillingAccountId)
             .HasStronglyTypedId(
@@ -30,12 +33,14 @@ internal sealed class LessonChargeConfiguration
                 "LessonId")
             .IsRequired();
 
-        builder.OwnsOne(charge => charge.Amount, amount =>
-        {
-            amount.ConfigureMoney(
-                "Amount",
-                "CurrencyCode");
-        });
+        builder.OwnsOne(
+            charge => charge.Amount,
+            amount =>
+            {
+                amount.ConfigureMoney(
+                    "Amount",
+                    "CurrencyCode");
+            });
 
         builder.Navigation(charge => charge.Amount)
             .IsRequired();
@@ -55,7 +60,7 @@ internal sealed class LessonChargeConfiguration
             .HasMaxLength(500)
             .IsRequired();
 
-        builder.HasOne(charge => charge.Lesson)
+        builder.HasOne<Lesson>()
             .WithMany()
             .HasForeignKey(charge => charge.LessonId)
             .OnDelete(DeleteBehavior.Restrict);

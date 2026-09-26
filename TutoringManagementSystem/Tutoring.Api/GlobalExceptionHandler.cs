@@ -69,7 +69,7 @@ public sealed class GlobalExceptionHandler(
                 StatusCodes.Status500InternalServerError,
                 "Unexpected error",
                 "Server.UnexpectedError",
-                "An unexpected error occurred.")
+                exception.ToString())
         };
         logger.LogError(exception, "An exception occurred: {Message}", exception.Message);
         if (error.StatusCode == StatusCodes.Status500InternalServerError)

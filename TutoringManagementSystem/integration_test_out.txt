@@ -1,0 +1,16 @@
+  Trwa określanie projektów do przywrócenia...
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-mggc-4xg6-vcxf
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-q939-rpr3-3284
+  Wszystkie projekty są aktualne na potrzeby przywrócenia.
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-mggc-4xg6-vcxf
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-q939-rpr3-3284
+  Tutoring.Domain -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.Domain\bin\Debug\net10.0\Tutoring.Domain.dll
+  Tutoring.Infrastructure -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.Infrastructure\bin\Debug\net10.0\Tutoring.Infrastructure.dll
+  Tutoring.Api -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.Api\bin\Debug\net10.0\Tutoring.Api.dll
+  Tutoring.UnitTest -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.UnitTest\bin\Debug\net10.0\Tutoring.UnitTest.dll
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Features\Auth\RegisterStudent\RegisterStudentTest.cs(37,32): warning CS8602: Wyłuskanie odwołania, które może mieć wartość null. [C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj]
+  Tutoring.IntegrationTests -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\bin\Debug\net10.0\Tutoring.IntegrationTests.dll
+Przebieg testu dla: C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\bin\Debug\net10.0\Tutoring.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+Łączna liczba plików testowych dopasowanych do określonego wzorca: 1.
+
+Powodzenie!    — niepowodzenie:     0, powodzenie:   201, pominięto:     0, łącznie:   201, czas trwania: 1 m 40 s - Tutoring.IntegrationTests.dll (net10.0)

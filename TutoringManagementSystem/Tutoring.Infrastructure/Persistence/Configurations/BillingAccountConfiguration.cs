@@ -8,15 +8,18 @@ namespace Tutoring.Infrastructure.Persistence.Configurations;
 internal sealed class BillingAccountConfiguration
     : IEntityTypeConfiguration<BillingAccount>
 {
-    public void Configure(EntityTypeBuilder<BillingAccount> builder)
+    public void Configure(
+        EntityTypeBuilder<BillingAccount> builder)
     {
         builder.ToTable("BillingAccounts");
 
         builder.HasKey(account => account.Id);
 
         builder.Property(account => account.Id)
-            .HasGeneratedStronglyTypedId(
-                value => new BillingAccountId(value));
+            .HasStronglyTypedId(
+                value => new BillingAccountId(value),
+                "Id")
+            .ValueGeneratedNever();
 
         builder.Property(account => account.TutoringAgreementId)
             .HasStronglyTypedId(
@@ -33,9 +36,9 @@ internal sealed class BillingAccountConfiguration
         builder.Property(account => account.CreatedAtUtc)
             .HasColumnType("datetimeoffset")
             .IsRequired();
-        
-        builder.HasOne(account => account.Agreement)
-            .WithOne(agreement => agreement.BillingAccount)
+
+        builder.HasOne<TutoringAgreement>()
+            .WithOne()
             .HasForeignKey<BillingAccount>(
                 account => account.TutoringAgreementId)
             .OnDelete(DeleteBehavior.Restrict);

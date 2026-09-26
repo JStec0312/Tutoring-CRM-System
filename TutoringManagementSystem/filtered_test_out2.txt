@@ -1,0 +1,23 @@
+  Trwa określanie projektów do przywrócenia...
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-mggc-4xg6-vcxf
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-q939-rpr3-3284
+  Wszystkie projekty są aktualne na potrzeby przywrócenia.
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-mggc-4xg6-vcxf
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj : warning NU1903: Pakiet „SSH.NET” 2025.1.0 ma znane wysoka luki w zabezpieczeniach o ważności, https://github.com/advisories/GHSA-q939-rpr3-3284
+  Tutoring.Domain -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.Domain\bin\Debug\net10.0\Tutoring.Domain.dll
+  Tutoring.Infrastructure -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.Infrastructure\bin\Debug\net10.0\Tutoring.Infrastructure.dll
+  Tutoring.Api -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.Api\bin\Debug\net10.0\Tutoring.Api.dll
+  Tutoring.UnitTest -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.UnitTest\bin\Debug\net10.0\Tutoring.UnitTest.dll
+C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Features\Auth\RegisterStudent\RegisterStudentTest.cs(37,32): warning CS8602: Wyłuskanie odwołania, które może mieć wartość null. [C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Tutoring.IntegrationTests.csproj]
+  Tutoring.IntegrationTests -> C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\bin\Debug\net10.0\Tutoring.IntegrationTests.dll
+Przebieg testu dla: C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\bin\Debug\net10.0\Tutoring.IntegrationTests.dll (.NETCoreApp,Version=v10.0)
+Łączna liczba plików testowych dopasowanych do określonego wzorca: 1.
+[xUnit.net 00:00:18.79]     Tutoring.IntegrationTests.Features.Tutors.SetLessonStatus.SetLessonStatusTests.SetLessonStatus_ToCompleted_ForSecondLessonOnSameAgreement_ShouldReuseBillingAccountAndAddSecondCharge [FAIL]
+  Niepowodzenie Tutoring.IntegrationTests.Features.Tutors.SetLessonStatus.SetLessonStatusTests.SetLessonStatus_ToCompleted_ForSecondLessonOnSameAgreement_ShouldReuseBillingAccountAndAddSecondCharge [3 s]
+  Komunikat o błędzie:
+   {"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"Unexpected error","status":500,"detail":"An unexpected error occurred.","code":"Server.UnexpectedError","traceId":"00-53606c325b9aceac836da5fd950fa619-60639fc2a6704da3-00"}
+  Ślad stosu:
+     at Tutoring.IntegrationTests.Features.Tutors.SetLessonStatus.SetLessonStatusTests.SetLessonStatus_ToCompleted_ForSecondLessonOnSameAgreement_ShouldReuseBillingAccountAndAddSecondCharge() in C:\Users\stecu\OneDrive\Pulpit\inzynierka\repo\TutoringManagementSystem\Tutoring.IntegrationTests\Features\Tutors\SetLessonStatus\SetLessonStatusTest.cs:line 108
+--- End of stack trace from previous location ---
+
+Niepowodzenie! — niepowodzenie:     1, powodzenie:     0, pominięto:     0, łącznie:     1, czas trwania: 3 s - Tutoring.IntegrationTests.dll (net10.0)

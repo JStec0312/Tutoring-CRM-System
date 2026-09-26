@@ -33,7 +33,6 @@ public sealed class SetLessonStatusHandler(
 
         var lesson = await dbContext.Lessons
             .Include(lesson => lesson.Agreement)
-                .ThenInclude(agreement => agreement.BillingAccount)
             .SingleOrDefaultAsync(
                 lesson =>
                     lesson.Id == lessonId &&
@@ -58,20 +57,34 @@ public sealed class SetLessonStatusHandler(
         {
             case LessonStatus.Completed:
                 lesson.Complete(nowUtc);
-                // Implementation of US - 016 charging for lesson 
-                // lazy creation of billing account and adding lesson charge
-                var lessonTutoringAgreement = lesson.Agreement;
-                if (lessonTutoringAgreement.HasHourlyRate)
-                {
-                    var lessonbillingAccount = lessonTutoringAgreement.BillingAccount;
-                    if(lessonbillingAccount is null)
-                    {
 
-                        BillingAccount billingAccount = new BillingAccount(lessonTutoringAgreement.Id, nowUtc);
-                        lessonTutoringAgreement.AddBillingAccount(billingAccount);
-                        lessonbillingAccount = billingAccount;
+                // US-016: charge the agreement's billing account for the completed lesson,
+                // lazily creating the billing account on the first charge.
+                if (lesson.Agreement.HasHourlyRate)
+                {
+                    var amount = lesson.Agreement.HourlyRate!.CalculateCost(
+                        lesson.TimeSlot.Duration);
+
+                    var billingAccount = await dbContext.BillingAccounts
+                        .Include(account => account.Charges)
+                        .SingleOrDefaultAsync(
+                            account =>
+                                account.TutoringAgreementId == lesson.TutoringAgreementId,
+                            cancellationToken);
+
+                    if (billingAccount is null)
+                    {
+                        billingAccount = new BillingAccount(
+                            lesson.TutoringAgreementId,
+                            nowUtc);
+
+                        dbContext.BillingAccounts.Add(billingAccount);
                     }
-                    lessonbillingAccount.AddLessonCharge(lesson, lessonTutoringAgreement.HourlyRate!, nowUtc);
+
+                    billingAccount.AddLessonCharge(
+                        lesson.Id,
+                        amount,
+                        nowUtc);
                 }
 
                 break;

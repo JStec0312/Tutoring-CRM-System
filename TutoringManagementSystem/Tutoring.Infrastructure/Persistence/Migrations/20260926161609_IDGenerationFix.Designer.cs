@@ -13,8 +13,8 @@ using Tutoring.Infrastructure.Persistence;
 namespace Tutoring.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TutoringDbContext))]
-    [Migration("20260926150217_AddLessonCostCalculationFix")]
-    partial class AddLessonCostCalculationFix
+    [Migration("20260926161609_IDGenerationFix")]
+    partial class IDGenerationFix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -29,10 +29,8 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tutoring.Domain.Billing.BillingAccount", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("Id")
-                        .HasDefaultValueSql("newsequentialid()");
+                        .HasColumnName("Id");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
@@ -57,10 +55,8 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tutoring.Domain.Billing.LessonCharge", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("Id")
-                        .HasDefaultValueSql("newsequentialid()");
+                        .HasColumnName("Id");
 
                     b.Property<Guid>("BillingAccountId")
                         .HasColumnType("uniqueidentifier")
@@ -698,13 +694,11 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Tutoring.Domain.Billing.BillingAccount", b =>
                 {
-                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", "Agreement")
-                        .WithOne("BillingAccount")
+                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", null)
+                        .WithOne()
                         .HasForeignKey("Tutoring.Domain.Billing.BillingAccount", "TutoringAgreementId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Agreement");
                 });
 
             modelBuilder.Entity("Tutoring.Domain.Billing.LessonCharge", b =>
@@ -715,7 +709,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Tutoring.Domain.Lessons.Lesson", "Lesson")
+                    b.HasOne("Tutoring.Domain.Lessons.Lesson", null)
                         .WithMany()
                         .HasForeignKey("LessonId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -724,7 +718,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.OwnsOne("Tutoring.Domain.Billing.Money", "Amount", b1 =>
                         {
                             b1.Property<Guid>("LessonChargeId")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")
@@ -748,8 +741,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Amount")
                         .IsRequired();
-
-                    b.Navigation("Lesson");
                 });
 
             modelBuilder.Entity("Tutoring.Domain.Billing.Payment", b =>
@@ -1202,11 +1193,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tutoring.Domain.Lessons.Lesson", b =>
                 {
                     b.Navigation("Note");
-                });
-
-            modelBuilder.Entity("Tutoring.Domain.TutoringAgreements.TutoringAgreement", b =>
-                {
-                    b.Navigation("BillingAccount");
                 });
 #pragma warning restore 612, 618
         }

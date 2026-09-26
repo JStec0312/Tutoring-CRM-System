@@ -97,6 +97,4 @@ public sealed class Lesson
         }
     }
 
-    public bool IsCompleted => Status == LessonStatus.Completed;
-
 }

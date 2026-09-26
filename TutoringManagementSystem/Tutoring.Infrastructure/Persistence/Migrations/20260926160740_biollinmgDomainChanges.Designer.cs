@@ -13,8 +13,8 @@ using Tutoring.Infrastructure.Persistence;
 namespace Tutoring.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TutoringDbContext))]
-    [Migration("20260926145328_AddLessonCostCalculation")]
-    partial class AddLessonCostCalculation
+    [Migration("20260926160740_biollinmgDomainChanges")]
+    partial class biollinmgDomainChanges
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,17 +46,10 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("TutoringAgreementId");
 
-                    b.Property<Guid?>("TutoringAgreementId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("TutoringAgreementId")
                         .IsUnique();
-
-                    b.HasIndex("TutoringAgreementId1")
-                        .IsUnique()
-                        .HasFilter("[TutoringAgreementId1] IS NOT NULL");
 
                     b.ToTable("BillingAccounts", (string)null);
                 });
@@ -705,17 +698,11 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Tutoring.Domain.Billing.BillingAccount", b =>
                 {
-                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", "Agreement")
+                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", null)
                         .WithOne()
                         .HasForeignKey("Tutoring.Domain.Billing.BillingAccount", "TutoringAgreementId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", null)
-                        .WithOne("BillingAccount")
-                        .HasForeignKey("Tutoring.Domain.Billing.BillingAccount", "TutoringAgreementId1");
-
-                    b.Navigation("Agreement");
                 });
 
             modelBuilder.Entity("Tutoring.Domain.Billing.LessonCharge", b =>
@@ -726,7 +713,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Tutoring.Domain.Lessons.Lesson", "Lesson")
+                    b.HasOne("Tutoring.Domain.Lessons.Lesson", null)
                         .WithMany()
                         .HasForeignKey("LessonId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -759,8 +746,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Amount")
                         .IsRequired();
-
-                    b.Navigation("Lesson");
                 });
 
             modelBuilder.Entity("Tutoring.Domain.Billing.Payment", b =>
@@ -1213,11 +1198,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tutoring.Domain.Lessons.Lesson", b =>
                 {
                     b.Navigation("Note");
-                });
-
-            modelBuilder.Entity("Tutoring.Domain.TutoringAgreements.TutoringAgreement", b =>
-                {
-                    b.Navigation("BillingAccount");
                 });
 #pragma warning restore 612, 618
         }

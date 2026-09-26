@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tutoring.Infrastructure.Persistence;
 
@@ -12,9 +13,11 @@ using Tutoring.Infrastructure.Persistence;
 namespace Tutoring.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TutoringDbContext))]
-    partial class TutoringDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926154907_AddLessonCostCalculation")]
+    partial class AddLessonCostCalculation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -26,8 +29,10 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tutoring.Domain.Billing.BillingAccount", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("Id");
+                        .HasColumnName("Id")
+                        .HasDefaultValueSql("newsequentialid()");
 
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
@@ -52,8 +57,10 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Tutoring.Domain.Billing.LessonCharge", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("Id");
+                        .HasColumnName("Id")
+                        .HasDefaultValueSql("newsequentialid()");
 
                     b.Property<Guid>("BillingAccountId")
                         .HasColumnType("uniqueidentifier")
@@ -715,6 +722,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.OwnsOne("Tutoring.Domain.Billing.Money", "Amount", b1 =>
                         {
                             b1.Property<Guid>("LessonChargeId")
+                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uniqueidentifier");
 
                             b1.Property<decimal>("Amount")

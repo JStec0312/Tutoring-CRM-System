@@ -74,6 +74,68 @@ public sealed class SetLessonStatusTests(
             await GetLessonStatusAsync(lessonId));
     }
 
+    [Fact]
+    public async Task SetLessonStatus_ToCompleted_ForSecondLessonOnSameAgreement_ShouldReuseBillingAccountAndAddSecondCharge()
+    {
+        var (tutor, agreementId) =
+            await CreateTutorAndAgreementAsync();
+
+        var firstLessonId = await CreateLessonAsync(
+            agreementId,
+            PastStartsAtUtc,
+            PastStartsAtUtc.AddHours(1));
+
+        var secondLessonId = await CreateLessonAsync(
+            agreementId,
+            PastStartsAtUtc.AddHours(2),
+            PastStartsAtUtc.AddHours(3));
+
+        var firstResponse = await SetLessonStatusAsync(
+            tutor.AccessToken,
+            firstLessonId,
+            LessonStatus.Completed);
+
+        Assert.Equal(
+            HttpStatusCode.NoContent,
+            firstResponse.StatusCode);
+
+        var secondResponse = await SetLessonStatusAsync(
+            tutor.AccessToken,
+            secondLessonId,
+            LessonStatus.Completed);
+
+        var secondResponseBody = await secondResponse.Content.ReadAsStringAsync();
+        Assert.True(
+            secondResponse.StatusCode == HttpStatusCode.NoContent,
+            secondResponseBody);
+
+        var billingAccountIds = await ExecuteDbAsync(
+            dbContext =>
+                dbContext.BillingAccounts
+                    .AsNoTracking()
+                    .Where(account =>
+                        account.TutoringAgreementId ==
+                        new TutoringAgreementId(agreementId))
+                    .Select(account => account.Id)
+                    .ToListAsync());
+
+        var billingAccountId = Assert.Single(billingAccountIds);
+
+        var chargedLessonIds = await ExecuteDbAsync(
+            dbContext =>
+                dbContext.LessonCharges
+                    .AsNoTracking()
+                    .Where(charge =>
+                        charge.BillingAccountId ==
+                        billingAccountId)
+                    .Select(charge => charge.LessonId)
+                    .ToListAsync());
+
+        Assert.Equal(2, chargedLessonIds.Count);
+        Assert.Contains(new LessonId(firstLessonId), chargedLessonIds);
+        Assert.Contains(new LessonId(secondLessonId), chargedLessonIds);
+    }
+
     [Theory]
     [InlineData(LessonStatus.Completed)]
     [InlineData(LessonStatus.Missed)]

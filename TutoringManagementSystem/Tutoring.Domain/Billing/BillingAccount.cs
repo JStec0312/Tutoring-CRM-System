@@ -15,7 +15,6 @@ public sealed class BillingAccount
     }
 
     public TutoringAgreementId TutoringAgreementId { get; private set; }
-    public TutoringAgreement Agreement { get; private set; } = null!;
 
     public BillingAccountStatus Status { get; private set; }
 
@@ -32,24 +31,16 @@ public sealed class BillingAccount
         CreatedAtUtc = createdAtUtc;
     }
 
-    public LessonCharge AddLessonCharge(Lesson lesson, HourlyRate hourlyRate, DateTimeOffset chargedAtUtc)
+    public LessonCharge AddLessonCharge(LessonId lessonId, Money amount, DateTimeOffset chargedAtUtc)
     {
-        if (_charges.Any(x => x.LessonId == lesson.Id))
+        if (_charges.Any(charge => charge.LessonId == lessonId))
         {
             throw new LessonAlreadyChargedException();
         }
-        if (!lesson.IsCompleted)
-        {
-            throw new CanNotChargeUncompletedLessonException();
-        }
-
-        var amount =
-            hourlyRate.CalculateCost(
-                lesson.TimeSlot.Duration);
 
         var charge = new LessonCharge(
             Id,
-            lesson.Id,
+            lessonId,
             amount,
             chargedAtUtc);
 
