@@ -6,27 +6,89 @@ hide footbox
 actor Tutor
 participant API
 participant InviteStudentHandler
-participant AcceptStudentInvitationHandler
 database Database
+participant OutboxProcessor
+participant RabbitMqPublisher
+queue RabbitMQ
+participant EmailConsumer
+participant EmailEventDispatcher
+participant StudentInvitationCreatedEmailHandler
+participant SmtpMailer
+participant "SMTP / Mailpit" as Mailpit
 actor Student
+participant AcceptStudentInvitationHandler
 
 Tutor -> API: POST /api/tutors/me/student-invitations
 API -> InviteStudentHandler: InviteStudentCommand
+
 InviteStudentHandler -> Database: Check active agreement for Tutor+Recipient
+
+InviteStudentHandler -> Database: Load previous Created/Sent invitations\nfor Tutor+Recipient
+Database --> InviteStudentHandler: Previous active invitations
+InviteStudentHandler -> InviteStudentHandler: Mark previous invitations Expired
+
 InviteStudentHandler -> InviteStudentHandler: Generate raw token + TokenHash
-InviteStudentHandler -> Database: Save StudentInvitation (TokenHash only)
+InviteStudentHandler -> InviteStudentHandler: Create StudentInvitation
+InviteStudentHandler -> InviteStudentHandler: Create StudentInvitationCreatedIntegrationEvent
+
+InviteStudentHandler -> Database: Save expired invitations\n+ new StudentInvitation (TokenHash only)\n+ OutboxMessage (raw token in payload)
+
+note right of Database
+Previous active invitations are preserved
+for history but marked Expired.
+
+The new StudentInvitation and its
+OutboxMessage are persisted in the
+same SaveChangesAsync call.
+end note
+
 InviteStudentHandler --> API: InvitationUrl (raw token)
 API --> Tutor: 200 OK + invitation link
 
-Tutor -> Student: Share invitation link (out of band)
+== Asynchronous email delivery ==
+
+OutboxProcessor -> Database: Load unprocessed OutboxMessage
+Database --> OutboxProcessor: student-invitations.created.v1
+
+OutboxProcessor -> RabbitMqPublisher: Publish event
+RabbitMqPublisher -> RabbitMQ: Publish student-invitations.created.v1
+RabbitMqPublisher --> OutboxProcessor: Publish confirmed
+
+OutboxProcessor -> Database: Mark OutboxMessage ProcessedAtUtc
+
+RabbitMQ -> EmailConsumer: Deliver invitation event
+EmailConsumer -> EmailEventDispatcher: Dispatch event
+EmailEventDispatcher -> StudentInvitationCreatedEmailHandler: Handle payload
+
+StudentInvitationCreatedEmailHandler -> StudentInvitationCreatedEmailHandler: Build invitation URL
+StudentInvitationCreatedEmailHandler -> StudentInvitationCreatedEmailHandler: Render email template
+StudentInvitationCreatedEmailHandler -> SmtpMailer: Send invitation email
+SmtpMailer -> Mailpit: SMTP message
+Mailpit --> Student: Invitation email with link
+
+EmailConsumer -> RabbitMQ: ACK
+
+== Invitation acceptance ==
 
 Student -> API: POST /api/student-invitations/{token}/accept
 API -> AcceptStudentInvitationHandler: AcceptStudentInvitationCommand
+
+AcceptStudentInvitationHandler -> AcceptStudentInvitationHandler: Hash raw token
 AcceptStudentInvitationHandler -> Database: Find StudentInvitation by TokenHash
-AcceptStudentInvitationHandler -> AcceptStudentInvitationHandler: Validate ValidUntilUtc, Status, recipient email
-AcceptStudentInvitationHandler -> Database: Check active agreement for Tutor+Student
-AcceptStudentInvitationHandler -> Database: Create TutoringAgreement, mark invitation Accepted
-AcceptStudentInvitationHandler --> API: AgreementId
-API --> Student: 200 OK
+
+AcceptStudentInvitationHandler -> AcceptStudentInvitationHandler: Validate ValidUntilUtc and Status
+
+alt Invitation expired, superseded, accepted, or rejected
+    AcceptStudentInvitationHandler --> API: 409 StudentInvitations.Unavailable
+    API --> Student: 409 Conflict
+else Invitation available
+    AcceptStudentInvitationHandler -> Database: Resolve authenticated Student
+    AcceptStudentInvitationHandler -> AcceptStudentInvitationHandler: Validate recipient email
+    AcceptStudentInvitationHandler -> Database: Check active agreement for Tutor+Student
+
+    AcceptStudentInvitationHandler -> Database: Create TutoringAgreement\n+ mark invitation Accepted
+    AcceptStudentInvitationHandler --> API: AgreementId
+    API --> Student: 200 OK
+end
 
 @enduml
