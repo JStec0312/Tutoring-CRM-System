@@ -13,6 +13,7 @@ using Tutoring.Domain.StudentInvitations;
 using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.Infrastructure.Mailing;
 using System.Text.Json;
+using Tutoring.Api.Features.Students.Exceptions;
 
 namespace Tutoring.Api.Features.Tutors.InviteStudent;
 
@@ -49,6 +50,25 @@ public sealed class InviteStudentHandler(
         }
 
         var recipient = new EmailAddress(request.Email);
+
+        var recipientIsRegisteredStudent =
+            await dbContext.Students
+                .AnyAsync(
+                    student =>
+                        student.Account != null &&
+                        student.Account.Email.Value == recipient.Value,
+                    cancellationToken);
+
+        if (!recipientIsRegisteredStudent)
+        {
+            logger.LogWarning(
+                "Student invitation recipient is not a registered student. TutorId: {TutorId}, Recipient: {Recipient}, RequestMetadata: {RequestMetadata}",
+                tutor.Id.Value,
+                recipient.Value,
+                request.RequestMetadata);
+
+            throw StudentNotFoundException.ForRecipientEmail();
+        }
 
         var existingAgreement =
             await dbContext.TutoringAgreements

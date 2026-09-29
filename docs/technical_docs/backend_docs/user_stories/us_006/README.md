@@ -28,14 +28,20 @@ Only the newest invitation for a given Tutor+Recipient pair remains available. W
 | Method | Endpoint | Auth | Result |
 | --- | --- | --- | --- |
 | POST | `/api/tutors/me/students` | `Tutor` role | Creates a managed `Student` and active `TutoringAgreement`, returns `201 Created`. |
-| POST | `/api/tutors/me/student-invitations` | `Tutor` role | Expires previous active invitations for the same Tutor+Recipient, creates a new `StudentInvitation`, schedules delivery through the Outbox pipeline, and returns an invitation link with `200 OK`. |
+| POST | `/api/tutors/me/student-invitations` | `Tutor` role | Requires the recipient email to belong to an existing, registered `Student` (`404 Students.NotFound` otherwise); expires previous active invitations for the same Tutor+Recipient, creates a new `StudentInvitation`, schedules delivery through the Outbox pipeline, and returns an invitation link with `200 OK`. |
 | POST | `/api/student-invitations/{token}/accept` | `Student` role | Accepts an available invitation for the authenticated student, creates a `TutoringAgreement`, returns `200 OK`. |
 
 ## Implementation
 
 - `AddStudentManuallyHandler` resolves the tutor from the `sub` claim, creates a managed `Student` with `DisplayName` and no `UserAccount`, then creates an active `TutoringAgreement` using the supplied title, subject, and optional hourly rate. It returns the created student and agreement identifiers.
 
-- `InviteStudentHandler` resolves the tutor from the `sub` claim and rejects the request if the tutor already has a non-`Ended` `TutoringAgreement` with that recipient email (`409 Students.AlreadyAssigned`).
+- `InviteStudentHandler` resolves the tutor from the `sub` claim, then verifies that the recipient email belongs to an existing, registered `Student` — that is, a `Student` with a linked `UserAccount` whose `Email` matches the recipient. This check runs before any agreement lookup, invitation expiration, token generation, or persistence. If no such `Student` exists, the request is rejected with `404 Students.NotFound`, no `StudentInvitation` or `OutboxMessage` is created, no previous invitations are expired, and a structured warning log (without the recipient's raw token or other sensitive data) is written.
+
+- An email that only belongs to a `UserAccount` without an associated `Student` (for example a Tutor account) does not qualify as a registered student and is rejected the same way.
+
+- This check does not require the student's `UserAccount` to be `Active`; any registered `Student` with a linked account and matching email is a valid invitation recipient, regardless of activation state.
+
+- `InviteStudentHandler` rejects the request if the tutor already has a non-`Ended` `TutoringAgreement` with that recipient email (`409 Students.AlreadyAssigned`).
 
 - Before creating a new invitation, `InviteStudentHandler` loads previous invitations for the same Tutor+Recipient pair whose status is `Created` or `Sent`. These entities are tracked by EF Core and are marked `Expired` through the domain `Expire()` method.
 
@@ -96,7 +102,9 @@ Only the newest invitation for a given Tutor+Recipient pair remains available. W
 `Tutoring.IntegrationTests.Features.Tutors.InviteStudent.InviteStudentTests` covers:
 
 - role and authorization checks;
-- invitation persistence with the correct tutor, recipient, title, subject, hourly rate, validity, and status;
+- rejection with `404 Students.NotFound` when the recipient email does not belong to any registered `Student`, with no `StudentInvitation` or Outbox message created;
+- rejection with `404 Students.NotFound` when the recipient email belongs to a `UserAccount` that is not linked to a `Student` (e.g. another Tutor's account);
+- invitation persistence with the correct tutor, recipient, title, subject, hourly rate, validity, and status, for a recipient email that belongs to a registered `Student`;
 - optional `HourlyRate`;
 - raw invitation token not being stored as `StudentInvitation.TokenHash`, while the returned link remains usable;
 - creation of a `StudentInvitationCreatedIntegrationEvent` Outbox message;

@@ -63,6 +63,7 @@ public sealed class InviteStudentTests(
     public async Task InviteStudent_AsTutor_ShouldCreateInvitation()
     {
         var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        await CreateStudentAsync("student@test.pl", "student");
 
         var response = await Client.SendAsync(
             CreateAuthorizedRequest(
@@ -104,6 +105,7 @@ public sealed class InviteStudentTests(
     public async Task InviteStudent_WithoutHourlyRate_ShouldCreateInvitationWithNullHourlyRate()
     {
         var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        await CreateStudentAsync("student@test.pl", "student");
 
         var response = await Client.SendAsync(
             CreateAuthorizedRequest(
@@ -185,6 +187,7 @@ public sealed class InviteStudentTests(
     public async Task InviteStudent_SameTutorSameEmailTwice_ShouldCreateTwoInvitations()
     {
         var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        await CreateStudentAsync("student@test.pl", "student");
 
         var request = new
         {
@@ -238,10 +241,90 @@ public sealed class InviteStudentTests(
     }
 
     [Fact]
+    public async Task InviteStudent_WhenRecipientIsNotRegisteredStudent_ShouldReturnNotFound()
+    {
+        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+
+        var response = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Post,
+                Endpoint,
+                tutor.AccessToken,
+                new
+                {
+                    Email = "unregistered@test.pl",
+                    Title = "Math tutoring",
+                    Subject = "Mathematics",
+                    HourlyRate = (decimal?)100
+                }));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var problemDetails = await response.Content
+            .ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(
+            "Students.NotFound",
+            problemDetails.GetProperty("code").GetString());
+
+        var invitationExists = await ExecuteDbAsync(dbContext =>
+            dbContext.StudentInvitations
+                .AsNoTracking()
+                .AnyAsync(invitation =>
+                    invitation.Recipient.Value == "unregistered@test.pl"));
+        Assert.False(invitationExists);
+
+        var outboxMessageExists = await ExecuteDbAsync(dbContext =>
+            dbContext.OutboxMessages
+                .AsNoTracking()
+                .AnyAsync(message =>
+                    message.Type ==
+                    StudentInvitationCreatedIntegrationEvent.EventType));
+        Assert.False(outboxMessageExists);
+    }
+
+    [Fact]
+    public async Task InviteStudent_WhenRecipientIsRegisteredButNotAStudent_ShouldReturnNotFound()
+    {
+        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        // Registers a second Tutor account; the email exists as a UserAccount
+        // but is not linked to any Student, so it must not be invitable.
+        await CreateTutorAsync("other-tutor@test.pl", "othertutor");
+
+        var response = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Post,
+                Endpoint,
+                tutor.AccessToken,
+                new
+                {
+                    Email = "other-tutor@test.pl",
+                    Title = "Math tutoring",
+                    Subject = "Mathematics",
+                    HourlyRate = (decimal?)100
+                }));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var problemDetails = await response.Content
+            .ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(
+            "Students.NotFound",
+            problemDetails.GetProperty("code").GetString());
+
+        var invitationExists = await ExecuteDbAsync(dbContext =>
+            dbContext.StudentInvitations
+                .AsNoTracking()
+                .AnyAsync(invitation =>
+                    invitation.Recipient.Value == "other-tutor@test.pl"));
+        Assert.False(invitationExists);
+    }
+
+    [Fact]
     public async Task InviteStudent_WhenTutorHasManagedStudentAgreement_ShouldStillCreateInvitation()
     {
         var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
         var managedStudentId = await CreateManagedStudentAsync("Managed Student");
+        await CreateStudentAsync("student@test.pl", "student");
 
         await CreateAgreementForStudentIdAsync(tutor.Email, managedStudentId);
 
@@ -268,6 +351,7 @@ public sealed class InviteStudentTests(
         var tutor = await CreateTutorAsync(
             "tutor@test.pl",
             "tutor");
+        await CreateStudentAsync("student@test.pl", "student");
 
         var response = await Client.SendAsync(
             CreateAuthorizedRequest(
@@ -335,6 +419,7 @@ public async Task InviteStudent_SameTutorSameEmailTwice_ShouldExpirePreviousInvi
         var tutor = await CreateTutorAsync(
             "tutor@test.pl",
             "tutor");
+        await CreateStudentAsync("student@test.pl", "student");
 
         var request = new
         {

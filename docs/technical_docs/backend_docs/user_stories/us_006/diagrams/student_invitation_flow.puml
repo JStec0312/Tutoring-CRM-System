@@ -21,29 +21,36 @@ participant AcceptStudentInvitationHandler
 Tutor -> API: POST /api/tutors/me/student-invitations
 API -> InviteStudentHandler: InviteStudentCommand
 
-InviteStudentHandler -> Database: Check active agreement for Tutor+Recipient
+InviteStudentHandler -> Database: Check registered Student by recipient email
 
-InviteStudentHandler -> Database: Load previous Created/Sent invitations\nfor Tutor+Recipient
-Database --> InviteStudentHandler: Previous active invitations
-InviteStudentHandler -> InviteStudentHandler: Mark previous invitations Expired
+alt Student does not exist
+    InviteStudentHandler --> API: 404 Students.NotFound
+    API --> Tutor: 404 Not Found
+else Registered Student exists
+    InviteStudentHandler -> Database: Check active agreement for Tutor+Recipient
 
-InviteStudentHandler -> InviteStudentHandler: Generate raw token + TokenHash
-InviteStudentHandler -> InviteStudentHandler: Create StudentInvitation
-InviteStudentHandler -> InviteStudentHandler: Create StudentInvitationCreatedIntegrationEvent
+    InviteStudentHandler -> Database: Load previous Created/Sent invitations\nfor Tutor+Recipient
+    Database --> InviteStudentHandler: Previous active invitations
+    InviteStudentHandler -> InviteStudentHandler: Mark previous invitations Expired
 
-InviteStudentHandler -> Database: Save expired invitations\n+ new StudentInvitation (TokenHash only)\n+ OutboxMessage (raw token in payload)
+    InviteStudentHandler -> InviteStudentHandler: Generate raw token + TokenHash
+    InviteStudentHandler -> InviteStudentHandler: Create StudentInvitation
+    InviteStudentHandler -> InviteStudentHandler: Create StudentInvitationCreatedIntegrationEvent
 
-note right of Database
-Previous active invitations are preserved
-for history but marked Expired.
+    InviteStudentHandler -> Database: Save expired invitations\n+ new StudentInvitation (TokenHash only)\n+ OutboxMessage (raw token in payload)
 
-The new StudentInvitation and its
-OutboxMessage are persisted in the
-same SaveChangesAsync call.
-end note
+    note right of Database
+    Previous active invitations are preserved
+    for history but marked Expired.
 
-InviteStudentHandler --> API: InvitationUrl (raw token)
-API --> Tutor: 200 OK + invitation link
+    The new StudentInvitation and its
+    OutboxMessage are persisted in the
+    same SaveChangesAsync call.
+    end note
+
+    InviteStudentHandler --> API: InvitationUrl (raw token)
+    API --> Tutor: 200 OK + invitation link
+end
 
 == Asynchronous email delivery ==
 

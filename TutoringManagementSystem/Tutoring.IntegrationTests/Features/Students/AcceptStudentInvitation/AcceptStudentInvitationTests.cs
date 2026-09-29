@@ -335,7 +335,7 @@ public sealed class AcceptStudentInvitationTests(
                 HttpMethod.Post,
                 AcceptUrl(firstInvitation.RawToken),
                 student.AccessToken));
-        Assert.Equal(HttpStatusCode.OK, firstAcceptResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, firstAcceptResponse.StatusCode);
 
         var secondAcceptResponse = await Client.SendAsync(
             CreateAuthorizedRequest(
@@ -343,7 +343,7 @@ public sealed class AcceptStudentInvitationTests(
                 AcceptUrl(secondInvitation.RawToken),
                 student.AccessToken));
 
-        Assert.Equal(HttpStatusCode.Conflict, secondAcceptResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, secondAcceptResponse.StatusCode);
 
         var activeAgreements = await ExecuteDbAsync(dbContext =>
             dbContext.TutoringAgreements
