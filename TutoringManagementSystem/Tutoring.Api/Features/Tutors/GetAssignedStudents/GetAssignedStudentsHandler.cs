@@ -26,51 +26,85 @@ public sealed class GetAssignedStudentsHandler(
             return [];
         }
 
-        var students = await dbContext.TutoringAgreements
+        var agreements = await dbContext.TutoringAgreements
             .AsNoTracking()
             .Where(agreement =>
                 agreement.TutorId == tutor.Id &&
                 agreement.Status != AgreementStatus.Ended)
-            .Select(agreement => new AssignedStudentResponse(
-                agreement.Student.Id.Value,
+            .Select(agreement => new
+            {
+                StudentId = agreement.Student.Id.Value,
+                DisplayName = agreement.Student.DisplayName.Value,
 
-                agreement.Student.DisplayName.Value,
-
-                agreement.Student.Account != null
+                FirstName = agreement.Student.Account != null
                     ? agreement.Student.Account.Profile.FirstName
                     : null,
 
-                agreement.Student.Account != null
+                LastName = agreement.Student.Account != null
                     ? agreement.Student.Account.Profile.LastName
                     : null,
 
-                agreement.Student.Account != null
+                Email = agreement.Student.Account != null
                     ? agreement.Student.Account.Email.Value
                     : null,
 
-                agreement.Student.Account != null &&
-                agreement.Student.Account.Profile.PhoneNumber != null
-                    ? agreement.Student.Account.Profile.PhoneNumber.Value
+                PhoneNumber =
+                    agreement.Student.Account != null &&
+                    agreement.Student.Account.Profile.PhoneNumber != null
+                        ? agreement.Student.Account.Profile.PhoneNumber.Value
+                        : null,
+
+                StudentStatus = agreement.Student.Status.ToString(),
+
+                TutoringAgreementId = agreement.Id.Value,
+
+                Subject = agreement.Subject.Name,
+
+                HourlyRate = agreement.HourlyRate != null
+                    ? (decimal?)agreement.HourlyRate.PricePerHour.Amount
                     : null,
 
-                agreement.Student.Status.ToString(),
-
-                agreement.Subject.Name,
-
-                agreement.HourlyRate != null
-                    ? agreement.HourlyRate.PricePerHour.Amount
-                    : null,
-
-                agreement.ContactEmail != null
+                ContactEmail = agreement.ContactEmail != null
                     ? agreement.ContactEmail.Value
                     : null,
 
-                agreement.ContactPhoneNumber != null
+                ContactPhoneNumber = agreement.ContactPhoneNumber != null
                     ? agreement.ContactPhoneNumber.Value
                     : null,
 
-                agreement.PrivateNotes))
+                Notes = agreement.PrivateNotes
+            })
             .ToListAsync(cancellationToken);
+
+        var students = agreements
+            .GroupBy(agreement => new
+            {
+                agreement.StudentId,
+                agreement.DisplayName,
+                agreement.FirstName,
+                agreement.LastName,
+                agreement.Email,
+                agreement.PhoneNumber,
+                agreement.StudentStatus
+            })
+            .Select(group => new AssignedStudentResponse(
+                group.Key.StudentId,
+                group.Key.DisplayName,
+                group.Key.FirstName,
+                group.Key.LastName,
+                group.Key.Email,
+                group.Key.PhoneNumber,
+                group.Key.StudentStatus,
+                group.Select(agreement =>
+                        new StudentAgreementResponse(
+                            agreement.TutoringAgreementId,
+                            agreement.Subject,
+                            agreement.HourlyRate,
+                            agreement.ContactEmail,
+                            agreement.ContactPhoneNumber,
+                            agreement.Notes))
+                    .ToList()))
+            .ToList();
 
         return students;
     }

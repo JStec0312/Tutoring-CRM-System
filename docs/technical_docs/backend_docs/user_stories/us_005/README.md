@@ -4,7 +4,9 @@
 
 ## Scope
 
-`GET /api/tutors/me/students` returns the students assigned to the authenticated tutor. The endpoint requires the `Tutor` role; students and unauthenticated callers are rejected.
+`GET /api/tutors/me/students` returns the students assigned to the authenticated tutor together with their active tutoring agreements.
+
+The endpoint requires the `Tutor` role; students and unauthenticated callers are rejected.
 
 ## FILES
 
@@ -12,10 +14,35 @@
 - Tests: [GetAssignedStudents](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Tutors/GetAssignedStudents/)
 
 ## Implementation
-a caller's `sub` claim and sends `GetAssignedStudentsQuery` with the resolved `UserAccountId`.
-- `GetAssignedStudentsHandler` looks up the `Tutor` by `UserAccountId`; if none exists, it returns an empty list instead of failing.
-- Students are resolved via `TutoringAgreement` rows where `TutorId` matches the tutor and `Status != AgreementStatus.Ended`, projected `AsNoTracking` into `AssignedStudentResponse` (student id, display name, optional first/last name, account email/phone, status, subject, hourly rate, tutor-maintained contact email/phone, and notes). Managed students have no `UserAccount`, so their account-derived fields are `null`; agreement details are still returned.
-- Ended agreements and agreements belonging to other tutors are excluded by the query filter, so no additional in-memory filtering is needed.
+
+- The caller's `sub` claim is resolved to `UserAccountId` and passed in `GetAssignedStudentsQuery`.
+- `GetAssignedStudentsHandler` looks up the `Tutor` by `UserAccountId`. If no tutor exists, an empty list is returned.
+- Students are resolved through `TutoringAgreement` rows where `TutorId` belongs to the authenticated tutor and `Status != AgreementStatus.Ended`.
+- The response contains one `AssignedStudentResponse` per student. If the same student has multiple active tutoring agreements with the tutor, the student is returned only once.
+- Each `AssignedStudentResponse` contains student-level data: student id, display name, optional first and last name, account email and phone number, and student status.
+- Agreement-specific data is returned in the `Agreements` collection as `StudentAgreementResponse`. Each agreement contains `TutoringAgreementId`, subject, hourly rate, tutor-maintained contact email, contact phone number, and notes.
+- Managed students without a `UserAccount` have `null` account-derived fields, while their tutoring agreements are still returned normally.
+- Ended agreements and agreements belonging to other tutors are excluded.
+
+## Response structure
+
+```text
+AssignedStudentResponse
+├── StudentId
+├── DisplayName
+├── FirstName
+├── LastName
+├── Email
+├── PhoneNumber
+├── Status
+└── Agreements[]
+    ├── TutoringAgreementId
+    ├── Subject
+    ├── HourlyRate
+    ├── ContactEmail
+    ├── ContactPhoneNumber
+    └── Notes
+```
 
 ## Diagram
 
@@ -23,4 +50,14 @@ a caller's `sub` claim and sends `GetAssignedStudentsQuery` with the resolved `U
 
 ## Tests
 
-`Tutoring.IntegrationTests.Features.Tutors.GetAssignedStudents.GetAssignedStudentsTests`: missing access token (`401`), `Student` role caller (`403`), tutor with no assignments (`200` + empty list), registered and managed-student response mapping, tutor data isolation (Tutor A never sees Tutor B's students), and exclusion of `Ended` agreements.
+`Tutoring.IntegrationTests.Features.Tutors.GetAssignedStudents.GetAssignedStudentsTests` covers:
+
+- missing access token (`401`),
+- `Student` role caller (`403`),
+- tutor with no assignments (`200` with an empty list),
+- registered student response mapping,
+- managed student response mapping,
+- registered and managed students returned together,
+- tutor data isolation,
+- exclusion of `Ended` agreements,
+- multiple active agreements for the same student being returned as one student with multiple entries in the `Agreements` collection.

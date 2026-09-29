@@ -1,7 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.GetAssignedStudents;
 using Tutoring.IntegrationTests.Infrastructure;
 
@@ -17,8 +15,12 @@ public sealed class UpdateStudentDetailsTests(
     [Fact]
     public async Task UpdateStudentDetails_ShouldPersistAllFieldsAndBeVisibleInAssignedStudents()
     {
-        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
-        var studentId = await AddStudentAsync(tutor.AccessToken);
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor");
+
+        var studentId = await AddStudentAsync(
+            tutor.AccessToken);
 
         var response = await UpdateAsync(
             tutor.AccessToken,
@@ -32,22 +34,46 @@ public sealed class UpdateStudentDetailsTests(
                 Notes = "Preparing for the final exam."
             });
 
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.NoContent,
+            response.StatusCode);
 
-        var students = await GetAssignedStudentsAsync(tutor.AccessToken);
-        var result = Assert.Single(students);
-        Assert.Equal("Mathematics", result.Subject);
-        Assert.Equal(80m, result.HourlyRate);
-        Assert.Equal("parent@example.com", result.ContactEmail);
-        Assert.Equal("500600700", result.ContactPhoneNumber);
-        Assert.Equal("Preparing for the final exam.", result.Notes);
+        var students = await GetAssignedStudentsAsync(
+            tutor.AccessToken);
+
+        var student = Assert.Single(students);
+        var agreement = Assert.Single(student.Agreements);
+
+        Assert.Equal(
+            "Mathematics",
+            agreement.Subject);
+
+        Assert.Equal(
+            80m,
+            agreement.HourlyRate);
+
+        Assert.Equal(
+            "parent@example.com",
+            agreement.ContactEmail);
+
+        Assert.Equal(
+            "500600700",
+            agreement.ContactPhoneNumber);
+
+        Assert.Equal(
+            "Preparing for the final exam.",
+            agreement.Notes);
     }
 
     [Fact]
     public async Task UpdateStudentDetails_ShouldAllowUpdatingAndClearingOptionalFields()
     {
-        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
-        var studentId = await AddStudentAsync(tutor.AccessToken);
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor");
+
+        var studentId = await AddStudentAsync(
+            tutor.AccessToken);
 
         Assert.Equal(
             HttpStatusCode.NoContent,
@@ -77,19 +103,38 @@ public sealed class UpdateStudentDetailsTests(
                     Notes = (string?)null
                 })).StatusCode);
 
-        var result = Assert.Single(await GetAssignedStudentsAsync(tutor.AccessToken));
-        Assert.Equal("Chemistry", result.Subject);
-        Assert.Null(result.HourlyRate);
-        Assert.Null(result.ContactEmail);
-        Assert.Null(result.ContactPhoneNumber);
-        Assert.Null(result.Notes);
+        var students = await GetAssignedStudentsAsync(
+            tutor.AccessToken);
+
+        var student = Assert.Single(students);
+        var agreement = Assert.Single(student.Agreements);
+
+        Assert.Equal(
+            "Chemistry",
+            agreement.Subject);
+
+        Assert.Null(
+            agreement.HourlyRate);
+
+        Assert.Null(
+            agreement.ContactEmail);
+
+        Assert.Null(
+            agreement.ContactPhoneNumber);
+
+        Assert.Null(
+            agreement.Notes);
     }
 
     [Fact]
     public async Task UpdateStudentDetails_WithNegativeHourlyRate_ShouldReturnBadRequest()
     {
-        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
-        var studentId = await AddStudentAsync(tutor.AccessToken);
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor");
+
+        var studentId = await AddStudentAsync(
+            tutor.AccessToken);
 
         var response = await UpdateAsync(
             tutor.AccessToken,
@@ -103,35 +148,50 @@ public sealed class UpdateStudentDetailsTests(
                 Notes = (string?)null
             });
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.BadRequest,
+            response.StatusCode);
     }
 
     [Fact]
     public async Task UpdateStudentDetails_WhenAgreementBelongsToAnotherTutor_ShouldReturnNotFound()
     {
-        var owner = await CreateTutorAsync("owner@test.pl", "owner");
-        var otherTutor = await CreateTutorAsync("other@test.pl", "other");
-        var studentId = await AddStudentAsync(owner.AccessToken);
+        var owner = await CreateTutorAsync(
+            "owner@test.pl",
+            "owner");
+
+        var otherTutor = await CreateTutorAsync(
+            "other@test.pl",
+            "other");
+
+        var studentId = await AddStudentAsync(
+            owner.AccessToken);
 
         var response = await UpdateAsync(
             otherTutor.AccessToken,
             studentId,
             ValidRequest());
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            response.StatusCode);
     }
 
     [Fact]
     public async Task UpdateStudentDetails_WhenStudentOrAgreementDoesNotExist_ShouldReturnNotFound()
     {
-        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor");
 
         var response = await UpdateAsync(
             tutor.AccessToken,
             Guid.NewGuid(),
             ValidRequest());
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            response.StatusCode);
     }
 
     [Fact]
@@ -141,12 +201,16 @@ public sealed class UpdateStudentDetailsTests(
             HttpMethod.Put,
             $"/api/tutors/students/{Guid.NewGuid()}/details")
         {
-            Content = JsonContent.Create(ValidRequest())
+            Content = JsonContent.Create(
+                ValidRequest())
         };
 
-        var response = await Client.SendAsync(request);
+        var response = await Client.SendAsync(
+            request);
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.Unauthorized,
+            response.StatusCode);
     }
 
     private async Task<HttpResponseMessage> UpdateAsync(
@@ -171,12 +235,16 @@ public sealed class UpdateStudentDetailsTests(
                 "/api/tutors/me/students",
                 accessToken));
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
         return (await response.Content
             .ReadFromJsonAsync<List<AssignedStudentResponse>>())!;
     }
 
-    private async Task<Guid> AddStudentAsync(string accessToken)
+    private async Task<Guid> AddStudentAsync(
+        string accessToken)
     {
         var response = await Client.SendAsync(
             CreateAuthorizedRequest(
@@ -191,9 +259,13 @@ public sealed class UpdateStudentDetailsTests(
                     HourlyRate = (decimal?)null
                 }));
 
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(
+            HttpStatusCode.Created,
+            response.StatusCode);
+
         var result = await response.Content
             .ReadFromJsonAsync<AddStudentResult>();
+
         Assert.NotNull(result);
 
         return result!.StudentId;
@@ -214,11 +286,22 @@ public sealed class UpdateStudentDetailsTests(
                 LastName = "Test",
                 PhoneNumber = (string?)null
             });
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        await ConfirmEmailAsync(await GetVerificationTokenAsync(email));
-        var accessToken = (await LoginAsync(email, Password)).Login.AccessToken;
-        return new TestTutor(accessToken);
+        Assert.Equal(
+            HttpStatusCode.Created,
+            response.StatusCode);
+
+        await ConfirmEmailAsync(
+            await GetVerificationTokenAsync(email));
+
+        var accessToken =
+            (await LoginAsync(
+                email,
+                Password))
+            .Login.AccessToken;
+
+        return new TestTutor(
+            accessToken);
     }
 
     private static object ValidRequest() => new
@@ -230,7 +313,10 @@ public sealed class UpdateStudentDetailsTests(
         Notes = "Notes"
     };
 
-    private sealed record AddStudentResult(Guid StudentId, Guid AgreementId);
+    private sealed record AddStudentResult(
+        Guid StudentId,
+        Guid AgreementId);
 
-    private sealed record TestTutor(string AccessToken);
+    private sealed record TestTutor(
+        string AccessToken);
 }
