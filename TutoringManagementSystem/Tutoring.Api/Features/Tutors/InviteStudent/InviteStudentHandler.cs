@@ -10,6 +10,9 @@ using Tutoring.Domain.Common;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Domain.Billing;
 using Tutoring.Domain.StudentInvitations;
+using Tutoring.Infrastructure.Messaging.Contracts;
+using Tutoring.Infrastructure.Mailing;
+using System.Text.Json;
 
 namespace Tutoring.Api.Features.Tutors.InviteStudent;
 
@@ -70,6 +73,21 @@ public sealed class InviteStudentHandler(
                 recipient.Value);
         }
 
+        var previousInvitations = await dbContext.StudentInvitations
+        .Where(invitation =>
+            invitation.TutorId == tutor.Id &&
+            invitation.Recipient.Value == recipient.Value &&
+            (
+                invitation.Status == InvitationStatus.Created ||
+                invitation.Status == InvitationStatus.Sent
+            ))
+        .ToListAsync(cancellationToken);
+
+    foreach (var previousInvitation in previousInvitations)
+    {
+        previousInvitation.Expire();
+    }
+
         var title = new AgreementTitle(
             request.Title);
         
@@ -100,11 +118,28 @@ public sealed class InviteStudentHandler(
             hourlyRate,
             subject,
             validUntilUtc,
-            now
-            );
+            now);
 
-        dbContext.StudentInvitations.Add(
-            invitation);
+        var integrationEvent =
+            new StudentInvitationCreatedIntegrationEvent(
+                InvitationId: invitation.Id.Value,
+                Email: recipient.Value,
+                InvitationToken: generatedToken.rawToken,
+                Title: title.Value,
+                Subject: subject.Name,
+                ValidUntilUtc: validUntilUtc);
+
+        var outboxMessage = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = StudentInvitationCreatedIntegrationEvent.EventType,
+            Payload = JsonSerializer.Serialize(integrationEvent),
+            OccurredAtUtc = now,
+            RetryCount = 0
+        };
+
+        dbContext.StudentInvitations.Add(invitation);
+        dbContext.OutboxMessages.Add(outboxMessage);
 
         await dbContext.SaveChangesAsync(
             cancellationToken);

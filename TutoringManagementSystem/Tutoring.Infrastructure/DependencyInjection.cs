@@ -55,6 +55,8 @@ public static class InfrastructureServiceCollectionExtensions
         
         services.AddSingleton<IEmailEventHandler,UserRegisteredEmailHandler>();
         services.AddSingleton<IEmailEventHandler, PasswordResetRequestedEmailHandler>();
+        services.AddSingleton<IEmailEventHandler, StudentInvitationCreatedEmailHandler>();
+
         services.AddSingleton<EmailEventDispatcher>();
 
         services.AddSingleton<IPublisher, RabbitMqPublisher>();

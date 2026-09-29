@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.InviteStudent;
 using Tutoring.Domain.Billing;
@@ -7,6 +8,8 @@ using Tutoring.Domain.StudentInvitations;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Domain.Tutors;
+using Tutoring.Infrastructure.Mailing;
+using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Tutors.InviteStudent;
@@ -259,7 +262,152 @@ public sealed class InviteStudentTests(
         // recipient email and must not cause a translation/NRE failure.
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
+    [Fact]
+    public async Task InviteStudent_AsTutor_ShouldCreateEmailOutboxMessage()
+    {
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor");
 
+        var response = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Post,
+                Endpoint,
+                tutor.AccessToken,
+                new
+                {
+                    Email = "student@test.pl",
+                    Title = "Math tutoring",
+                    Subject = "Mathematics",
+                    HourlyRate = (decimal?)100
+                }));
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            response.StatusCode);
+
+        var result = await response.Content
+            .ReadFromJsonAsync<InviteStudentResponse>();
+
+        Assert.NotNull(result);
+
+        OutboxMessage outboxMessage = await ExecuteDbAsync<OutboxMessage>(
+            dbContext =>
+                dbContext.OutboxMessages
+                    .AsNoTracking()
+                    .Where(message =>
+                        message.Type ==
+                        StudentInvitationCreatedIntegrationEvent.EventType)
+                    .SingleAsync());
+
+        var integrationEvent =
+            JsonSerializer.Deserialize<StudentInvitationCreatedIntegrationEvent>(
+                outboxMessage.Payload);
+
+        Assert.NotNull(integrationEvent);
+
+        Assert.Equal(
+            "student@test.pl",
+            integrationEvent.Email);
+
+        Assert.Equal(
+            "Math tutoring",
+            integrationEvent.Title);
+
+        Assert.Equal(
+            "Mathematics",
+            integrationEvent.Subject);
+
+        Assert.Null(outboxMessage.ProcessedAtUtc);
+        Assert.Equal(0, outboxMessage.RetryCount);
+
+        var tokenFromResponse =
+            ExtractTokenFromInvitationUrl(
+                result!.InvitationUrl);
+
+        Assert.Equal(
+            tokenFromResponse,
+            integrationEvent.InvitationToken);
+    }
+    [Fact]
+public async Task InviteStudent_SameTutorSameEmailTwice_ShouldExpirePreviousInvitation()
+{
+        var tutor = await CreateTutorAsync(
+            "tutor@test.pl",
+            "tutor");
+
+        var request = new
+        {
+            Email = "student@test.pl",
+            Title = "Math tutoring",
+            Subject = "Mathematics",
+            HourlyRate = (decimal?)100
+        };
+
+        var firstResponse = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Post,
+                Endpoint,
+                tutor.AccessToken,
+                request));
+
+        var firstResult = await firstResponse.Content
+            .ReadFromJsonAsync<InviteStudentResponse>();
+
+        var secondResponse = await Client.SendAsync(
+            CreateAuthorizedRequest(
+                HttpMethod.Post,
+                Endpoint,
+                tutor.AccessToken,
+                request));
+
+        var secondResult = await secondResponse.Content
+            .ReadFromJsonAsync<InviteStudentResponse>();
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            firstResponse.StatusCode);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            secondResponse.StatusCode);
+
+        Assert.NotNull(firstResult);
+        Assert.NotNull(secondResult);
+
+        var invitations = await ExecuteDbAsync(
+            dbContext =>
+                dbContext.StudentInvitations
+                    .AsNoTracking()
+                    .Where(invitation =>
+                        invitation.TutorId ==
+                            new TutorId(tutor.TutorId) &&
+                        invitation.Recipient.Value ==
+                            "student@test.pl")
+                    .OrderBy(invitation =>
+                        invitation.CreatedAtUtc)
+                    .ToListAsync());
+
+        Assert.Equal(2, invitations.Count);
+
+        var firstInvitation = invitations.Single(
+            invitation =>
+                invitation.Id.Value ==
+                firstResult!.InvitationId);
+
+        var secondInvitation = invitations.Single(
+            invitation =>
+                invitation.Id.Value ==
+                secondResult!.InvitationId);
+
+        Assert.Equal(
+            InvitationStatus.Expired,
+            firstInvitation.Status);
+
+        Assert.Equal(
+            InvitationStatus.Created,
+            secondInvitation.Status);
+    }
     private static string ExtractTokenFromInvitationUrl(string invitationUrl)
     {
         var uri = new Uri(invitationUrl);
