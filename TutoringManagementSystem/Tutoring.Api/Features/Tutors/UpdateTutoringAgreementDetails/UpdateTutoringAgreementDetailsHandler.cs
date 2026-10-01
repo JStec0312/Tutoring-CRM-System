@@ -53,17 +53,10 @@ public sealed class UpdateTutoringAgreementDetailsHandler(
                 request.TutoringAgreementId);
         }
 
-        var contactEmail = request.ContactEmail is null
-            ? null
-            : new EmailAddress(request.ContactEmail);
-        var contactPhoneNumber = request.ContactPhoneNumber is null
-            ? null
-            : new PhoneNumber(request.ContactPhoneNumber);
 
+        var subject = request.Subject is null ? null : new Subject(request.Subject);
         agreement.UpdateTutoringAgreementDetails(
-            new Subject(request.Subject),
-            contactEmail,
-            contactPhoneNumber,
+            subject,
             request.Notes);
 
         await dbContext.SaveChangesAsync(cancellationToken);

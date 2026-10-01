@@ -14,6 +14,4 @@ public sealed record StudentAgreementResponse(
     Guid TutoringAgreementId,
     string Subject,
     decimal? HourlyRate,
-    string? ContactEmail,
-    string? ContactPhoneNumber,
     string? Notes);

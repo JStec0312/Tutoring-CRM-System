@@ -8,8 +8,6 @@ public sealed record UpdateTutoringAgreementDetailsCommand(
     UserAccountId UserAccountId,
     Guid TutoringAgreementId,
     string Subject,
-    string? ContactEmail,
-    string? ContactPhoneNumber,
     string? Notes,
     RequestMetadata RequestMetadata)
     : IRequest;

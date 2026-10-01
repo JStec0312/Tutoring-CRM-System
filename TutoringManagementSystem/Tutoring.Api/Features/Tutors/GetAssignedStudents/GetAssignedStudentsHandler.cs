@@ -57,19 +57,10 @@ public sealed class GetAssignedStudentsHandler(
                 StudentStatus = agreement.Student.Status.ToString(),
 
                 TutoringAgreementId = agreement.Id.Value,
-
                 Subject = agreement.Subject.Name,
 
                 HourlyRate = agreement.HourlyRate != null
                     ? (decimal?)agreement.HourlyRate.PricePerHour.Amount
-                    : null,
-
-                ContactEmail = agreement.ContactEmail != null
-                    ? agreement.ContactEmail.Value
-                    : null,
-
-                ContactPhoneNumber = agreement.ContactPhoneNumber != null
-                    ? agreement.ContactPhoneNumber.Value
                     : null,
 
                 Notes = agreement.PrivateNotes
@@ -96,13 +87,11 @@ public sealed class GetAssignedStudentsHandler(
                 group.Key.PhoneNumber,
                 group.Key.StudentStatus,
                 group.Select(agreement =>
-                        new StudentAgreementResponse(
-                            agreement.TutoringAgreementId,
-                            agreement.Subject,
-                            agreement.HourlyRate,
-                            agreement.ContactEmail,
-                            agreement.ContactPhoneNumber,
-                            agreement.Notes))
+                    new StudentAgreementResponse(
+                        agreement.TutoringAgreementId,
+                        agreement.Subject,
+                        agreement.HourlyRate,
+                        agreement.Notes))
                     .ToList()))
             .ToList();
 

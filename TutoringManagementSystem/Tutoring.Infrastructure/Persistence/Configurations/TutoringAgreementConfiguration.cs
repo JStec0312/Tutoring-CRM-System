@@ -101,24 +101,6 @@ internal sealed class TutoringAgreementConfiguration
             .HasMaxLength(2000)
             .IsRequired(false);
 
-        builder.Property(agreement => agreement.ContactEmail)
-            .HasConversion(
-                email => email == null ? null : email.Value,
-                value => value == null ? null : new EmailAddress(value))
-            .HasColumnName("ContactEmail")
-            .HasColumnType("nvarchar(320)")
-            .HasMaxLength(320)
-            .IsRequired(false);
-
-        builder.Property(agreement => agreement.ContactPhoneNumber)
-            .HasConversion(
-                phone => phone == null ? null : phone.Value,
-                value => value == null ? null : new PhoneNumber(value))
-            .HasColumnName("ContactPhoneNumber")
-            .HasColumnType("nvarchar(30)")
-            .HasMaxLength(30)
-            .IsRequired(false);
-
         builder.Property(agreement => agreement.CreatedAtUtc)
             .HasColumnType("datetimeoffset")
             .IsRequired();

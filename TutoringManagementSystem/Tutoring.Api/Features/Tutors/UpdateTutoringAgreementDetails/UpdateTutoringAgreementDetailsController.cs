@@ -42,8 +42,6 @@ public sealed class UpdateTutoringAgreementDetailsController(
                 new UserAccountId(userAccountId),
                 tutoringAgreementId,
                 request.Subject,
-                request.ContactEmail,
-                request.ContactPhoneNumber,
                 request.Notes,
                 metadata),
             cancellationToken);
