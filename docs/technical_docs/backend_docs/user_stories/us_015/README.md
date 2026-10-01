@@ -1,7 +1,8 @@
 # [US-015] Define individual hourly rate
 
-> As a tutor, I want to define an individual hourly rate for each student so that I can handle different cooperation terms.
-
+> As a tutor, I want to define an hourly rate for a tutoring agreement
+ so that each cooperation with a student can have its own pricing terms.
+ 
 ## Scope
 
 An authenticated tutor can set, change, or clear the hourly rate stored on the `TutoringAgreement` for their relationship with a student. In this application, `TutoringAgreement` represents the Tutor–Student cooperation relationship and stores its current terms; it is not a formal legal contract.
