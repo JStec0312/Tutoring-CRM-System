@@ -4,20 +4,20 @@ using Microsoft.AspNetCore.Mvc;
 using Tutoring.Api.Features.Common.Http;
 using Tutoring.Domain.Identity;
 
-namespace Tutoring.Api.Features.Tutors.UpdateStudentDetails;
+namespace Tutoring.Api.Features.Tutors.UpdateTutoringAgreementDetails;
 
 [ApiController]
 [Authorize(Roles = "Tutor")]
-[Route("api/tutors/students")]
-public sealed class UpdateStudentDetailsController(
+[Route("api/tutors/tutoring-agreements")]
+public sealed class UpdateTutoringAgreementDetailsController(
     ISender sender,
-    ILogger<UpdateStudentDetailsController> logger)
+    ILogger<UpdateTutoringAgreementDetailsController> logger)
     : ControllerBase
 {
-    [HttpPut("{studentId:guid}/details")]
-    public async Task<IActionResult> UpdateStudentDetails(
-        Guid studentId,
-        [FromBody] UpdateStudentDetailsRequest request,
+    [HttpPut("{tutoringAgreementId:guid}/details")]
+    public async Task<IActionResult> UpdateTutoringAgreementDetails(
+        Guid tutoringAgreementId,
+        [FromBody] UpdateTutoringAgreementDetailsRequest request,
         CancellationToken cancellationToken)
     {
         var subject = User.FindFirst("sub")?.Value;
@@ -32,17 +32,16 @@ public sealed class UpdateStudentDetailsController(
         }
 
         logger.LogInformation(
-            "Student details update requested. UserId: {UserId}, StudentId: {StudentId}, RequestMetadata: {RequestMetadata}",
+            "Tutoring agreement details update requested. UserId: {UserId}, TutoringAgreementId: {TutoringAgreementId}, RequestMetadata: {RequestMetadata}",
             userAccountId,
-            studentId,
+            tutoringAgreementId,
             metadata);
 
         await sender.Send(
-            new UpdateStudentDetailsCommand(
+            new UpdateTutoringAgreementDetailsCommand(
                 new UserAccountId(userAccountId),
-                studentId,
+                tutoringAgreementId,
                 request.Subject,
-                request.HourlyRate,
                 request.ContactEmail,
                 request.ContactPhoneNumber,
                 request.Notes,

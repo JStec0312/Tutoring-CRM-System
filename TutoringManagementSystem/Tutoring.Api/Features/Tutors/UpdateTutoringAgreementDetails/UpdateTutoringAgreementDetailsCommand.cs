@@ -2,13 +2,12 @@ using MediatR;
 using Tutoring.Api.Features.Common.Http;
 using Tutoring.Domain.Identity;
 
-namespace Tutoring.Api.Features.Tutors.UpdateStudentDetails;
+namespace Tutoring.Api.Features.Tutors.UpdateTutoringAgreementDetails;
 
-public sealed record UpdateStudentDetailsCommand(
+public sealed record UpdateTutoringAgreementDetailsCommand(
     UserAccountId UserAccountId,
-    Guid StudentId,
+    Guid TutoringAgreementId,
     string Subject,
-    decimal? HourlyRate,
     string? ContactEmail,
     string? ContactPhoneNumber,
     string? Notes,

@@ -50,15 +50,13 @@ public sealed class TutoringAgreement
         CreatedAtUtc = createdAtUtc;
     }
 
-    public void UpdateStudentDetails(
+    public void UpdateTutoringAgreementDetails(
         Subject subject,
-        HourlyRate? hourlyRate,
         EmailAddress? contactEmail,
         PhoneNumber? contactPhoneNumber,
         string? notes)
     {
         Subject = subject ?? throw new ArgumentNullException(nameof(subject));
-        HourlyRate = hourlyRate;
         ContactEmail = contactEmail;
         ContactPhoneNumber = contactPhoneNumber;
         PrivateNotes = notes;

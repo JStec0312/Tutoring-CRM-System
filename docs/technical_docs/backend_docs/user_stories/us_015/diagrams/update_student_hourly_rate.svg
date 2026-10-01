@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1240" height="930" viewBox="0 0 1240 930" role="img" aria-labelledby="title description">
-  <title id="title">US-015 - Update student hourly rate sequence</title>
-  <desc id="description">Tutor request and JWT identity flow through the hourly rate controller, MediatR handler, database context, and tutoring agreement. The handler updates or clears the PLN rate and persists it, or returns 404 for an unavailable owned agreement.</desc>
+  <title id="title">US-015 - Update tutoring agreement hourly rate sequence</title>
+  <desc id="description">Tutor request and JWT identity flow through the tutoring agreement hourly rate controller, MediatR handler, database context, and tutoring agreement. The handler updates or clears the PLN rate for the selected agreement and persists it, or returns 404 for an unavailable or non-owned agreement.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
       <path d="M0,0 L10,4 L0,8 z" fill="#344054"/>
@@ -26,17 +26,17 @@
   </defs>
 
   <rect width="1240" height="930" fill="#ffffff"/>
-  <text x="620" y="35" text-anchor="middle" class="title">US-015 - Update student hourly rate</text>
+  <text x="620" y="35" text-anchor="middle" class="title">US-015 - Update tutoring agreement hourly rate</text>
 
   <rect x="33" y="62" width="115" height="42" class="participant"/>
   <text x="90" y="88" text-anchor="middle" class="actor">Tutor</text>
   <rect x="178" y="62" width="215" height="42" class="participant"/>
-  <text x="285" y="80" text-anchor="middle" class="actor">UpdateStudentHourlyRate</text>
+  <text x="285" y="80" text-anchor="middle" class="actor">UpdateTutoringAgreementHourlyRate</text>
   <text x="285" y="96" text-anchor="middle" class="actor">Controller</text>
   <rect x="435" y="62" width="120" height="42" class="participant"/>
   <text x="495" y="88" text-anchor="middle" class="actor">MediatR</text>
   <rect x="587" y="62" width="210" height="42" class="participant"/>
-  <text x="692" y="80" text-anchor="middle" class="actor">UpdateStudentHourlyRate</text>
+  <text x="692" y="80" text-anchor="middle" class="actor">UpdateTutoringAgreementHourlyRate</text>
   <text x="692" y="96" text-anchor="middle" class="actor">Handler</text>
   <rect x="835" y="62" width="170" height="42" class="participant"/>
   <text x="920" y="88" text-anchor="middle" class="actor">TutoringDbContext</text>
@@ -46,7 +46,7 @@
   <path d="M90 104 V895 M285 104 V895 M495 104 V895 M692 104 V895 M920 104 V895 M1123 104 V895" class="life"/>
 
   <line x1="90" y1="145" x2="285" y2="145" class="call"/>
-  <text x="188" y="133" text-anchor="middle" class="label">PUT /api/tutors/students/{studentId}/hourly-rate</text>
+  <text x="188" y="133" text-anchor="middle" class="label">PUT /api/tutors/tutoring-agreements/{tutoringAgreementId}/hourly-rate</text>
   <text x="188" y="161" text-anchor="middle" class="small">JWT sub + hourlyRate</text>
 
   <path d="M285 183 h45 v28 h-45" class="self"/>
@@ -54,8 +54,8 @@
   <text x="338" y="209" class="small">RequestMetadata: IP, User-Agent, TraceId</text>
 
   <line x1="285" y1="243" x2="495" y2="243" class="call"/>
-  <text x="390" y="231" text-anchor="middle" class="label">Send UpdateStudentHourlyRateCommand</text>
-  <text x="390" y="259" text-anchor="middle" class="small">UserAccountId, StudentId, amount, metadata</text>
+  <text x="390" y="231" text-anchor="middle" class="label">Send UpdateTutoringAgreementHourlyRateCommand</text>
+  <text x="390" y="259" text-anchor="middle" class="small">UserAccountId, TutoringAgreementId, amount, metadata</text>
   <line x1="495" y1="284" x2="692" y2="284" class="call"/>
   <text x="594" y="272" text-anchor="middle" class="label">Handle(command, CancellationToken)</text>
 
@@ -65,7 +65,7 @@
   <text x="806" y="348" text-anchor="middle" class="small">Tutor</text>
 
   <line x1="692" y1="402" x2="920" y2="402" class="call"/>
-  <text x="806" y="390" text-anchor="middle" class="label">Find owned agreement: TutorId + StudentId</text>
+  <text x="806" y="390" text-anchor="middle" class="label">Find owned agreement: TutoringAgreementId + TutorId</text>
   <text x="806" y="417" text-anchor="middle" class="small">Status != Ended</text>
   <line x1="920" y1="444" x2="692" y2="444" class="return"/>
   <text x="806" y="436" text-anchor="middle" class="small">Agreement or none</text>
@@ -76,7 +76,7 @@
   <rect x="570" y="494" width="636" height="82" class="error"/>
   <text x="585" y="515" class="small">[agreement not found / not owned]</text>
   <line x1="692" y1="540" x2="495" y2="540" class="return"/>
-  <text x="594" y="532" text-anchor="middle" class="small">TutoringAgreementNotFoundException</text>
+  <text x="594" y="532" text-anchor="middle" class="small">TutoringAgreementNotFoundByIdException</text>
   <line x1="495" y1="559" x2="285" y2="559" class="return"/>
   <text x="390" y="552" text-anchor="middle" class="label">404 Not Found</text>
   <line x1="285" y1="559" x2="90" y2="559" class="return"/>

@@ -1,26 +1,26 @@
 @startuml
 
-title US-015 - Update student hourly rate
+title US-015 - Update tutoring agreement hourly rate
 
 actor Tutor
-participant "UpdateStudentHourlyRateController" as Controller
+participant "UpdateTutoringAgreementHourlyRateController" as Controller
 participant MediatR
-participant "UpdateStudentHourlyRateHandler" as Handler
+participant "UpdateTutoringAgreementHourlyRateHandler" as Handler
 database "TutoringDbContext" as Db
 participant "TutoringAgreement" as Agreement
 
-Tutor -> Controller: PUT /api/tutors/students/{studentId}/hourly-rate\nJWT sub + request body
+Tutor -> Controller: PUT /api/tutors/tutoring-agreements/{tutoringAgreementId}/hourly-rate\nJWT sub + request body
 Controller -> Controller: Read UserAccountId from sub\nBuild RequestMetadata (IP, User-Agent, TraceId)
-Controller -> MediatR: Send UpdateStudentHourlyRateCommand\n(UserAccountId, StudentId, HourlyRate, RequestMetadata)
+Controller -> MediatR: Send UpdateTutoringAgreementHourlyRateCommand\n(UserAccountId, TutoringAgreementId, HourlyRate, RequestMetadata)
 MediatR -> Handler: Handle(command, CancellationToken)
 
 Handler -> Db: Find Tutor by UserAccountId
 Db --> Handler: Tutor
-Handler -> Db: Find agreement by TutorId + StudentId\nwhere Status != Ended
+Handler -> Db: Find agreement by TutoringAgreementId + TutorId\nwhere Status != Ended
 Db --> Handler: TutoringAgreement or none
 
 alt agreement not found or not owned by tutor
-    Handler --> MediatR: TutoringAgreementNotFoundException
+    Handler --> MediatR: TutoringAgreementNotFoundByIdException
     MediatR --> Controller: NotFoundException
     Controller --> Tutor: 404 Not Found
 else tutor-owned non-ended agreement found
