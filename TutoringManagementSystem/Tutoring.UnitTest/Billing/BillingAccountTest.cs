@@ -43,4 +43,56 @@ public sealed class BillingAccountTest
                 amount,
                 DateTimeOffset.UtcNow));
     }
+
+    [Fact]
+    public void RecordPayment_ShouldCreateAndAddPaymentWithExpectedProperties()
+    {
+        var account = new BillingAccount(
+            new TutoringAgreementId(Guid.NewGuid()),
+            DateTimeOffset.UtcNow);
+        var amount = new Money(125.50m, new Currency("PLN"));
+        var paidAt = DateTimeOffset.UtcNow;
+        var reference = new PaymentReference("INV-001");
+
+        var payment = account.RecordPayment(amount, paidAt, reference);
+
+        Assert.Equal(account.Id, payment.BillingAccountId);
+        Assert.Equal(amount, payment.Amount);
+        Assert.Equal(paidAt, payment.PaidAtUtc);
+        Assert.Equal(reference, payment.Reference);
+        Assert.Single(account.Payments);
+        Assert.Same(payment, account.Payments.Single());
+    }
+
+    [Fact]
+    public void RecordPayment_WithZeroAmount_ShouldThrow()
+    {
+        var account = new BillingAccount(
+            new TutoringAgreementId(Guid.NewGuid()),
+            DateTimeOffset.UtcNow);
+
+        Assert.Throws<PaymentMustBePositiveException>(
+            () => account.RecordPayment(
+                new Money(0, new Currency("PLN")),
+                DateTimeOffset.UtcNow,
+                null));
+
+        Assert.Empty(account.Payments);
+    }
+
+    [Fact]
+    public void RecordPayment_WithNegativeAmount_ShouldThrow()
+    {
+        var account = new BillingAccount(
+            new TutoringAgreementId(Guid.NewGuid()),
+            DateTimeOffset.UtcNow);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => account.RecordPayment(
+                new Money(-1, new Currency("PLN")),
+                DateTimeOffset.UtcNow,
+                null));
+
+        Assert.Empty(account.Payments);
+    }
 }

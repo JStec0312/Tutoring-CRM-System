@@ -5,20 +5,18 @@ namespace Tutoring.Domain.Billing;
 public sealed class Payment
     : Entity<PaymentId>
 {
-    private Payment()
-    {
-    }
+    private BillingAccountId id;
 
-    public Payment(
-        BillingAccountId billingAccountId,
-        Money amount,
-        DateTimeOffset paidAtUtc,
-        PaymentReference? reference)
+    public Payment(BillingAccountId id, Money amount, DateTimeOffset paidAtUtc, PaymentReference? reference)
     {
-        BillingAccountId = billingAccountId;
-        Amount = amount ?? throw new ArgumentNullException(nameof(amount));
+        this.id = id;
+        Amount = amount;
         PaidAtUtc = paidAtUtc;
         Reference = reference;
+    }
+
+    private Payment()
+    {
     }
 
     public BillingAccountId BillingAccountId { get; private set; }
