@@ -50,6 +50,62 @@ public sealed class SetLessonStatusTests(
     }
 
     [Fact]
+    public async Task SetLessonStatus_ToCompleted_ShouldCreateChargeWithCalculatedAmountAndCurrency()
+    {
+        var (tutor, agreementId) = await CreateTutorAndAgreementAsync();
+        var lessonId = await CreateLessonAsync(
+            agreementId, PastStartsAtUtc, PastStartsAtUtc.AddMinutes(90));
+
+        var response = await SetLessonStatusAsync(
+            tutor.AccessToken, lessonId, LessonStatus.Completed);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var charge = await ExecuteDbAsync(dbContext =>
+            dbContext.LessonCharges.AsNoTracking()
+                .SingleAsync(item => item.LessonId == new LessonId(lessonId)));
+
+        Assert.Equal(150m, charge.Amount.Amount);
+        Assert.Equal("PLN", charge.Amount.Currency.Code);
+    }
+
+    [Fact]
+    public async Task SetLessonStatus_ToMissed_ShouldNotCreateCharge()
+    {
+        var (tutor, agreementId) = await CreateTutorAndAgreementAsync();
+        var lessonId = await CreateLessonAsync(
+            agreementId, PastStartsAtUtc, PastStartsAtUtc.AddHours(1));
+
+        var response = await SetLessonStatusAsync(
+            tutor.AccessToken, lessonId, LessonStatus.Missed);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var chargeCount = await ExecuteDbAsync(dbContext =>
+            dbContext.LessonCharges.CountAsync(item =>
+                item.LessonId == new LessonId(lessonId)));
+        Assert.Equal(0, chargeCount);
+    }
+
+    [Fact]
+    public async Task SetLessonStatus_ToCompleted_WhenAgreementHasNoHourlyRate_ShouldNotCreateCharge()
+    {
+        var tutor = await CreateTutorAsync("no-rate-tutor@test.pl", "no-rate-tutor");
+        var student = await CreateStudentAsync("no-rate-student@test.pl", "no-rate-student");
+        var agreementId = await CreateAgreementAsync(tutor.Email, student.StudentId, hasHourlyRate: false);
+        var lessonId = await CreateLessonAsync(
+            agreementId, PastStartsAtUtc, PastStartsAtUtc.AddHours(1));
+
+        var response = await SetLessonStatusAsync(
+            tutor.AccessToken, lessonId, LessonStatus.Completed);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var chargeCount = await ExecuteDbAsync(dbContext =>
+            dbContext.LessonCharges.CountAsync(item =>
+                item.LessonId == new LessonId(lessonId)));
+        Assert.Equal(0, chargeCount);
+    }
+
+    [Fact]
     public async Task SetLessonStatus_ToMissed_ShouldMarkLessonAsMissed()
     {
         var (tutor, agreementId) =
@@ -465,7 +521,8 @@ public sealed class SetLessonStatusTests(
 
     private async Task<Guid> CreateAgreementAsync(
         string tutorEmail,
-        Guid studentId)
+        Guid studentId,
+        bool hasHourlyRate = true)
     {
         return await ExecuteDbAsync(
             async dbContext =>
@@ -483,10 +540,9 @@ public sealed class SetLessonStatusTests(
                         tutorId,
                         new StudentId(studentId),
                         new Subject("Mathematics"),
-                        new HourlyRate(
-                            new Money(
-                                100,
-                                new Currency("PLN"))),
+                        hasHourlyRate
+                            ? new HourlyRate(new Money(100, new Currency("PLN")))
+                            : null,
                         new AgreementTitle(
                             "Test Agreement"),
                         DateTimeOffset.UtcNow);
