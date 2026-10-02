@@ -46,7 +46,7 @@ Source: original project PDF brief.
 | US-004 | Users | As a user, I want to edit my profile data and password so that my account information stays up to date. |
 | US-005 | Students | As a tutor, I want to see my assigned students so that I can manage the people I teach. |
 | US-006 | Students | As a tutor, I want to add a student manually or by invitation so that I can start working with them in the system. |
-| US-007 | Students | As a tutor, I want to store subject, contact details, and notes for each tutoring agreement so that I can keep cooperation-specific information in one place. |
+| US-007 | Students | As a tutor, I want to store subject and notes for each tutoring agreement so that I can keep cooperation-specific information in one place. |
 | US-008 | Students | As a tutor, I want to mark a tutoring agreement with a student as active or inactive so that I can manage whether that specific teaching relationship is currently active. |
 | US-009 | Calendar | As a tutor, I want to schedule a lesson with a date, student, subject, and duration so that I can plan tutoring sessions. |
 | US-010 | Calendar | As a tutor, I want to edit a scheduled lesson so that I can correct its time or details. |

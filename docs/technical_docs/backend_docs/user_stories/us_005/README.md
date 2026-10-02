@@ -19,9 +19,13 @@ The endpoint requires the `Tutor` role; students and unauthenticated callers are
 - `GetAssignedStudentsHandler` looks up the `Tutor` by `UserAccountId`. If no tutor exists, an empty list is returned.
 - Students are resolved through `TutoringAgreement` rows where `TutorId` belongs to the authenticated tutor and `Status != AgreementStatus.Ended`.
 - The response contains one `AssignedStudentResponse` per student. If the same student has multiple active tutoring agreements with the tutor, the student is returned only once.
-- Each `AssignedStudentResponse` contains student-level data: student id, display name, optional first and last name, account email and phone number, and student status.
-- Agreement-specific data is returned in the `Agreements` collection as `StudentAgreementResponse`. Each agreement contains `TutoringAgreementId`, subject, hourly rate, tutor-maintained contact email, contact phone number, and notes.
-- Managed students without a `UserAccount` have `null` account-derived fields, while their tutoring agreements are still returned normally.
+- Student-level data is resolved from the `Student` entity and its associated `UserAccount`.
+- `Email` is returned from `Student.Account.Email`.
+- `PhoneNumber` is returned from `Student.Account.Profile.PhoneNumber`.
+- `FirstName` and `LastName` are also resolved from the student's account profile.
+- Agreement-specific data is returned in the `Agreements` collection as `StudentAgreementResponse`.
+- Each agreement contains `TutoringAgreementId`, subject, hourly rate, and tutor-maintained private notes.
+- Managed students without a `UserAccount` have `null` account-derived fields such as first name, last name, email, and phone number, while their tutoring agreements are still returned normally.
 - Ended agreements and agreements belonging to other tutors are excluded.
 
 ## Response structure
@@ -39,8 +43,6 @@ AssignedStudentResponse
     ├── TutoringAgreementId
     ├── Subject
     ├── HourlyRate
-    ├── ContactEmail
-    ├── ContactPhoneNumber
     └── Notes
 ```
 
@@ -55,8 +57,8 @@ AssignedStudentResponse
 - missing access token (`401`),
 - `Student` role caller (`403`),
 - tutor with no assignments (`200` with an empty list),
-- registered student response mapping,
-- managed student response mapping,
+- registered student response mapping, including email and phone number from the student's `UserAccount`,
+- managed student response mapping with `null` account-derived fields,
 - registered and managed students returned together,
 - tutor data isolation,
 - exclusion of `Ended` agreements,
