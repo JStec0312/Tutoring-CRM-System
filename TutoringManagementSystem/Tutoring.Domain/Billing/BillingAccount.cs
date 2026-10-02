@@ -50,4 +50,26 @@ public sealed class BillingAccount
 
         return charge;
     }
+    public Payment RecordPayment(
+    Money amount,
+    DateTimeOffset paidAtUtc,
+    PaymentReference? reference)
+    {
+        ArgumentNullException.ThrowIfNull(amount);
+
+        if (amount.Amount <= 0)
+        {
+            throw new PaymentMustBePositiveException();
+        }
+
+        var payment = new Payment(
+            Id,
+            amount,
+            paidAtUtc,
+            reference);
+
+        _payments.Add(payment);
+
+        return payment;
+    }
 }
