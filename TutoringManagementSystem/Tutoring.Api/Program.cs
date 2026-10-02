@@ -3,6 +3,7 @@ using Scalar.AspNetCore;
 using Serilog;
 using Tutoring.Api;
 using Tutoring.Api.Configuration;
+using Tutoring.Api.Development;
 using Tutoring.Infrastructure;
 using Tutoring.Infrastructure.Persistence;
 using DotNetEnv;
@@ -26,6 +27,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<DevelopmentDataBootstrapper>();
 
 if (!builder.Environment.IsEnvironment("IntegrationTests"))
 {
