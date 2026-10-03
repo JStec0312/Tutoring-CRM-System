@@ -6,6 +6,7 @@ using Tutoring.Api.Configuration;
 using Tutoring.Infrastructure;
 using Tutoring.Infrastructure.Persistence;
 using DotNetEnv;
+using Tutoring.Api.Dev;
 
 
 Env
@@ -40,6 +41,18 @@ builder.Services.AddMediatR(config =>
 
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+
+// bootstrap 
+if (builder.Environment.IsDevelopment())
+{
+        builder.Services.AddScoped<DevelopmentDataBootstrapper>();
+        
+}
+
+
+
+
 
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

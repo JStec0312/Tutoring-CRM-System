@@ -7,7 +7,7 @@ namespace Tutoring.Api.Features.Tutors.UpdateTutoringAgreementDetails;
 public sealed record UpdateTutoringAgreementDetailsCommand(
     UserAccountId UserAccountId,
     Guid TutoringAgreementId,
-    string Subject,
+    string? Subject,
     string? Notes,
     RequestMetadata RequestMetadata)
     : IRequest;

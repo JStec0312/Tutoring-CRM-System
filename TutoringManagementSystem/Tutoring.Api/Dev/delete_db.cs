@@ -1,4 +1,4 @@
-namespace Tutoring.Api;
+namespace Tutoring.Api.Dev;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

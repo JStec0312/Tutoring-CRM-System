@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.Exceptions;
-using Tutoring.Domain.Common;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Infrastructure.Persistence;
 
