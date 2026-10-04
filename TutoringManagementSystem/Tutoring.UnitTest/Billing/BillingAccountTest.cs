@@ -22,8 +22,8 @@ public sealed class BillingAccountTest
         Assert.Equal(amount, charge.Amount);
         Assert.Equal(chargedAt, charge.ChargedAtUtc);
         Assert.Equal(ChargeStatus.Active, charge.Status);
+        Assert.Null(charge.PaymentId);
         Assert.False(charge.IsPaid);
-        Assert.Null(charge.PaidAtUtc);
         Assert.Equal("Lesson charge", charge.Description);
         Assert.Single(account.Charges);
     }
@@ -54,8 +54,9 @@ public sealed class BillingAccountTest
 
         var payment = account.MarkChargeAsPaid(charge.Id, paidAt, reference);
 
+        Assert.Equal(payment.Id, charge.PaymentId);
+        Assert.Same(payment, charge.Payment);
         Assert.True(charge.IsPaid);
-        Assert.Equal(paidAt, charge.PaidAtUtc);
         Assert.Equal(account.Id, payment.BillingAccountId);
         Assert.Equal(75.50m, payment.Amount.Amount);
         Assert.Equal("PLN", payment.Amount.Currency.Code);
@@ -77,9 +78,14 @@ public sealed class BillingAccountTest
             paidAt,
             null);
 
-        Assert.All(account.Charges, charge => Assert.True(charge.IsPaid));
-        Assert.All(account.Charges, charge => Assert.Equal(paidAt, charge.PaidAtUtc));
+        Assert.All(account.Charges, charge =>
+        {
+            Assert.Equal(payment.Id, charge.PaymentId);
+            Assert.Same(payment, charge.Payment);
+            Assert.True(charge.IsPaid);
+        });
         Assert.Equal(75.50m, payment.Amount.Amount);
+        Assert.Equal(paidAt, payment.PaidAtUtc);
         Assert.Single(account.Payments);
     }
 
@@ -89,7 +95,10 @@ public sealed class BillingAccountTest
         var account = CreateAccount();
         var alreadyPaid = AddCharge(account, 25m);
         var unpaid = AddCharge(account, 50m);
-        account.MarkChargeAsPaid(alreadyPaid.Id, DateTimeOffset.UtcNow, null);
+        var existingPayment = account.MarkChargeAsPaid(
+            alreadyPaid.Id,
+            DateTimeOffset.UtcNow,
+            null);
         var paymentCount = account.Payments.Count;
 
         Assert.Throws<ChargeCannotBePaidException>(
@@ -98,7 +107,9 @@ public sealed class BillingAccountTest
                 DateTimeOffset.UtcNow,
                 null));
 
+        Assert.Equal(existingPayment.Id, alreadyPaid.PaymentId);
         Assert.True(alreadyPaid.IsPaid);
+        Assert.Null(unpaid.PaymentId);
         Assert.False(unpaid.IsPaid);
         Assert.Equal(paymentCount, account.Payments.Count);
     }
@@ -166,6 +177,8 @@ public sealed class BillingAccountTest
                 DateTimeOffset.UtcNow,
                 null));
 
+        Assert.Null(plnCharge.PaymentId);
+        Assert.Null(eurCharge.PaymentId);
         Assert.False(plnCharge.IsPaid);
         Assert.False(eurCharge.IsPaid);
         Assert.Empty(account.Payments);

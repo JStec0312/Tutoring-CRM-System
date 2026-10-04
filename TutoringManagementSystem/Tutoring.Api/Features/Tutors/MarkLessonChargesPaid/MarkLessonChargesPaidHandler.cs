@@ -66,9 +66,10 @@ public sealed class MarkLessonChargesPaidHandler(
 
             throw new LessonChargesFromDifferentBillingAccountsException();
         }
+        var paidAtUtc = request.PaidAtUtc ?? DateTimeOffset.UtcNow;
         accounts[0].MarkChargesAsPaid(
             chargeIds,
-            request.PaidAtUtc,
+            paidAtUtc,
             request.Reference is null ? null : new PaymentReference(request.Reference));
 
         await dbContext.SaveChangesAsync(cancellationToken);

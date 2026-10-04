@@ -28,7 +28,7 @@ public sealed class MarkLessonChargesPaidTests(
             HttpMethod.Post,
             $"{Endpoint}/{data.ChargeIds[0]}/mark-paid",
             tutor.AccessToken,
-            new { PaidAtUtc = paidAt, Reference = "TRANSFER-001" });
+            new { PaidAtUtc = paidAt, Reference = "TRANSFER-001", Amount = 0.01m });
 
         var response = await Client.SendAsync(request);
 
@@ -37,12 +37,13 @@ public sealed class MarkLessonChargesPaidTests(
         {
             Charge = await db.LessonCharges.AsNoTracking()
                 .Where(charge => charge.Id == new LessonChargeId(data.ChargeIds[0]))
-                .Select(charge => new { charge.IsPaid, charge.PaidAtUtc })
+                .Select(charge => new { charge.PaymentId })
                 .SingleAsync(),
             Payment = await db.Payments.AsNoTracking()
                 .Where(payment => payment.BillingAccountId == new BillingAccountId(data.BillingAccountId))
                 .Select(payment => new
                 {
+                    payment.Id,
                     Amount = payment.Amount.Amount,
                     payment.PaidAtUtc,
                     Reference = payment.Reference!.Value
@@ -50,8 +51,7 @@ public sealed class MarkLessonChargesPaidTests(
                 .SingleAsync()
         });
 
-        Assert.True(result.Charge.IsPaid);
-        Assert.Equal(paidAt, result.Charge.PaidAtUtc);
+        Assert.Equal(result.Payment.Id.Value, result.Charge.PaymentId?.Value);
         Assert.Equal(75.50m, result.Payment.Amount);
         Assert.Equal(paidAt, result.Payment.PaidAtUtc);
         Assert.Equal("TRANSFER-001", result.Payment.Reference);
@@ -85,23 +85,27 @@ public sealed class MarkLessonChargesPaidTests(
         {
             Charges = await db.LessonCharges.AsNoTracking()
                 .Where(charge => chargeIds.Contains(charge.Id))
-                .Select(charge => new { charge.IsPaid, charge.PaidAtUtc })
+                .Select(charge => new { charge.PaymentId })
                 .ToListAsync(),
             Payments = await db.Payments.AsNoTracking()
                 .Where(payment => payment.BillingAccountId == new BillingAccountId(data.BillingAccountId))
-                .Select(payment => new { Amount = payment.Amount.Amount, payment.Reference!.Value })
+                .Select(payment => new
+                {
+                    payment.Id,
+                    Amount = payment.Amount.Amount,
+                    payment.PaidAtUtc,
+                    Reference = payment.Reference!.Value
+                })
                 .ToListAsync()
         });
 
         Assert.Equal(2, result.Charges.Count);
-        Assert.All(result.Charges, charge =>
-        {
-            Assert.True(charge.IsPaid);
-            Assert.Equal(paidAt, charge.PaidAtUtc);
-        });
         var payment = Assert.Single(result.Payments);
+        Assert.All(result.Charges, charge =>
+            Assert.Equal(payment.Id.Value, charge.PaymentId?.Value));
         Assert.Equal(75.50m, payment.Amount);
-        Assert.Equal("BULK-TRANSFER-001", payment.Value);
+        Assert.Equal(paidAt, payment.PaidAtUtc);
+        Assert.Equal("BULK-TRANSFER-001", payment.Reference);
     }
 
     [Fact]
@@ -127,11 +131,14 @@ public sealed class MarkLessonChargesPaidTests(
         var chargeIds = new[] { first.ChargeIds[0], second.ChargeIds[0] }
             .Select(id => new LessonChargeId(id))
             .ToArray();
-        var paidStates = await ExecuteDbAsync(db => db.LessonCharges.AsNoTracking()
+        var paymentIds = await ExecuteDbAsync(db => db.LessonCharges.AsNoTracking()
             .Where(charge => chargeIds.Contains(charge.Id))
-            .Select(charge => charge.IsPaid)
+            .Select(charge => charge.PaymentId)
             .ToListAsync());
-        Assert.Equal(new[] { false, false }, paidStates);
+        Assert.All(paymentIds, Assert.Null);
+
+        var paymentCount = await ExecuteDbAsync(db => db.Payments.CountAsync());
+        Assert.Equal(0, paymentCount);
     }
 
     [Fact]
@@ -160,7 +167,121 @@ public sealed class MarkLessonChargesPaidTests(
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         var paymentCount = await ExecuteDbAsync(db => db.Payments.CountAsync(
             payment => payment.BillingAccountId == new BillingAccountId(data.BillingAccountId)));
+        var paymentId = await ExecuteDbAsync(db => db.LessonCharges.AsNoTracking()
+            .Where(charge => charge.Id == new LessonChargeId(data.ChargeIds[0]))
+            .Select(charge => charge.PaymentId)
+            .SingleAsync());
         Assert.Equal(1, paymentCount);
+        Assert.NotNull(paymentId);
+    }
+
+    [Fact]
+    public async Task MarkInactiveCharge_ShouldRejectWithoutCreatingPayment()
+    {
+        var tutor = await CreateTutorAsync("inactive-charge@test.pl", "inactive-charge");
+        var data = await CreateChargeSetAsync(tutor.TutorId, 25m);
+
+        await ExecuteDbAsync(async db =>
+        {
+            var charge = await db.LessonCharges.SingleAsync(
+                item => item.Id == new LessonChargeId(data.ChargeIds[0]));
+            db.Entry(charge).Property(item => item.Status).CurrentValue = ChargeStatus.Cancelled;
+            await db.SaveChangesAsync();
+        });
+
+        using var request = CreateAuthorizedRequest(
+            HttpMethod.Post,
+            $"{Endpoint}/{data.ChargeIds[0]}/mark-paid",
+            tutor.AccessToken,
+            new { PaidAtUtc = DateTimeOffset.UtcNow });
+
+        var response = await Client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var state = await ExecuteDbAsync(async db => new
+        {
+            PaymentId = await db.LessonCharges.AsNoTracking()
+                .Where(charge => charge.Id == new LessonChargeId(data.ChargeIds[0]))
+                .Select(charge => charge.PaymentId)
+                .SingleAsync(),
+            PaymentCount = await db.Payments.CountAsync(
+                payment => payment.BillingAccountId == new BillingAccountId(data.BillingAccountId))
+        });
+        Assert.Null(state.PaymentId);
+        Assert.Equal(0, state.PaymentCount);
+    }
+
+    [Fact]
+    public async Task FailedBulkPayment_ShouldLeaveDatabaseUnchanged()
+    {
+        var tutor = await CreateTutorAsync("failed-bulk-payment@test.pl", "failed-bulk-payment");
+        var data = await CreateChargeSetAsync(tutor.TutorId, 25m, 50m);
+        using (var singleRequest = CreateAuthorizedRequest(
+            HttpMethod.Post,
+            $"{Endpoint}/{data.ChargeIds[0]}/mark-paid",
+            tutor.AccessToken,
+            new { PaidAtUtc = DateTimeOffset.UtcNow }))
+        {
+            Assert.Equal(HttpStatusCode.NoContent, (await Client.SendAsync(singleRequest)).StatusCode);
+        }
+
+        var settledPaymentId = await ExecuteDbAsync(db => db.LessonCharges.AsNoTracking()
+            .Where(charge => charge.Id == new LessonChargeId(data.ChargeIds[0]))
+            .Select(charge => charge.PaymentId)
+            .SingleAsync());
+
+        using var bulkRequest = CreateAuthorizedRequest(
+            HttpMethod.Post,
+            $"{Endpoint}/mark-paid",
+            tutor.AccessToken,
+            new
+            {
+                LessonChargeIds = data.ChargeIds,
+                PaidAtUtc = DateTimeOffset.UtcNow
+            });
+        var response = await Client.SendAsync(bulkRequest);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        var chargeIds = data.ChargeIds.Select(id => new LessonChargeId(id)).ToArray();
+        var state = await ExecuteDbAsync(async db => new
+        {
+            Charges = await db.LessonCharges.AsNoTracking()
+                .Where(charge => chargeIds.Contains(charge.Id))
+                .Select(charge => new { charge.Id, charge.PaymentId })
+                .ToListAsync(),
+            PaymentCount = await db.Payments.CountAsync(
+                payment => payment.BillingAccountId == new BillingAccountId(data.BillingAccountId))
+        });
+
+        Assert.Equal(1, state.PaymentCount);
+        Assert.Equal(settledPaymentId, state.Charges.Single(charge => charge.Id.Value == data.ChargeIds[0]).PaymentId);
+        Assert.Null(state.Charges.Single(charge => charge.Id.Value == data.ChargeIds[1]).PaymentId);
+    }
+
+    [Fact]
+    public async Task MarkFutureLessonWithoutCharge_ShouldNotRecordAdvancePayment()
+    {
+        var tutor = await CreateTutorAsync("future-lesson@test.pl", "future-lesson");
+        var futureLesson = await CreateUnchargedFutureLessonAsync(tutor.TutorId);
+
+        using var request = CreateAuthorizedRequest(
+            HttpMethod.Post,
+            $"{Endpoint}/{futureLesson.LessonId}/mark-paid",
+            tutor.AccessToken,
+            new { PaidAtUtc = DateTimeOffset.UtcNow });
+
+        var response = await Client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        var result = await ExecuteDbAsync(async db => new
+        {
+            ChargeCount = await db.LessonCharges.CountAsync(
+                charge => charge.LessonId == new LessonId(futureLesson.LessonId)),
+            PaymentCount = await db.Payments.CountAsync(
+                payment => payment.BillingAccountId == new BillingAccountId(futureLesson.BillingAccountId))
+        });
+        Assert.Equal(0, result.ChargeCount);
+        Assert.Equal(0, result.PaymentCount);
     }
 
     [Fact]
@@ -179,11 +300,11 @@ public sealed class MarkLessonChargesPaidTests(
         var response = await Client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        var isPaid = await ExecuteDbAsync(db => db.LessonCharges.AsNoTracking()
+        var paymentId = await ExecuteDbAsync(db => db.LessonCharges.AsNoTracking()
             .Where(charge => charge.Id == new LessonChargeId(data.ChargeIds[0]))
-            .Select(charge => charge.IsPaid)
+            .Select(charge => charge.PaymentId)
             .SingleAsync());
-        Assert.False(isPaid);
+        Assert.Null(paymentId);
     }
 
     [Fact]
@@ -235,6 +356,35 @@ public sealed class MarkLessonChargesPaidTests(
         });
     }
 
+    private async Task<FutureLesson> CreateUnchargedFutureLessonAsync(Guid tutorId)
+    {
+        return await ExecuteDbAsync(async db =>
+        {
+            var now = DateTimeOffset.UtcNow;
+            var student = new Student(new StudentDisplayName($"Future Student {Guid.NewGuid():N}"), now);
+            var agreement = new TutoringAgreement(
+                new TutorId(tutorId),
+                student.Id,
+                new Subject("Mathematics"),
+                new HourlyRate(new Money(100m, new Currency("PLN"))),
+                new AgreementTitle("Future lesson agreement"),
+                now);
+            var account = new BillingAccount(agreement.Id, now);
+            var lesson = new Lesson(
+                agreement.Id,
+                new TimeSlot(now.AddDays(1), now.AddDays(1).AddHours(1)),
+                now);
+
+            db.Students.Add(student);
+            db.TutoringAgreements.Add(agreement);
+            db.BillingAccounts.Add(account);
+            db.Lessons.Add(lesson);
+            await db.SaveChangesAsync();
+
+            return new FutureLesson(account.Id.Value, lesson.Id.Value);
+        });
+    }
+
     private async Task<TestTutor> CreateTutorAsync(string email, string userName)
     {
         var response = await Client.PostAsJsonAsync(
@@ -257,6 +407,8 @@ public sealed class MarkLessonChargesPaidTests(
             .SingleAsync());
         return new TestTutor(tutorId, session.Login.AccessToken);
     }
+
+    private sealed record FutureLesson(Guid BillingAccountId, Guid LessonId);
 
     private sealed record ChargeSet(Guid BillingAccountId, IReadOnlyList<Guid> ChargeIds);
     private sealed record TestTutor(Guid TutorId, string AccessToken);

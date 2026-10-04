@@ -7,6 +7,6 @@ namespace Tutoring.Api.Features.Tutors.MarkLessonChargePaid;
 public sealed record MarkLessonChargePaidCommand(
     UserAccountId UserAccountId,
     Guid LessonChargeId,
-    DateTimeOffset PaidAtUtc,
+    DateTimeOffset? PaidAtUtc,
     string? Reference,
     RequestMetadata RequestMetadata) : IRequest;

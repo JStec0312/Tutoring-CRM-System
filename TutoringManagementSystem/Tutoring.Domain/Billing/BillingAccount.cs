@@ -97,6 +97,12 @@ public sealed class BillingAccount
             charge.EnsureCanBeMarkedAsPaid();
         }
 
+        if (charges.Any(charge => charge.BillingAccountId != Id))
+        {
+            throw new InvalidOperationException(
+                "All lesson charges must belong to the same billing account.");
+        }
+
         var currency = charges[0].Amount.Currency;
 
         if (charges.Any(
@@ -109,11 +115,6 @@ public sealed class BillingAccount
         var totalAmount = charges.Sum(
             charge => charge.Amount.Amount);
 
-        foreach (var charge in charges)
-        {
-            charge.MarkAsPaid(paidAtUtc);
-        }
-
         var payment = new Payment(
             Id,
             new Money(totalAmount, currency),
@@ -121,6 +122,11 @@ public sealed class BillingAccount
             reference);
 
         _payments.Add(payment);
+
+        foreach (var charge in charges)
+        {
+            charge.MarkAsPaid(payment);
+        }
 
         return payment;
     }

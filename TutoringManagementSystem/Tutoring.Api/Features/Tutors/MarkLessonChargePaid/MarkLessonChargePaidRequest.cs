@@ -1,5 +1,5 @@
 namespace Tutoring.Api.Features.Tutors.MarkLessonChargePaid;
 
 public sealed record MarkLessonChargePaidRequest(
-    DateTimeOffset PaidAtUtc,
+    DateTimeOffset? PaidAtUtc,
     string? Reference);

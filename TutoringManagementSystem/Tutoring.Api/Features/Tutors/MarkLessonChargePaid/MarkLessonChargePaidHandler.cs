@@ -64,10 +64,12 @@ public sealed class MarkLessonChargePaidHandler(
         var reference = request.Reference is null
             ? null
             : new PaymentReference(request.Reference);
+        
+        var paidAtUtc = request.PaidAtUtc ?? DateTimeOffset.UtcNow;
 
         var payment = billingAccount.MarkChargeAsPaid(
             chargeId,
-            request.PaidAtUtc,
+            paidAtUtc,
             reference);
 
         await dbContext.SaveChangesAsync(
@@ -79,7 +81,7 @@ public sealed class MarkLessonChargePaidHandler(
             billingAccount.Id.Value,
             request.LessonChargeId,
             payment.Id.Value,
-            request.PaidAtUtc,
+            paidAtUtc,
             request.RequestMetadata);
     }
 }

@@ -26,10 +26,15 @@ internal sealed class LessonChargeConfiguration
         builder.Property(charge => charge.ChargedAtUtc).HasColumnType("datetimeoffset").IsRequired();
         builder.Property(charge => charge.Status).HasConversion<string>().HasColumnType("nvarchar(50)").HasMaxLength(50).IsRequired();
         builder.Property(charge => charge.Description).HasColumnType("nvarchar(500)").HasMaxLength(500).IsRequired();
-        builder.Property(charge => charge.IsPaid).IsRequired();
-        builder.Property(charge => charge.PaidAtUtc).HasColumnType("datetimeoffset").IsRequired(false);
+        builder.Property(charge => charge.PaymentId)
+            .HasNullableStronglyTypedId(value => new PaymentId(value), "PaymentId");
+        builder.HasOne(charge => charge.Payment)
+            .WithMany()
+            .HasForeignKey(charge => charge.PaymentId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Lesson>().WithMany().HasForeignKey(charge => charge.LessonId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(charge => charge.BillingAccountId);
+        builder.HasIndex(charge => charge.PaymentId);
         builder.HasIndex(charge => charge.LessonId).IsUnique();
     }
 }
