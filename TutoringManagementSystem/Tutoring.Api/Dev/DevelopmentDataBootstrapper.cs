@@ -78,8 +78,6 @@ public sealed class DevelopmentDataBootstrapper(
         public static readonly LessonChargeId LessonCharge =
             new(Guid.Parse("00000000-0000-0000-0000-000000000502"));
 
-        public static readonly PaymentId Payment =
-            new(Guid.Parse("00000000-0000-0000-0000-000000000503"));
     }
 
     public async Task BootstrapAsync(CancellationToken cancellationToken)
@@ -265,13 +263,7 @@ public sealed class DevelopmentDataBootstrapper(
 
         SetId(charge, Ids.LessonCharge);
 
-        var payment = billingAccount.MarkChargeAsPaid(
-            charge.Id,
-            nowUtc.AddDays(-5),
-            new PaymentReference("DEV-PAYMENT-001"));
-
-        SetId(payment, Ids.Payment);
-
+       
         dbContext.UserAccounts.AddRange(
             tutorAccount,
             annaAccount,

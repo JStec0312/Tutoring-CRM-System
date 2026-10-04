@@ -119,6 +119,57 @@ public sealed class BillingAccountTest
         Assert.Empty(account.Payments);
     }
 
+    [Fact]
+    public void MarkChargeAsPaid_WhenChargeIsMissing_ShouldThrowWithoutCreatingPayment()
+    {
+        var account = CreateAccount();
+
+        Assert.Throws<ChargeNotFoundInBillingAccountException>(
+            () => account.MarkChargeAsPaid(
+                new LessonChargeId(Guid.NewGuid()),
+                DateTimeOffset.UtcNow,
+                null));
+
+        Assert.Empty(account.Payments);
+    }
+
+    [Fact]
+    public void MarkChargesAsPaid_WhenNoChargesAreProvided_ShouldThrow()
+    {
+        var account = CreateAccount();
+
+        Assert.Throws<ArgumentException>(
+            () => account.MarkChargesAsPaid(
+                [],
+                DateTimeOffset.UtcNow,
+                null));
+
+        Assert.Empty(account.Payments);
+    }
+
+    [Fact]
+    public void MarkChargesAsPaid_WhenCurrenciesDiffer_ShouldRejectWithoutChangingCharges()
+    {
+        var account = CreateAccount();
+        var plnCharge = account.AddLessonCharge(
+            new LessonId(Guid.NewGuid()),
+            new Money(25m, new Currency("PLN")),
+            DateTimeOffset.UtcNow);
+        var eurCharge = account.AddLessonCharge(
+            new LessonId(Guid.NewGuid()),
+            new Money(10m, new Currency("EUR")),
+            DateTimeOffset.UtcNow);
+
+        Assert.Throws<InvalidOperationException>(
+            () => account.MarkChargesAsPaid(
+                [plnCharge.Id, eurCharge.Id],
+                DateTimeOffset.UtcNow,
+                null));
+
+        Assert.False(plnCharge.IsPaid);
+        Assert.False(eurCharge.IsPaid);
+        Assert.Empty(account.Payments);
+    }
     private static BillingAccount CreateAccount() => new(
         new TutoringAgreementId(Guid.NewGuid()),
         DateTimeOffset.UtcNow);
@@ -129,3 +180,4 @@ public sealed class BillingAccountTest
             new Money(amount, new Currency("PLN")),
             DateTimeOffset.UtcNow);
 }
+

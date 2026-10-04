@@ -105,10 +105,12 @@ PlantUML source: [mark_lesson_charges_paid.puml](diagrams/mark_lesson_charges_pa
 - bulk payment creation with one payment for the total,
 - marking all selected charges as paid,
 - rejection of an already-paid charge,
-- rejection of duplicate charge IDs,
+- rejection of a missing charge,
+- rejection of empty and duplicate charge IDs,
+- rejection of mixed currencies,
 - preservation of other charges and payments when bulk validation fails.
 
-Result: the targeted billing domain test run passes **6/6 tests**.
+Result: the targeted billing domain test run passes **9/9 tests**.
 
 ### Integration tests
 
@@ -121,4 +123,9 @@ Result: the targeted billing domain test run passes **6/6 tests**.
 - tutor ownership protection,
 - unauthenticated access.
 
-The integration test project compiles successfully. Test execution is currently blocked because the repository fixture uses Testcontainers SQL Server and Docker is unavailable in the environment (`npipe://./pipe/docker_engine`).
+The integration test project compiles successfully. Test execution is currently blocked because the repository fixture uses Testcontainers SQL Server and Docker is unavailable in the environment (
+pipe://./pipe/docker_engine`).
+
+
+
+

@@ -78,10 +78,13 @@ public sealed class MarkLessonChargesPaidTests(
         var response = await Client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var chargeIds = data.ChargeIds
+            .Select(id => new LessonChargeId(id))
+            .ToArray();
         var result = await ExecuteDbAsync(async db => new
         {
             Charges = await db.LessonCharges.AsNoTracking()
-                .Where(charge => data.ChargeIds.Contains(charge.Id.Value))
+                .Where(charge => chargeIds.Contains(charge.Id))
                 .Select(charge => new { charge.IsPaid, charge.PaidAtUtc })
                 .ToListAsync(),
             Payments = await db.Payments.AsNoTracking()
@@ -121,8 +124,11 @@ public sealed class MarkLessonChargesPaidTests(
         var response = await Client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var chargeIds = new[] { first.ChargeIds[0], second.ChargeIds[0] }
+            .Select(id => new LessonChargeId(id))
+            .ToArray();
         var paidStates = await ExecuteDbAsync(db => db.LessonCharges.AsNoTracking()
-            .Where(charge => new[] { first.ChargeIds[0], second.ChargeIds[0] }.Contains(charge.Id.Value))
+            .Where(charge => chargeIds.Contains(charge.Id))
             .Select(charge => charge.IsPaid)
             .ToListAsync());
         Assert.Equal(new[] { false, false }, paidStates);
@@ -255,4 +261,6 @@ public sealed class MarkLessonChargesPaidTests(
     private sealed record ChargeSet(Guid BillingAccountId, IReadOnlyList<Guid> ChargeIds);
     private sealed record TestTutor(Guid TutorId, string AccessToken);
 }
+
+
 

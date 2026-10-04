@@ -17,8 +17,8 @@ The bootstrap creates a deterministic set of development data. Entity IDs are ha
 | Student Piotr account | `00000000-0000-0000-0000-000000000003` | `student2.dev@test.pl` | `Password123!` |
 
 ## Domain Data
-
-| Entity | ID | Details |
+`
+| Entity | ID | Details |`
 |---|---|---|
 | Tutor | `00000000-0000-0000-0000-000000000101` | Development Tutor |
 | Student | `00000000-0000-0000-0000-000000000201` | Anna Nowak |
@@ -34,4 +34,3 @@ The bootstrap creates a deterministic set of development data. Entity IDs are ha
 | Lesson | `00000000-0000-0000-0000-000000000405` | Scheduled Physics lesson |
 | Billing Account | `00000000-0000-0000-0000-000000000501` | Mathematics agreement billing account |
 | Lesson Charge | `00000000-0000-0000-0000-000000000502` | Charge for the completed lesson |
-| Payment | `00000000-0000-0000-0000-000000000503` | 50 PLN payment |
