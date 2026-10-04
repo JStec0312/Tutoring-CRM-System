@@ -221,6 +221,8 @@ package "Billing" {
     amount: Money
     chargedAt: DateTime
     status: ChargeStatus
+    isPaid: Boolean
+    paidAt: Optional<DateTime>
     description: String
   }
 
@@ -243,20 +245,20 @@ package "Billing" {
     value: String
   }
 
-  BillingAccount "1" --> "1" TutoringAgreement : 
+  BillingAccount "1" --> "1" TutoringAgreement
 
   BillingAccount "1" *-- "0..*" LessonCharge
   BillingAccount "1" *-- "0..*" Payment
 
   LessonCharge "1" --> "1" Lesson : references by LessonId
   LessonCharge "1" *-- "1" Money
+
   Payment "1" *-- "1" Money
   Payment "1" *-- "0..1" PaymentReference
 
   Money "1" *-- "1" Currency
   HourlyRate "1" *-- "1" Money
 }
-
 
 ' ============================================================
 ' LEARNING MATERIALS
