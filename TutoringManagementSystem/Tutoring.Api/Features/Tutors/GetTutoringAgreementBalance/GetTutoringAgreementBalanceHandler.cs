@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Tutoring.Api.Features.Tutors.Exceptions;
 using Tutoring.Domain.Billing;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Infrastructure.Persistence;
@@ -37,7 +36,8 @@ public sealed class GetTutoringAgreementBalanceHandler(
                 request.UserAccountId.Value,
                 request.RequestMetadata);
 
-            throw new TutoringAgreementNotFoundException();
+            throw new GetTutoringAgreementBalanceNotFoundException(
+                request.TutoringAgreementId);
         }
 
         var billingAccountId = await dbContext.BillingAccounts

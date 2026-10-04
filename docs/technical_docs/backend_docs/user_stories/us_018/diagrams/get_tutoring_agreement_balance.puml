@@ -1,0 +1,57 @@
+@startuml
+skinparam backgroundColor white
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title US-018 - Get tutoring agreement balance
+
+actor Tutor
+participant "ASP.NET Core Authorization" as Authorization
+participant "GetTutoringAgreementBalanceController" as Controller
+participant MediatR
+participant "GetTutoringAgreementBalanceHandler" as Handler
+database "TutoringDbContext / SQL Server" as Db
+
+Tutor -> Authorization: GET /api/tutors/tutoring-agreements/{id}/balance
+alt unauthenticated or not in Tutor role
+    Authorization --> Tutor: 401 Unauthorized / 403 Forbidden
+else authenticated Tutor
+    Authorization -> Controller: Route authorized request
+    Controller -> Controller: Read sub claim and parse UserAccountId
+
+    alt missing or invalid sub
+        Controller --> Tutor: 401 Unauthorized
+    else valid UserAccountId
+        Controller -> MediatR: GetTutoringAgreementBalanceQuery\n(UserAccountId, TutoringAgreementId, RequestMetadata)
+        MediatR -> Handler: Handle(query)
+        activate Handler
+
+        Handler -> Db: Check agreement ID and owning Tutor.UserAccountId\nAsNoTracking
+        Db --> Handler: Agreement owned by caller?
+
+        alt missing or foreign agreement
+            Handler --> MediatR: GetTutoringAgreementBalanceNotFoundException
+            MediatR --> Controller: NotFoundException
+            Controller --> Tutor: 404 Not Found
+        else agreement owned by caller
+            Handler -> Db: Find BillingAccountId for agreement\nAsNoTracking
+            Db --> Handler: BillingAccountId or null
+
+            alt no BillingAccount
+                Handler -> Handler: Create zero totals
+            else account found
+                Handler -> Db: Aggregate active LessonCharges\nTotalCharged from Amount\nTotalPaid from PaymentId != null\nBalance from PaymentId == null\nAsNoTracking
+                note over Handler, Db: Payment entities are not summed independently
+                Db --> Handler: Totals or no active charges
+                Handler -> Handler: Use zero totals when no active charges
+            end
+
+            Handler --> MediatR: GetTutoringAgreementBalanceResponse
+            deactivate Handler
+            MediatR --> Controller: TotalCharged, TotalPaid, Balance
+            Controller --> Tutor: 200 OK with balance
+        end
+    end
+end
+
+@enduml
