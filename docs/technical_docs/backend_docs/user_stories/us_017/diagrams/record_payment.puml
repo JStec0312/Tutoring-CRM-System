@@ -1,0 +1,28 @@
+@startuml
+skinparam backgroundColor white
+title Record payment
+
+actor Tutor
+participant "RecordPaymentController" as Controller
+participant "RecordPaymentHandler" as Handler
+participant "TutoringAgreement" as Agreement
+participant "BillingAccount" as Account
+database "TutoringDbContext" as Db
+
+Tutor -> Controller: POST agreement/{id}/payments
+Controller -> Handler: RecordPaymentCommand
+Handler -> Agreement: verify tutor ownership
+Agreement --> Handler: owned agreement
+Handler -> Db: load BillingAccount
+alt account does not exist
+    Handler -> Account: create for agreement
+    Handler -> Db: add account
+else account exists
+    Db --> Handler: existing account
+end
+Handler -> Account: RecordPayment(PLN amount, paidAtUtc, reference)
+Account --> Handler: Payment
+Handler -> Db: SaveChangesAsync
+Db --> Controller: RecordPaymentResponse
+Controller --> Tutor: 201 Created
+@enduml

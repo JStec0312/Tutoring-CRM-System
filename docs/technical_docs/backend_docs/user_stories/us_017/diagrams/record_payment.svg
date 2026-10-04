@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="650" viewBox="0 0 980 650">
+  <title>Record payment</title>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #222; font-size: 14px; }
+    .title { font-size: 20px; font-weight: bold; }
+    .box { fill: #eef4fb; stroke: #376a9e; stroke-width: 1.5; }
+    .line { stroke: #777; stroke-dasharray: 5 4; }
+    .message { stroke: #333; stroke-width: 1.2; marker-end: url(#arrow); }
+    .return { stroke: #555; stroke-dasharray: 5 3; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 z" fill="#333"/>
+    </marker>
+  </defs>
+  <text x="490" y="30" text-anchor="middle" class="title">Record payment</text>
+  <rect x="35" y="55" width="125" height="42" rx="4" class="box"/>
+  <rect x="205" y="55" width="160" height="42" rx="4" class="box"/>
+  <rect x="410" y="55" width="155" height="42" rx="4" class="box"/>
+  <rect x="610" y="55" width="145" height="42" rx="4" class="box"/>
+  <rect x="800" y="55" width="145" height="42" rx="4" class="box"/>
+  <text x="97" y="81" text-anchor="middle">Tutor</text>
+  <text x="285" y="81" text-anchor="middle">RecordPaymentController</text>
+  <text x="487" y="81" text-anchor="middle">RecordPaymentHandler</text>
+  <text x="682" y="81" text-anchor="middle">BillingAccount</text>
+  <text x="872" y="81" text-anchor="middle">TutoringDbContext</text>
+  <path d="M97 97 V590 M285 97 V590 M487 97 V590 M682 97 V590 M872 97 V590" class="line"/>
+  <path d="M97 135 H285" class="message"/>
+  <text x="191" y="127" text-anchor="middle">POST .../{id}/payments</text>
+  <path d="M285 185 H487" class="message"/>
+  <text x="386" y="177" text-anchor="middle">RecordPaymentCommand</text>
+  <path d="M487 235 H872" class="message"/>
+  <text x="680" y="227" text-anchor="middle">verify ownership and load account</text>
+  <path d="M872 285 H682" class="return"/>
+  <text x="777" y="277" text-anchor="middle">account or none</text>
+  <path d="M487 335 H682" class="message"/>
+  <text x="584" y="327" text-anchor="middle">create if missing</text>
+  <path d="M487 385 H682" class="message"/>
+  <text x="584" y="377" text-anchor="middle">RecordPayment(PLN, paidAtUtc, reference)</text>
+  <path d="M682 435 H487" class="return"/>
+  <text x="584" y="427" text-anchor="middle">Payment</text>
+  <path d="M487 485 H872" class="message"/>
+  <text x="680" y="477" text-anchor="middle">SaveChangesAsync</text>
+  <path d="M872 535 H285" class="return"/>
+  <text x="578" y="527" text-anchor="middle">RecordPaymentResponse</text>
+  <path d="M285 585 H97" class="return"/>
+  <text x="191" y="577" text-anchor="middle">201 Created</text>
+</svg>
