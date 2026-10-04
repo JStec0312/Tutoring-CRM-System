@@ -265,8 +265,8 @@ public sealed class DevelopmentDataBootstrapper(
 
         SetId(charge, Ids.LessonCharge);
 
-        var payment = billingAccount.RecordPayment(
-            new Money(50m, pln),
+        var payment = billingAccount.MarkChargeAsPaid(
+            charge.Id,
             nowUtc.AddDays(-5),
             new PaymentReference("DEV-PAYMENT-001"));
 

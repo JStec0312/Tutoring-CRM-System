@@ -14,25 +14,32 @@ public sealed class BillingAccount
     {
     }
 
-    public TutoringAgreementId TutoringAgreementId { get; private set; }
-
-    public BillingAccountStatus Status { get; private set; }
-
-    public DateTimeOffset CreatedAtUtc { get; private set; }
-
-    public IReadOnlyCollection<LessonCharge> Charges => _charges.AsReadOnly();
-
-    public IReadOnlyCollection<Payment> Payments => _payments.AsReadOnly();
-
-    public BillingAccount(TutoringAgreementId tutoringAgreementId, DateTimeOffset createdAtUtc)
+    public BillingAccount(
+        TutoringAgreementId tutoringAgreementId,
+        DateTimeOffset createdAtUtc)
     {
         TutoringAgreementId = tutoringAgreementId;
         Status = BillingAccountStatus.Active;
         CreatedAtUtc = createdAtUtc;
     }
 
-    public LessonCharge AddLessonCharge(LessonId lessonId, Money amount, DateTimeOffset chargedAtUtc)
-    {   
+    public TutoringAgreementId TutoringAgreementId { get; private set; }
+
+    public BillingAccountStatus Status { get; private set; }
+
+    public DateTimeOffset CreatedAtUtc { get; private set; }
+
+    public IReadOnlyCollection<LessonCharge> Charges =>
+        _charges.AsReadOnly();
+
+    public IReadOnlyCollection<Payment> Payments =>
+        _payments.AsReadOnly();
+
+    public LessonCharge AddLessonCharge(
+        LessonId lessonId,
+        Money amount,
+        DateTimeOffset chargedAtUtc)
+    {
         ArgumentNullException.ThrowIfNull(amount);
 
         if (_charges.Any(charge => charge.LessonId == lessonId))
@@ -50,26 +57,91 @@ public sealed class BillingAccount
 
         return charge;
     }
-    public Payment RecordPayment(
-    Money amount,
-    DateTimeOffset paidAtUtc,
-    PaymentReference? reference)
-    {
-        ArgumentNullException.ThrowIfNull(amount);
 
-        if (amount.Amount <= 0)
+    public Payment MarkChargeAsPaid(
+        LessonChargeId chargeId,
+        DateTimeOffset paidAtUtc,
+        PaymentReference? reference)
+    {
+        return MarkChargesAsPaid(
+            [chargeId],
+            paidAtUtc,
+            reference);
+    }
+
+    public Payment MarkChargesAsPaid(
+        IReadOnlyCollection<LessonChargeId> chargeIds,
+        DateTimeOffset paidAtUtc,
+        PaymentReference? reference)
+    {
+        ArgumentNullException.ThrowIfNull(chargeIds);
+
+        if (chargeIds.Count == 0)
         {
-            throw new PaymentMustBePositiveException();
+            throw new ArgumentException(
+                "At least one lesson charge is required.",
+                nameof(chargeIds));
+        }
+
+        if (chargeIds.Distinct().Count() != chargeIds.Count)
+        {
+            throw new ArgumentException(
+                "Lesson charge IDs must be unique.",
+                nameof(chargeIds));
+        }
+
+        var charges = FindCharges(chargeIds);
+
+        foreach (var charge in charges)
+        {
+            charge.EnsureCanBeMarkedAsPaid();
+        }
+
+        var currency = charges[0].Amount.Currency;
+
+        if (charges.Any(
+                charge => charge.Amount.Currency.Code != currency.Code))
+        {
+            throw new InvalidOperationException(
+                "All lesson charges must use the same currency.");
+        }
+
+        var totalAmount = charges.Sum(
+            charge => charge.Amount.Amount);
+
+        foreach (var charge in charges)
+        {
+            charge.MarkAsPaid(paidAtUtc);
         }
 
         var payment = new Payment(
             Id,
-            amount,
+            new Money(totalAmount, currency),
             paidAtUtc,
             reference);
 
         _payments.Add(payment);
 
         return payment;
+    }
+
+    private LessonCharge[] FindCharges(
+        IReadOnlyCollection<LessonChargeId> chargeIds)
+    {
+        var charges = _charges
+            .Where(charge => chargeIds.Contains(charge.Id))
+            .ToArray();
+
+        if (charges.Length != chargeIds.Count)
+        {
+            var missingChargeId = chargeIds
+                .Except(charges.Select(charge => charge.Id))
+                .First();
+
+            throw new ChargeNotFoundInBillingAccountException(
+                missingChargeId.Value);
+        }
+
+        return charges;
     }
 }

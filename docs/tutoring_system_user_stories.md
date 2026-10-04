@@ -56,7 +56,7 @@ Source: original project PDF brief.
 | US-014 | Calendar | As a tutor, I want to review a student's lesson history so that I can understand previous work with that student. |
 | US-015 | Settlements | As a tutor, I want to define an hourly rate for a tutoring agreement so that each cooperation with a student can have its own pricing terms. |
 | US-016 | Settlements | As a tutor, I want lesson costs to be calculated from the rate and duration so that I do not have to calculate them manually. |
-| US-017 | Settlements | As a tutor, I want to record student payments so that I can keep payment records up to date. |
+| US-017 | Settlements | As a tutor, I want to mark lesson charges as paid so that I can keep student payment records up to date. |
 | US-018 | Settlements | As a tutor, I want to see a student's balance so that I know what has been paid and what is still due. |
 | US-019 | Settlements | As a tutor, I want to see students with overdue payments so that I can react to unpaid lessons. |
 | US-020 | Settlements | As a tutor, I want to review settlement history so that I can check lesson costs and payments. |
