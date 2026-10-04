@@ -1,0 +1,70 @@
+@startuml
+skinparam backgroundColor white
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title US-017 - Mark lesson charges as paid
+
+actor Tutor
+participant MarkLessonChargePaidController as SingleController
+participant MarkLessonChargesPaidController as BulkController
+participant MediatR
+participant MarkLessonChargePaidHandler as SingleHandler
+participant MarkLessonChargesPaidHandler as BulkHandler
+database TutoringDbContext as Db
+participant BillingAccount as Aggregate
+
+alt single charge
+    Tutor -> SingleController: POST /api/tutors/me/lesson-charges/{id}/mark-paid
+    SingleController -> SingleController: Read UserAccountId from JWT sub
+    SingleController -> MediatR: MarkLessonChargePaidCommand
+    MediatR -> SingleHandler: Handle(command)
+    activate SingleHandler
+    SingleHandler -> Db: Find tutor by UserAccountId
+    Db --> SingleHandler: Tutor or null
+
+    alt tutor missing
+        SingleHandler --> Tutor: 404 Tutors.NotFound
+    else tutor found
+        SingleHandler -> Db: Find owned BillingAccount with charge
+        Db --> SingleHandler: BillingAccount with charges or null
+        alt charge missing or not owned
+            SingleHandler --> Tutor: 404 Billing.LessonChargeNotFound
+        else charge found
+            SingleHandler -> Aggregate: MarkChargeAsPaid(chargeId, paidAt, reference)
+            Aggregate -> Aggregate: Validate active and unpaid
+            Aggregate -> Aggregate: Set IsPaid and PaidAtUtc
+            Aggregate -> Aggregate: Create Payment from charge amount
+            Aggregate --> SingleHandler: Payment
+            SingleHandler -> Db: SaveChangesAsync()
+            Db --> SingleHandler: Saved
+            SingleHandler --> Tutor: 204 No Content
+        end
+    end
+    deactivate SingleHandler
+else bulk charges
+    Tutor -> BulkController: POST /api/tutors/me/lesson-charges/mark-paid
+    BulkController -> BulkController: Read UserAccountId from JWT sub
+    BulkController -> MediatR: MarkLessonChargesPaidCommand
+    MediatR -> BulkHandler: Handle(command)
+    activate BulkHandler
+    BulkHandler -> Db: Find owned BillingAccounts containing selected charges
+    Db --> BulkHandler: Accounts and selected charges
+
+    alt missing, foreign, or different accounts
+        BulkHandler --> Tutor: 404 or 409 error
+    else one account and all charges found
+        BulkHandler -> Aggregate: MarkChargesAsPaid(chargeIds, paidAt, reference)
+        Aggregate -> Aggregate: Validate all charges before mutation
+        Aggregate -> Aggregate: Sum selected charge amounts
+        Aggregate -> Aggregate: Mark all charges paid
+        Aggregate -> Aggregate: Create one Payment for total
+        Aggregate --> BulkHandler: Payment
+        BulkHandler -> Db: SaveChangesAsync()
+        Db --> BulkHandler: Saved atomically
+        BulkHandler --> Tutor: 204 No Content
+    end
+    deactivate BulkHandler
+end
+
+@enduml

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1040" viewBox="0 0 1200 1040" role="img" aria-labelledby="title desc">
+  <title id="title">US-017 mark lesson charges as paid sequence diagram</title>
+  <desc id="desc">Sequence diagram showing single and bulk lesson charge payment flows through controllers, MediatR handlers, the database, and BillingAccount.</desc>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #222; font-size: 14px; }
+    .title { font-size: 22px; font-weight: bold; }
+    .participant { fill: #eef4fb; stroke: #3c78b4; stroke-width: 1.5; }
+    .actor { fill: #fff4d6; stroke: #b8860b; stroke-width: 1.5; }
+    .db { fill: #eaf6ea; stroke: #4b8b3b; stroke-width: 1.5; }
+    .aggregate { fill: #f7ecfa; stroke: #8a4e9b; stroke-width: 1.5; }
+    .line { stroke: #777; stroke-width: 1; stroke-dasharray: 5 4; }
+    .message { stroke: #333; stroke-width: 1.2; marker-end: url(#arrow); }
+    .return { stroke: #555; stroke-width: 1.1; stroke-dasharray: 5 4; marker-end: url(#arrow); }
+    .section { fill: #f4f4f4; stroke: #aaa; }
+    .note { fill: #fffbe6; stroke: #c9b458; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#333"/>
+    </marker>
+  </defs>
+
+  <text x="600" y="32" text-anchor="middle" class="title">US-017 - Mark lesson charges as paid</text>
+
+  <rect x="30" y="55" width="150" height="42" rx="5" class="actor"/><text x="105" y="81" text-anchor="middle">Tutor</text>
+  <rect x="220" y="55" width="170" height="42" rx="5" class="participant"/><text x="305" y="73" text-anchor="middle">Single controller</text><text x="305" y="89" text-anchor="middle">or bulk controller</text>
+  <rect x="430" y="55" width="145" height="42" rx="5" class="participant"/><text x="502" y="81" text-anchor="middle">MediatR handler</text>
+  <rect x="615" y="55" width="175" height="42" rx="5" class="db"/><text x="702" y="81" text-anchor="middle">TutoringDbContext</text>
+  <rect x="830" y="55" width="170" height="42" rx="5" class="aggregate"/><text x="915" y="81" text-anchor="middle">BillingAccount</text>
+  <rect x="1040" y="55" width="130" height="42" rx="5" class="participant"/><text x="1105" y="81" text-anchor="middle">Payment</text>
+
+  <line x1="105" y1="97" x2="105" y2="1010" class="line"/><line x1="305" y1="97" x2="305" y2="1010" class="line"/><line x1="502" y1="97" x2="502" y2="1010" class="line"/><line x1="702" y1="97" x2="702" y2="1010" class="line"/><line x1="915" y1="97" x2="915" y2="1010" class="line"/><line x1="1105" y1="97" x2="1105" y2="1010" class="line"/>
+
+  <rect x="25" y="125" width="1150" height="35" class="section"/><text x="40" y="148">Single charge</text>
+  <line x1="105" y1="190" x2="305" y2="190" class="message"/><text x="205" y="181" text-anchor="middle">POST .../{id}/mark-paid</text>
+  <line x1="305" y1="225" x2="502" y2="225" class="message"/><text x="403" y="216" text-anchor="middle">MarkLessonChargePaidCommand</text>
+  <line x1="502" y1="260" x2="702" y2="260" class="message"/><text x="602" y="251" text-anchor="middle">Find tutor and owned charge</text>
+  <line x1="702" y1="292" x2="502" y2="292" class="return"/><text x="602" y="284" text-anchor="middle">BillingAccount with charge</text>
+  <line x1="502" y1="330" x2="915" y2="330" class="message"/><text x="703" y="321" text-anchor="middle">MarkChargeAsPaid(...)</text>
+  <rect x="790" y="350" width="250" height="74" class="note"/><text x="915" y="372" text-anchor="middle">Validate active and unpaid</text><text x="915" y="392" text-anchor="middle">Set IsPaid/PaidAtUtc</text><text x="915" y="412" text-anchor="middle">Create Payment from charge amount</text>
+  <line x1="915" y1="450" x2="1105" y2="450" class="message"/><text x="1010" y="441" text-anchor="middle">Payment</text>
+  <line x1="502" y1="485" x2="702" y2="485" class="message"/><text x="602" y="476" text-anchor="middle">SaveChangesAsync</text>
+  <line x1="305" y1="520" x2="105" y2="520" class="return"/><text x="205" y="512" text-anchor="middle">204 No Content</text>
+
+  <rect x="25" y="565" width="1150" height="35" class="section"/><text x="40" y="588">Bulk charges</text>
+  <line x1="105" y1="630" x2="305" y2="630" class="message"/><text x="205" y="621" text-anchor="middle">POST .../mark-paid</text>
+  <line x1="305" y1="665" x2="502" y2="665" class="message"/><text x="403" y="656" text-anchor="middle">MarkLessonChargesPaidCommand</text>
+  <line x1="502" y1="700" x2="702" y2="700" class="message"/><text x="602" y="691" text-anchor="middle">Find all owned selected charges</text>
+  <line x1="702" y1="732" x2="502" y2="732" class="return"/><text x="602" y="724" text-anchor="middle">One account and all charges</text>
+  <line x1="502" y1="770" x2="915" y2="770" class="message"/><text x="703" y="761" text-anchor="middle">MarkChargesAsPaid(...)</text>
+  <rect x="790" y="790" width="250" height="74" class="note"/><text x="915" y="812" text-anchor="middle">Validate every charge first</text><text x="915" y="832" text-anchor="middle">Mark all paid and sum amounts</text><text x="915" y="852" text-anchor="middle">Create exactly one Payment</text>
+  <line x1="915" y1="890" x2="1105" y2="890" class="message"/><text x="1010" y="881" text-anchor="middle">Payment for total</text>
+  <line x1="502" y1="925" x2="702" y2="925" class="message"/><text x="602" y="916" text-anchor="middle">SaveChangesAsync (atomic)</text>
+  <line x1="305" y1="960" x2="105" y2="960" class="return"/><text x="205" y="952" text-anchor="middle">204 No Content</text>
+</svg>
