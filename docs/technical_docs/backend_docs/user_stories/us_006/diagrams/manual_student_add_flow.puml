@@ -1,4 +1,5 @@
 @startuml manual_student_add_flow
+skinparam backgroundColor white
 title Add Managed Student Manually - UML Sequence Diagram
 
 hide footbox

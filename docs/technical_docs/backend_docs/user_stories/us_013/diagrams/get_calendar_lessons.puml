@@ -1,4 +1,5 @@
 @startuml
+skinparam backgroundColor white
 
 title US-013 - View calendar lessons
 

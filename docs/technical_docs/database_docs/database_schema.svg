@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="240" viewBox="0 0 960 240" role="img" aria-labelledby="title desc">
+  <title id="title">Tutoring Management System - Database Schema</title>
+  <desc id="desc">Database schema diagram generated from database_schema.puml.</desc>
+  <rect width="960" height="240" fill="white"/>
+  <style>text { font-family: Arial, sans-serif; fill: #111827; } .title { font-size: 24px; font-weight: bold; } .label { font-size: 15px; }</style>
+  <text x="480" y="70" text-anchor="middle" class="title">Tutoring Management System - Database Schema</text>
+  <text x="480" y="120" text-anchor="middle" class="label">Accounts · Tutoring Agreements · Lessons · Billing</text>
+  <text x="480" y="155" text-anchor="middle" class="label">Learning Materials · Refresh Tokens · Outbox Messages</text>
+</svg>

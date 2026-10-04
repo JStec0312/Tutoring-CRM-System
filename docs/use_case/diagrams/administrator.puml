@@ -1,4 +1,5 @@
 @startuml
+skinparam backgroundColor white
 title Use Case Diagram - Administrator
 
 left to right direction

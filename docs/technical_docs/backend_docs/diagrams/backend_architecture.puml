@@ -1,4 +1,5 @@
 @startuml backend_architecture
+skinparam backgroundColor white
 title Backend Runtime - UML Component Diagram
 
 skinparam componentStyle uml2

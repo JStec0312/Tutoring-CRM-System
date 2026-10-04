@@ -1,4 +1,5 @@
 @startuml student_invitation_flow
+skinparam backgroundColor white
 title Add Student by Invitation - UML Sequence Diagram
 
 hide footbox

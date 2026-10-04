@@ -1,4 +1,5 @@
 @startuml registration_email_confirmation
+skinparam backgroundColor white
 title Registration and Email Confirmation - UML Sequence Diagram
 
 hide footbox

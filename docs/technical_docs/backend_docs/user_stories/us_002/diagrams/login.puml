@@ -1,4 +1,5 @@
 @startuml login
+skinparam backgroundColor white
 title Login - UML Sequence Diagram
 
 hide footbox

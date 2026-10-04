@@ -1,4 +1,5 @@
 @startuml
+skinparam backgroundColor white
 title Use Case Diagram - Parent
 
 left to right direction

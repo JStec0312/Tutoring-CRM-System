@@ -1,4 +1,5 @@
 @startuml refresh_token
+skinparam backgroundColor white
 title Refresh Token Rotation - UML Sequence Diagram
 
 hide footbox

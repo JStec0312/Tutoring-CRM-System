@@ -1,4 +1,6 @@
 @startuml get_assigned_students
+skinparam backgroundColor white
+
 title Get Assigned Students - UML Sequence Diagram
 
 hide footbox

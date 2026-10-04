@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="650" viewBox="0 0 1100 650">
+  <title>View tutoring agreement balance</title>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #222; font-size: 14px; }
+    .title { font-size: 20px; font-weight: bold; }
+    .box { fill: #eef4fb; stroke: #376a9e; stroke-width: 1.5; }
+    .line { stroke: #777; stroke-dasharray: 5 4; }
+    .message { stroke: #333; stroke-width: 1.2; marker-end: url(#arrow); }
+    .return { stroke: #555; stroke-dasharray: 5 3; marker-end: url(#arrow); }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 z" fill="#333"/>
+    </marker>
+  </defs>
+  <text x="550" y="30" text-anchor="middle" class="title">View tutoring agreement balance</text>
+  <rect x="30" y="55" width="100" height="42" rx="4" class="box"/>
+  <rect x="220" y="55" width="90" height="42" rx="4" class="box"/>
+  <rect x="400" y="55" width="280" height="42" rx="4" class="box"/>
+  <rect x="770" y="55" width="110" height="42" rx="4" class="box"/>
+  <text x="80" y="81" text-anchor="middle">Tutor</text>
+  <text x="265" y="81" text-anchor="middle">API</text>
+  <text x="540" y="81" text-anchor="middle">GetTutoringAgreementBalanceHandler</text>
+  <text x="825" y="81" text-anchor="middle">Database</text>
+  <line x1="80" y1="97" x2="80" y2="600" class="line"/>
+  <line x1="265" y1="97" x2="265" y2="600" class="line"/>
+  <line x1="540" y1="97" x2="540" y2="600" class="line"/>
+  <line x1="825" y1="97" x2="825" y2="600" class="line"/>
+  <line x1="80" y1="135" x2="265" y2="135" class="message"/>
+  <text x="172" y="127" text-anchor="middle">GET .../balance</text>
+  <line x1="265" y1="180" x2="540" y2="180" class="message"/>
+  <text x="402" y="172" text-anchor="middle">balance query</text>
+  <line x1="540" y1="225" x2="825" y2="225" class="message"/>
+  <text x="682" y="217" text-anchor="middle">resolve tutor</text>
+  <line x1="540" y1="275" x2="825" y2="275" class="message"/>
+  <text x="682" y="267" text-anchor="middle">verify agreement ownership</text>
+  <line x1="540" y1="325" x2="825" y2="325" class="message"/>
+  <text x="682" y="317" text-anchor="middle">aggregate active LessonCharges</text>
+  <line x1="540" y1="375" x2="825" y2="375" class="message"/>
+  <text x="682" y="367" text-anchor="middle">aggregate Payments</text>
+  <line x1="825" y1="425" x2="540" y2="425" class="return"/>
+  <text x="682" y="417" text-anchor="middle">aggregate totals</text>
+  <text x="540" y="475" text-anchor="middle">calculate Balance = TotalCharged - TotalPaid</text>
+  <line x1="540" y1="520" x2="265" y2="520" class="return"/>
+  <text x="402" y="512" text-anchor="middle">balance response</text>
+  <line x1="265" y1="570" x2="80" y2="570" class="return"/>
+  <text x="172" y="562" text-anchor="middle">200 OK</text>
+</svg>

@@ -1,5 +1,5 @@
 @startuml
-
+skinparam backgroundColor white
 title Tutoring Management System - Database Schema
 
 hide circle

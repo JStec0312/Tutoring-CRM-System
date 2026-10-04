@@ -1,4 +1,5 @@
 @startuml roles
+skinparam backgroundColor white
 title User Roles - Class Diagram
 
 hide empty members

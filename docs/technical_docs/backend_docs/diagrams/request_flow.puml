@@ -1,4 +1,5 @@
 @startuml request_flow
+skinparam backgroundColor white
 title Backend Request Flow - UML Sequence Diagram
 
 hide footbox

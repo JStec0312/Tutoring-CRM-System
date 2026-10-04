@@ -48,7 +48,7 @@ AssignedStudentResponse
 
 ## Diagram
 
-![Get assigned students flow](diagrams/get_assigned_students.png)
+![Get assigned students flow](diagrams/get_assigned_students.svg)
 
 ## Tests
 

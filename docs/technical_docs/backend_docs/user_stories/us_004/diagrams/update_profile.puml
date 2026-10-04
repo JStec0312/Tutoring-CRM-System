@@ -1,4 +1,5 @@
 @startuml update_profile
+skinparam backgroundColor white
 title Update Profile - UML Sequence Diagram
 
 hide footbox
