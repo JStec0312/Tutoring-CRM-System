@@ -1,0 +1,40 @@
+@startuml
+skinparam backgroundColor white
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title US-019 - View tutoring agreements with overdue payments
+
+actor Tutor
+participant "ASP.NET Core Authorization" as Authorization
+participant "GetOverdueTutoringAgreementsController" as Controller
+participant MediatR
+participant "GetOverdueTutoringAgreementsHandler" as Handler
+database "TutoringDbContext / SQL Server" as Db
+
+Tutor -> Authorization: GET /api/tutors/tutoring-agreements/overdue
+alt unauthenticated
+    Authorization --> Tutor: 401 Unauthorized
+else authenticated without Tutor role
+    Authorization --> Tutor: 403 Forbidden
+else authenticated Tutor
+    Authorization -> Controller: Route authorized request
+    Controller -> Controller: Read sub and parse UserAccountId
+
+    alt missing or invalid sub
+        Controller --> Tutor: 401 Unauthorized
+    else valid UserAccountId
+        Controller -> MediatR: GetOverdueTutoringAgreementsQuery\n(UserAccountId, RequestMetadata)
+        MediatR -> Handler: Handle(query, CancellationToken)
+        activate Handler
+        Handler -> Db: Execute one AsNoTracking query\nFilter active charges with PaymentId == null\nAggregate by BillingAccount.TutoringAgreementId\nJoin agreements and filter Tutor.UserAccountId\nProject rows ordered by OutstandingAmount descending
+        note over Handler, Db: No full aggregate loading, N+1 queries, or per-agreement US-018 calls
+        Db --> Handler: Agreement rows or empty result
+        Handler --> MediatR: IReadOnlyCollection<OverdueTutoringAgreementResponse>
+        deactivate Handler
+        MediatR --> Controller: Collection
+        Controller --> Tutor: 200 OK (empty collection when no matches)
+    end
+end
+
+@enduml

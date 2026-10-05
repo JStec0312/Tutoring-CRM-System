@@ -59,7 +59,7 @@ Source: original project PDF brief.
 | US-017 | Settlements | As a tutor, I want to mark lesson charges as paid so that I can keep student payment records up to date. |
 | US-018 | Settlements | As a tutor, I want to see the balance of a tutoring agreement so that I know what has been paid and what is still due. |
 | US-019 | Settlements | As a tutor, I want to see students with overdue payments so that I can react to unpaid lessons. |
-| US-020 | Settlements | As a tutor, I want to review settlement history so that I can check lesson costs and payments. |
+| ~~US-020~~ | ~~Settlements~~ |~~ As a tutor, I want to review settlement history so that I can check lesson costs and payments.~~ (Obsolete) |
 | US-021 | Materials | As a tutor, I want to upload PDF learning materials so that I can share them with students. |
 | US-022 | Materials | As a tutor, I want to attach a file to a specific lesson so that the material is connected to the right session. |
 | US-023 | Materials | As a tutor, I want to assign a file to a specific student so that I can share material with the right person. |

@@ -16,33 +16,35 @@ public sealed class GetOverdueTutoringAgreementsHandler(
         GetOverdueTutoringAgreementsQuery request,
         CancellationToken cancellationToken)
     {
-        var agreements = await (
+        var unpaidByAgreement =
             from charge in dbContext.LessonCharges.AsNoTracking()
             join account in dbContext.BillingAccounts.AsNoTracking()
                 on charge.BillingAccountId equals account.Id
-            join agreement in dbContext.TutoringAgreements.AsNoTracking()
-                on account.TutoringAgreementId equals agreement.Id
-            where charge.Status == ChargeStatus.Active &&
-                  charge.PaymentId == null &&
-                  agreement.Tutor.UserAccountId == request.UserAccountId
-            group charge by new
-            {
-                TutoringAgreementId = agreement.Id.Value,
-                StudentId = agreement.Student.Id.Value,
-                StudentDisplayName = agreement.Student.DisplayName.Value,
-                Subject = agreement.Subject.Name,
-                AgreementTitle = agreement.AgreementTitle.Value
-            }
+            where charge.Status == ChargeStatus.Active
+                  && charge.PaymentId == null
+            group charge by account.TutoringAgreementId
             into unpaidCharges
-            orderby unpaidCharges.Sum(charge => charge.Amount.Amount) descending
+            select new
+            {
+                TutoringAgreementId = unpaidCharges.Key,
+                TotalUnpaidAmount = unpaidCharges.Sum(charge => charge.Amount.Amount),
+                UnpaidChargeCount = unpaidCharges.Count()
+            };
+
+        var agreements = await (
+            from unpaid in unpaidByAgreement
+            join agreement in dbContext.TutoringAgreements.AsNoTracking()
+                on unpaid.TutoringAgreementId equals agreement.Id
+            where agreement.Tutor.UserAccountId == request.UserAccountId
+            orderby unpaid.TotalUnpaidAmount descending
             select new OverdueTutoringAgreementResponse(
-                unpaidCharges.Key.TutoringAgreementId,
-                unpaidCharges.Key.StudentId,
-                unpaidCharges.Key.StudentDisplayName,
-                unpaidCharges.Key.Subject,
-                unpaidCharges.Key.AgreementTitle,
-                unpaidCharges.Sum(charge => charge.Amount.Amount),
-                unpaidCharges.Count()))
+                agreement.Id.Value,
+                agreement.Student.Id.Value,
+                agreement.Student.DisplayName.Value,
+                agreement.Subject.Name,
+                agreement.AgreementTitle.Value,
+                unpaid.TotalUnpaidAmount,
+                unpaid.UnpaidChargeCount))
             .ToListAsync(cancellationToken);
 
         logger.LogInformation(
