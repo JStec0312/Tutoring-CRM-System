@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.FileStorage;
 using Tutoring.Infrastructure.Mailing;
 using Tutoring.Infrastructure.Mailing.Handlers;
 using Tutoring.Infrastructure.Messaging.Contracts;
@@ -36,6 +37,8 @@ public static class InfrastructureServiceCollectionExtensions
         
         services.Configure<StudentInvitationOptions>(
             configuration.GetSection(StudentInvitationOptions.SectionName));
+
+        services.Configure<FileStorageOptions>(configuration.GetSection(FileStorageOptions.SectionName)); 
         
         
         services.AddDbContext<TutoringDbContext>(options =>
@@ -52,7 +55,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IEmailVerificationTokenGenerator, EmailVerificationTokenGenerator>();
         services.AddScoped<IPasswordResetTokenGenerator, PasswordResetTokenGenerator>();
         services.AddScoped<IStudentInvitationTokenGenerator, StudentInvitationTokenGenerator>();
-        
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
         services.AddSingleton<IEmailEventHandler,UserRegisteredEmailHandler>();
         services.AddSingleton<IEmailEventHandler, PasswordResetRequestedEmailHandler>();
         services.AddSingleton<IEmailEventHandler, StudentInvitationCreatedEmailHandler>();

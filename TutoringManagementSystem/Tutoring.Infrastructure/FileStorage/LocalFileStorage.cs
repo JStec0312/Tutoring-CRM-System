@@ -42,12 +42,26 @@ public sealed class LocalFileStorage : IFileStorage
 
     public Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var filePath = GetFullPath(storageKey);
+        var fileStream = new FileStream(
+            filePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 81920,
+            useAsync: true);
+        return Task.FromResult<Stream>(fileStream);
     }
 
     public Task DeleteAsync(string storageKey, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        cancellationToken.ThrowIfCancellationRequested();
+        var filePath = GetFullPath(storageKey);
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
+        return Task.CompletedTask;
     }
 
 
