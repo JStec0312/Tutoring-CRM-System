@@ -128,7 +128,9 @@ entity Payments {
 entity LearningMaterials {
     * Id : uniqueidentifier <<PK>>
     --
-    TutorId : uniqueidentifier <<FK>>
+    CreatedByUserAccountId : uniqueidentifier <<FK>>
+    TutoringAgreementId : uniqueidentifier <<FK>>
+    LessonId : uniqueidentifier <<FK, nullable>>
     Title : nvarchar(200)
     FileName : nvarchar(260)
     ContentType : nvarchar(255)
@@ -136,19 +138,6 @@ entity LearningMaterials {
     StorageLocation : nvarchar(1024)
     Status : nvarchar(50)
     CreatedAtUtc : datetimeoffset
-}
-
-entity MaterialAssignments {
-    * Id : uniqueidentifier <<PK>>
-    --
-    LearningMaterialId : uniqueidentifier <<FK>>
-    TutoringAgreementId : uniqueidentifier <<FK>>
-    LessonId : uniqueidentifier <<FK, nullable>>
-    Status : nvarchar(50)
-    AssignedAtUtc : datetimeoffset
-    --
-    UQ : LearningMaterialId, TutoringAgreementId, LessonId
-    UQ : LearningMaterialId, TutoringAgreementId where LessonId is null
 }
 
 entity RefreshTokens {
@@ -206,9 +195,8 @@ BillingAccounts ||--o{ LessonCharges
 Lessons ||--o| LessonCharges
 BillingAccounts ||--o{ Payments
 
-Tutors ||--o{ LearningMaterials
-LearningMaterials ||--o{ MaterialAssignments
-TutoringAgreements ||--o{ MaterialAssignments
-Lessons |o--o{ MaterialAssignments
+UserAccounts ||--o{ LearningMaterials : created by
+TutoringAgreements ||--o{ LearningMaterials : contains
+Lessons |o--o{ LearningMaterials : optionally attached to
 
 @enduml

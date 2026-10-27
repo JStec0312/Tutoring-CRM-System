@@ -153,7 +153,6 @@ Represents a user who provides tutoring services.
 - May be connected with zero or one `UserAccount`.
 - May participate in multiple `TutoringAgreement` aggregates.
 - May send multiple `StudentInvitation` aggregates.
-- May own multiple `LearningMaterial` aggregates.
 
 ---
 
@@ -207,7 +206,7 @@ The agreement stores conditions that belong to a specific cooperation rather tha
 - May own one `HourlyRate`.
 - May contain multiple `Lesson` aggregates.
 - Is settled by one `BillingAccount`.
-- May receive multiple `MaterialAssignment` aggregates.
+- May be associated with multiple `LearningMaterial` aggregates.
 
 ---
 
@@ -298,7 +297,7 @@ Represents a tutoring session scheduled within one tutoring agreement.
 - May own one `CancellationReason`.
 - May own one `LessonNote`.
 - May be used by `BillingAccount` when a charge is created.
-- May be referenced by `MaterialAssignment`.
+- May be optionally associated with multiple `LearningMaterial` aggregates.
 
 ---
 
@@ -530,7 +529,8 @@ Represents an optional identifier or description assigned to a payment.
 **Type:** Aggregate Root
 
 **Domain meaning:**  
-Represents a learning file uploaded and managed by a tutor.
+Represents a learning file uploaded by a tutor or student within a tutoring
+agreement.
 
 **Fields:**
 
@@ -542,33 +542,10 @@ Represents a learning file uploaded and managed by a tutor.
 
 **Connections:**
 
-- Is owned by exactly one `Tutor`.
-- Owns one `FileDescriptor`.
-- May be referenced by multiple `MaterialAssignment` aggregates.
-
----
-
-## MaterialAssignment
-
-**Type:** Aggregate Root
-
-**Domain meaning:**  
-Represents access granted to a learning material within a tutoring agreement.
-
-The material may optionally be attached to a specific lesson.
-
-**Fields:**
-
-| Field | Type | Meaning |
-|---|---|---|
-| `status` | `AssignmentStatus` | Current access state |
-| `assignedAt` | `DateTime` | Date and time when access was granted |
-
-**Connections:**
-
-- Refers to exactly one `LearningMaterial`.
+- Is created by exactly one `UserAccount`.
 - Refers to exactly one `TutoringAgreement`.
-- May refer to one `Lesson`.
+- May optionally refer to one `Lesson` within that tutoring agreement.
+- Owns one `FileDescriptor`.
 
 ---
 

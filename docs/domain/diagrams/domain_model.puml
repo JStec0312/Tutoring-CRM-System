@@ -272,11 +272,6 @@ package "Learning Materials" {
     status: MaterialStatus
   }
 
-  class MaterialAssignment <<Aggregate Root>> {
-    status: AssignmentStatus
-    assignedAt: DateTime
-  }
-
   class FileDescriptor <<Value Object>> {
     fileName: String
     contentType: String
@@ -292,11 +287,9 @@ package "Learning Materials" {
     value: String
   }
 
-  LearningMaterial "0..*" --> "1" Tutor : owned by
-
-  MaterialAssignment "0..*" --> "1" LearningMaterial : assigned material
-  MaterialAssignment "0..*" --> "1" TutoringAgreement : shared in agreement
-  MaterialAssignment "0..*" --> "0..1" Lesson : optionally attached to
+  LearningMaterial "0..*" --> "1" UserAccount : created by
+  LearningMaterial "0..*" --> "1" TutoringAgreement : belongs to
+  LearningMaterial "0..*" --> "0..1" Lesson : optionally attached to
 
   LearningMaterial "1" *-- "1" FileDescriptor
 
