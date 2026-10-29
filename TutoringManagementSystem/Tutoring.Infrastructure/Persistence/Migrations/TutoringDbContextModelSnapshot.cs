@@ -160,6 +160,9 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("LessonId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -170,13 +173,21 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<Guid>("TutorId")
+                    b.Property<Guid>("TutoringAgreementId")
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("TutorId");
+                        .HasColumnName("TutoringAgreementId");
+
+                    b.Property<Guid>("UploadedByUserAccountId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("UploadedByUserAccountId");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TutorId");
+                    b.HasIndex("LessonId");
+
+                    b.HasIndex("TutoringAgreementId");
+
+                    b.HasIndex("UploadedByUserAccountId");
 
                     b.ToTable("LearningMaterials", (string)null);
                 });
@@ -895,9 +906,20 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Tutoring.Domain.LearningMaterials.LearningMaterial", b =>
                 {
-                    b.HasOne("Tutoring.Domain.Tutors.Tutor", "Tutor")
+                    b.HasOne("Tutoring.Domain.Lessons.Lesson", null)
                         .WithMany()
-                        .HasForeignKey("TutorId")
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Tutoring.Domain.TutoringAgreements.TutoringAgreement", null)
+                        .WithMany()
+                        .HasForeignKey("TutoringAgreementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserAccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -970,8 +992,6 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
 
                     b.Navigation("File")
                         .IsRequired();
-
-                    b.Navigation("Tutor");
                 });
 
             modelBuilder.Entity("Tutoring.Domain.LearningMaterials.MaterialAssignment", b =>

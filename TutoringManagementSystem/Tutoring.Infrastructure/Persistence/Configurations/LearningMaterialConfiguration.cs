@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tutoring.Domain.LearningMaterials;
-using Tutoring.Domain.Tutors;
+using Tutoring.Domain.Identity;
+using Tutoring.Domain.Lessons;
+using Tutoring.Domain.TutoringAgreements;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Tutoring.Infrastructure.Persistence.Configurations;
 
@@ -17,9 +20,24 @@ internal sealed class LearningMaterialConfiguration
         builder.Property(material => material.Id)
             .HasStronglyTypedEntityId(value => new LearningMaterialId(value));
 
-        builder.Property(material => material.TutorId)
-            .HasStronglyTypedId(value => new TutorId(value), "TutorId")
+        builder.Property(material => material.TutoringAgreementId)
+            .HasStronglyTypedId(value => new TutoringAgreementId(value), "TutoringAgreementId")
             .IsRequired();
+
+        builder.Property(material => material.UploadedByUserAccountId)
+            .HasStronglyTypedId(value => new UserAccountId(value), "UploadedByUserAccountId")
+            .IsRequired();
+        builder.Property(material => material.LessonId)
+            .HasConversion(new ValueConverter<LessonId?, Guid?>(
+                id => id == null ? null : id.Value.Value,
+                value => value == null ? null : new LessonId(value.Value)))
+            .HasColumnType("uniqueidentifier");
+        builder.HasOne<TutoringAgreement>().WithMany()
+            .HasForeignKey(material => material.TutoringAgreementId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Lesson>().WithMany()
+            .HasForeignKey(material => material.LessonId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<UserAccount>().WithMany()
+            .HasForeignKey(material => material.UploadedByUserAccountId).OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(material => material.Title)
             .HasColumnType("nvarchar(200)")
@@ -77,11 +95,6 @@ internal sealed class LearningMaterialConfiguration
             .HasColumnType("datetimeoffset")
             .IsRequired();
 
-        builder.HasOne(material => material.Tutor)
-            .WithMany()
-            .HasForeignKey(material => material.TutorId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(material => material.TutorId);
+        builder.HasIndex(material => material.TutoringAgreementId);
     }
 }

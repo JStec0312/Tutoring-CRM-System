@@ -128,7 +128,7 @@ entity Payments {
 entity LearningMaterials {
     * Id : uniqueidentifier <<PK>>
     --
-    CreatedByUserAccountId : uniqueidentifier <<FK>>
+    UploadedByUserAccountId : uniqueidentifier <<FK>>
     TutoringAgreementId : uniqueidentifier <<FK>>
     LessonId : uniqueidentifier <<FK, nullable>>
     Title : nvarchar(200)

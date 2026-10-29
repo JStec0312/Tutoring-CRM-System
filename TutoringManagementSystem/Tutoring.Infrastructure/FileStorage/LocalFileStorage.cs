@@ -29,19 +29,27 @@ public sealed class LocalFileStorage : IFileStorage
         var extension = NormalizeExtension(fileExtension);
         var storageKey = $"{Guid.NewGuid()}{extension}"; 
         var filePath = GetFullPath(storageKey);
-        await using var fileStream = new FileStream(
-            filePath, // Full path to the file to be created
-            FileMode.CreateNew, // Create a new file. If the file already exists, an IOException will be thrown.
-            FileAccess.Write, // Allow writing to the file
-            FileShare.None, // Lock the file for exclusive access while writing
-            bufferSize: 81920, // Default buffer size for asynchronous operations
-            useAsync: true); // Enable asynchronous I/O operations
-        await content.CopyToAsync(fileStream, cancellationToken); // Copy the content to the file asynchronously 
-        return storageKey; 
+        var created = false;
+        try
+        {
+            await using var fileStream = new FileStream(
+                filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None,
+                bufferSize: 81920, useAsync: true);
+            created = true;
+            await content.CopyToAsync(fileStream, cancellationToken);
+            return storageKey;
+        }
+        catch
+        {
+            // The destination stream is disposed before cleanup, including on cancellation.
+            if (created) File.Delete(filePath);
+            throw;
+        }
     }
 
     public Task<Stream> OpenReadAsync(string storageKey, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var filePath = GetFullPath(storageKey);
         var fileStream = new FileStream(
             filePath,
@@ -84,8 +92,7 @@ public sealed class LocalFileStorage : IFileStorage
             extension = $".{extension}";
         }
 
-        if (extension.Contains(Path.DirectorySeparatorChar) ||
-            extension.Contains(Path.AltDirectorySeparatorChar))
+        if (extension.Skip(1).Any(character => !char.IsAsciiLetterOrDigit(character)))
         {
             throw new ArgumentException(
                 "Invalid file extension.",
@@ -101,12 +108,14 @@ public sealed class LocalFileStorage : IFileStorage
         // 1. Ensure the storage key is not null or whitespace.
         // 2. Combine the root path with the storage key to get the full path.
         // 3. Ensure the full path starts with the root path to prevent path traversal attacks.
-        ArgumentNullException.ThrowIfNullOrWhiteSpace(storageKey);
-        var fullPath = Path.Combine(_rootPath, storageKey);
+        ArgumentException.ThrowIfNullOrWhiteSpace(storageKey);
+        if (storageKey.Contains('/') || storageKey.Contains('\\') || Path.IsPathRooted(storageKey))
+            throw new ArgumentException("Invalid storage key.", nameof(storageKey));
+        var fullPath = Path.GetFullPath(Path.Combine(_rootPath, storageKey));
         var rootPathWithSeparator = _rootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
          if (!fullPath.StartsWith(
                 rootPathWithSeparator,
-                StringComparison.OrdinalIgnoreCase))
+                OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal))
         {
             throw new ArgumentException(
                 "Storage key resolves outside the storage root.",

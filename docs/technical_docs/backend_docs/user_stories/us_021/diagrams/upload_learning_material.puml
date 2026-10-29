@@ -1,0 +1,37 @@
+@startuml
+title US-021 - Upload learning material
+actor "Tutor / Student" as User
+participant "Upload controller" as API
+participant "Upload handler" as Handler
+database "SQL Server" as DB
+participant "File validator" as Validator
+participant "Local file storage" as Storage
+
+User -> API: POST multipart (title, file, TA, optional lesson)
+API -> API: Authenticate and authorize role
+API -> Handler: Upload command with authenticated account
+Handler -> DB: Check TA participant and lesson/TA match
+alt Context missing or inaccessible
+  Handler --> API: ContextNotFound
+  API --> User: 404
+else Context allowed
+  Handler -> Validator: Validate length, name, format, signature
+  Validator --> Handler: Normalized file metadata
+  Handler -> Storage: Save under generated key
+  Storage --> Handler: Storage key
+  Handler -> DB: Save Draft material, uploader and context
+  alt Save succeeds
+    DB --> Handler: Saved
+    Handler --> API: Material metadata
+    API --> User: 201 Created
+  else Save fails or request is cancelled
+    Handler -> Storage: Delete file (uncancelled token)
+    Handler --> API: UploadFailed / cancellation
+    API --> User: Failure response
+  end
+end
+note over Storage
+Failed file copies delete their partial output.
+Cleanup failures are logged for investigation.
+end note
+@enduml

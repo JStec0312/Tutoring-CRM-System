@@ -9,6 +9,7 @@ using Respawn;
 using Respawn.Graph;
 using Testcontainers.MsSql;
 using Tutoring.Infrastructure.Persistence;
+using Tutoring.Infrastructure.FileStorage;
 namespace Tutoring.IntegrationTests.Infrastructure;
 
 public sealed class IntegrationTestFixture : IAsyncLifetime
@@ -20,6 +21,8 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
 
     private WebApplicationFactory<Program> _factory = null!;
     private Respawner _respawner = null!;
+
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), "tutoring-upload-tests", Guid.NewGuid().ToString("N"));
 
     public HttpClient Client { get; private set; } = null!;
 
@@ -38,6 +41,7 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
 
                 builder.ConfigureServices(services =>
                 {
+                    services.Configure<FileStorageOptions>(options => options.RootPath = StorageRoot);
                     // delete existing DbContextOptionsConfiguration<TutoringDbContext> registration
                     services.RemoveAll<
                         IDbContextOptionsConfiguration<TutoringDbContext>>();
@@ -91,6 +95,9 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
         await connection.OpenAsync();
 
         await _respawner.ResetAsync(connection);
+        if (Directory.Exists(StorageRoot))
+            foreach (var file in Directory.EnumerateFiles(StorageRoot))
+                File.Delete(file);
     }
 
     public async Task DisposeAsync()
@@ -99,5 +106,7 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
 
         await _factory.DisposeAsync();
         await _sqlContainer.DisposeAsync();
+        if (Directory.Exists(StorageRoot))
+            Directory.Delete(StorageRoot, recursive: true);
     }
 }

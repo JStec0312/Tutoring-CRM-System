@@ -20,6 +20,14 @@ public sealed class GlobalExceptionHandler(
     {
         var error = exception switch
         {
+            Tutoring.Api.Features.LearningMaterials.Exceptions.MaterialUploadFailedException uploadFailed => new ErrorDetails(
+                StatusCodes.Status500InternalServerError, "Upload failed",
+                Tutoring.Api.Features.LearningMaterials.Exceptions.MaterialUploadFailedException.Code,
+                uploadFailed.Message),
+            Tutoring.Infrastructure.FileStorage.UploadTooLargeException tooLarge => new ErrorDetails(
+                StatusCodes.Status413PayloadTooLarge, "File too large", tooLarge.Code, tooLarge.Message),
+            BadHttpRequestException badRequest => new ErrorDetails(
+                badRequest.StatusCode, "Invalid request", "Request.Invalid", badRequest.Message),
             NotFoundException notFoundException => new ErrorDetails(
                 StatusCodes.Status404NotFound,
                 "Resource not found",

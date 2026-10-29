@@ -56,6 +56,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IPasswordResetTokenGenerator, PasswordResetTokenGenerator>();
         services.AddScoped<IStudentInvitationTokenGenerator, StudentInvitationTokenGenerator>();
         services.AddSingleton<IFileStorage, LocalFileStorage>();
+        services.AddOptions<MaterialUploadOptions>()
+            .Bind(configuration.GetSection(MaterialUploadOptions.SectionName))
+            .Validate(MaterialUploadOptions.IsValid, "Invalid material upload policy.")
+            .ValidateOnStart();
+        services.AddSingleton<IUploadedFileValidator, UploadedFileValidator>();
         services.AddSingleton<IEmailEventHandler,UserRegisteredEmailHandler>();
         services.AddSingleton<IEmailEventHandler, PasswordResetRequestedEmailHandler>();
         services.AddSingleton<IEmailEventHandler, StudentInvitationCreatedEmailHandler>();
