@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.Exceptions;
@@ -32,10 +33,10 @@ public sealed class UpdateTutoringAgreementDetailsHandler(
         }
 
         var agreement = await dbContext.TutoringAgreements
+            .ForTutor(tutor.Id)
             .SingleOrDefaultAsync(
                 agreement =>
                     agreement.Id == new TutoringAgreementId(request.TutoringAgreementId) &&
-                    agreement.TutorId == tutor.Id &&
                     agreement.Status != AgreementStatus.Ended,
                 cancellationToken);
 

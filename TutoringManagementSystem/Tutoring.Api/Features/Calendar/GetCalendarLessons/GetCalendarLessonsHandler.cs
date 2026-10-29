@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Infrastructure.Persistence;
@@ -24,13 +25,8 @@ public sealed class GetCalendarLessonsHandler(
 
         var lessons = await dbContext.Lessons
             .AsNoTracking()
+            .ForParticipant(request.UserAccountId)
             .Where(lesson =>
-                (
-                    lesson.Agreement.Tutor.UserAccountId
-                        == request.UserAccountId ||
-                    lesson.Agreement.Student.UserAccountId
-                        == request.UserAccountId
-                ) &&
                 lesson.TimeSlot.StartsAtUtc < request.ToUtc &&
                 lesson.TimeSlot.EndsAtUtc > request.FromUtc)
             .OrderBy(lesson => lesson.TimeSlot.StartsAtUtc)

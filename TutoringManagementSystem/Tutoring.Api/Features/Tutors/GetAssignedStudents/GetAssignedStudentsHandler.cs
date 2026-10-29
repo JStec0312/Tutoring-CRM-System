@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Domain.TutoringAgreements;
@@ -28,8 +29,8 @@ public sealed class GetAssignedStudentsHandler(
 
         var agreements = await dbContext.TutoringAgreements
             .AsNoTracking()
+            .ForTutor(tutor.Id)
             .Where(agreement =>
-                agreement.TutorId == tutor.Id &&
                 agreement.Status != AgreementStatus.Ended)
             .Select(agreement => new
             {

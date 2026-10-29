@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Lessons.Exceptions;
@@ -23,15 +24,9 @@ public sealed class CancelLessonHandler(
                 .ThenInclude(agreement => agreement.Tutor)
             .Include(lesson => lesson.Agreement)
                 .ThenInclude(agreement => agreement.Student)
+            .ForParticipant(request.UserAccountId)
             .SingleOrDefaultAsync(
-                lesson =>
-                    lesson.Id == lessonId &&
-                    (
-                        lesson.Agreement.Tutor.UserAccountId
-                            == request.UserAccountId ||
-                        lesson.Agreement.Student.UserAccountId
-                            == request.UserAccountId
-                    ),
+                lesson => lesson.Id == lessonId,
                 cancellationToken);
 
         if (lesson is null)

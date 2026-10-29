@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.Exceptions;
@@ -35,11 +36,11 @@ public sealed class ScheduleLessonHandler(
         }
 
         var agreement = await dbContext.TutoringAgreements
+            .ForTutor(tutor.Id)
             .AsNoTracking()
             .SingleOrDefaultAsync(
                 agreement =>
-                    agreement.Id == new TutoringAgreementId(request.TutoringAgreementId) &&
-                    agreement.TutorId == tutor.Id,
+                    agreement.Id == new TutoringAgreementId(request.TutoringAgreementId),
                 cancellationToken);
 
         if (agreement is null)

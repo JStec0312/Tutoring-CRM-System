@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Domain.Billing;
@@ -33,9 +34,8 @@ public sealed class GetOverdueTutoringAgreementsHandler(
 
         var agreements = await (
             from unpaid in unpaidByAgreement
-            join agreement in dbContext.TutoringAgreements.AsNoTracking()
+            join agreement in dbContext.TutoringAgreements.AsNoTracking().ForTutor(request.UserAccountId)
                 on unpaid.TutoringAgreementId equals agreement.Id
-            where agreement.Tutor.UserAccountId == request.UserAccountId
             orderby unpaid.TotalUnpaidAmount descending
             select new OverdueTutoringAgreementResponse(
                 agreement.Id.Value,

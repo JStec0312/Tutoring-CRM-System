@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.Exceptions;
@@ -34,10 +35,10 @@ public sealed class UpdateTutoringAgreementStatusHandler(
         // Ownership is enforced by requiring the agreement to belong to the
         // authenticated tutor; a mismatch is treated the same as "not found".
         var agreement = await dbContext.TutoringAgreements
+            .ForTutor(tutor.Id)
             .SingleOrDefaultAsync(
                 agreement =>
                     agreement.Id == new TutoringAgreementId(request.TutoringAgreementId) &&
-                    agreement.TutorId == tutor.Id &&
                     agreement.Status != AgreementStatus.Ended,
                 cancellationToken);
 

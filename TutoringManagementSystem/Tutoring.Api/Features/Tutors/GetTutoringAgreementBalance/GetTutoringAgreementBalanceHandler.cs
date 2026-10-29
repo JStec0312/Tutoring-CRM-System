@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Domain.Billing;
@@ -22,10 +23,9 @@ public sealed class GetTutoringAgreementBalanceHandler(
 
         var agreementExists = await dbContext.TutoringAgreements
             .AsNoTracking()
+            .ForTutor(request.UserAccountId)
             .AnyAsync(
-                agreement =>
-                    agreement.Id == tutoringAgreementId &&
-                    agreement.Tutor.UserAccountId == request.UserAccountId,
+                agreement => agreement.Id == tutoringAgreementId,
                 cancellationToken);
 
         if (!agreementExists)

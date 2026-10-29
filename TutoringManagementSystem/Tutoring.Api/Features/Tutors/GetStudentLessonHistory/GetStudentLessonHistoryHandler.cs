@@ -1,3 +1,4 @@
+using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.Exceptions;
@@ -45,9 +46,9 @@ public sealed class GetStudentLessonHistoryHandler(
 
         var hasAgreement = await dbContext.TutoringAgreements
             .AsNoTracking()
+            .ForTutor(tutor.Id)
             .AnyAsync(
                 agreement =>
-                    agreement.TutorId == tutor.Id &&
                     agreement.StudentId == studentId,
                 cancellationToken);
 
