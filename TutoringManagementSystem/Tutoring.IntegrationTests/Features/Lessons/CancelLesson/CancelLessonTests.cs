@@ -728,26 +728,6 @@ public sealed class CancelLessonTests(
                 }));
     }
 
-    private static async Task AssertProblemCodeAsync(
-        HttpResponseMessage response,
-        string expectedCode)
-    {
-        var problem =
-            await response.Content
-                .ReadFromJsonAsync<ProblemDetails>();
-
-        Assert.NotNull(problem);
-
-        Assert.True(
-            problem!.Extensions.TryGetValue(
-                "code",
-                out var code));
-
-        Assert.Equal(
-            expectedCode,
-            code?.ToString());
-    }
-
     private sealed record TestTutor(
         string Email,
         string AccessToken,

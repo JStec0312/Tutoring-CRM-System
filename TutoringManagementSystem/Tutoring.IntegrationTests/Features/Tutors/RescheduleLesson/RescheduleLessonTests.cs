@@ -14,9 +14,9 @@ namespace Tutoring.IntegrationTests.Features.Tutors.RescheduleLesson;
 [Collection(IntegrationTestCollection.Name)]
 public sealed class RescheduleLessonTests(
     IntegrationTestFixture fixture)
-    : IntegrationTestBase(fixture)
+    : LessonIntegrationTestBase(fixture)
 {
-    private const string Password = "Password123!";
+    protected override DateTimeOffset AgreementCreatedAtUtc => InitialStartsAtUtc;
     private const string Endpoint = "/api/tutors/me/lessons";
     private static readonly DateTimeOffset InitialStartsAtUtc = new(2099, 9, 25, 10, 0, 0, TimeSpan.Zero);
 
@@ -348,97 +348,6 @@ public sealed class RescheduleLessonTests(
         return (tutor, agreementId);
     }
 
-    private async Task<TestTutor> CreateTutorAsync(string email, string userName)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/register/tutor",
-            new
-            {
-                Email = email,
-                UserName = userName,
-                Password,
-                FirstName = "Tutor",
-                LastName = "Test",
-                PhoneNumber = (string?)null
-            });
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-
-        await ConfirmEmailAsync(await GetVerificationTokenAsync(email));
-        var accessToken = (await LoginAsync(email, Password)).Login.AccessToken;
-
-        return new TestTutor(email, accessToken);
-    }
-
-    private async Task<TestStudent> CreateStudentAsync(string email, string userName)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/register/student",
-            new
-            {
-                Email = email,
-                Username = userName,
-                Password
-            });
-
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-
-        await ConfirmEmailAsync(await GetVerificationTokenAsync(email));
-        var accessToken = (await LoginAsync(email, Password)).Login.AccessToken;
-        var studentId = await ExecuteDbAsync(dbContext =>
-            dbContext.Students
-                .Where(student => student.Account != null && student.Account.Email.Value == email)
-                .Select(student => student.Id.Value)
-                .SingleAsync());
-
-        return new TestStudent(accessToken, studentId);
-    }
-
-    private async Task<Guid> CreateAgreementAsync(string tutorEmail, Guid studentId)
-    {
-        return await ExecuteDbAsync(async dbContext =>
-        {
-            var tutorId = await dbContext.Tutors
-                .Where(tutor => tutor.Account.Email.Value == tutorEmail)
-                .Select(tutor => tutor.Id)
-                .SingleAsync();
-
-            var agreement = new TutoringAgreement(
-                tutorId,
-                new StudentId(studentId),
-                new Subject("Mathematics"),
-                new HourlyRate(new Money(100, new Currency("PLN"))),
-                new AgreementTitle("Test Agreement"),
-                InitialStartsAtUtc);
-
-            dbContext.TutoringAgreements.Add(agreement);
-            await dbContext.SaveChangesAsync();
-
-            return agreement.Id.Value;
-        });
-    }
-
-    private async Task<Guid> CreateLessonAsync(
-        Guid agreementId,
-        DateTimeOffset startsAtUtc,
-        DateTimeOffset endsAtUtc,
-        LessonSeriesId? lessonSeriesId = null)
-    {
-        return await ExecuteDbAsync(async dbContext =>
-        {
-            var lesson = new Lesson(
-                new TutoringAgreementId(agreementId),
-                new TimeSlot(startsAtUtc, endsAtUtc),
-                InitialStartsAtUtc,
-                lessonSeriesId);
-
-            dbContext.Lessons.Add(lesson);
-            await dbContext.SaveChangesAsync();
-
-            return lesson.Id.Value;
-        });
-    }
-
     private Task SetLessonStatusAsync(Guid lessonId, LessonStatus status)
     {
         return ExecuteDbAsync(dbContext =>
@@ -482,21 +391,6 @@ public sealed class RescheduleLessonTests(
                     DurationMinutes = durationMinutes
                 }));
     }
-
-    private static async Task AssertProblemCodeAsync(
-        HttpResponseMessage response,
-        string expectedCode)
-    {
-        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-
-        Assert.NotNull(problem);
-        Assert.True(problem!.Extensions.TryGetValue("code", out var code));
-        Assert.Equal(expectedCode, code?.ToString());
-    }
-
-    private sealed record TestTutor(string Email, string AccessToken);
-
-    private sealed record TestStudent(string AccessToken, Guid StudentId);
 
     private sealed record LessonSnapshot(
         Guid Id,

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -315,6 +316,14 @@ public abstract class IntegrationTestBase
              value.Contains(
                  "secure",
                  StringComparison.OrdinalIgnoreCase)));
+    }
+
+    protected static async Task AssertProblemCodeAsync(HttpResponseMessage response, string expectedCode)
+    {
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.True(problem.Extensions.TryGetValue("code", out var code));
+        Assert.Equal(expectedCode, code?.ToString());
     }
 
     protected string RefreshTokenCookieName =>
