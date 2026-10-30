@@ -23,12 +23,12 @@ public sealed class UploadLearningMaterialHandler(
             .ForParticipant(request.UserAccountId)
             .AnyAsync(agreement => agreement.Id == agreementId, cancellationToken);
         if (!allowed)
-            throw new MaterialContextNotFoundException();
+            throw new MaterialContextNotFoundException("The tutoring agreement was not found or is not accessible to you.");
 
         LessonId? lessonId = request.LessonId is { } id ? new LessonId(id) : null;
         if (lessonId is not null && !await dbContext.Lessons.AsNoTracking().AnyAsync(
                 lesson => lesson.Id == lessonId && lesson.TutoringAgreementId == agreementId, cancellationToken))
-            throw new MaterialContextNotFoundException();
+            throw new MaterialContextNotFoundException("The lesson was not found in the specified tutoring agreement.");
 
         LearningMaterial.ValidateTitle(request.Title);
         var file = await validator.ValidateAsync(

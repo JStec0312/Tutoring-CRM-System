@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
@@ -86,6 +87,8 @@ public sealed class UploadLearningMaterialTests(IntegrationTestFixture fixture) 
             : (await CreateTutorAsync("outsider-tutor@test.pl", "outsider")).AccessToken;
         using var response = await UploadAsync(token, agreement);
         await AssertRejectedAsync(response, HttpStatusCode.NotFound, "LearningMaterials.ContextNotFound");
+        Assert.Equal("The tutoring agreement was not found or is not accessible to you.",
+            (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("detail").GetString());
     }
 
     [Fact]
@@ -94,6 +97,8 @@ public sealed class UploadLearningMaterialTests(IntegrationTestFixture fixture) 
         var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
         using var response = await UploadAsync(tutor.AccessToken, Guid.NewGuid());
         await AssertRejectedAsync(response, HttpStatusCode.NotFound, "LearningMaterials.ContextNotFound");
+        Assert.Equal("The tutoring agreement was not found or is not accessible to you.",
+            (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("detail").GetString());
     }
 
     [Theory]
@@ -107,6 +112,8 @@ public sealed class UploadLearningMaterialTests(IntegrationTestFixture fixture) 
         var lesson = missing ? Guid.NewGuid() : await CreateLessonAsync(otherAgreement, now.AddDays(1), now.AddDays(1).AddHours(1));
         using var response = await UploadAsync(student.AccessToken, agreement, lesson);
         await AssertRejectedAsync(response, HttpStatusCode.NotFound, "LearningMaterials.ContextNotFound");
+        Assert.Equal("The lesson was not found in the specified tutoring agreement.",
+            (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("detail").GetString());
     }
 
     [Theory]

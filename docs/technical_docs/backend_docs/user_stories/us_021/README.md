@@ -52,7 +52,7 @@ The response does not expose the storage key or physical path.
 | 400 | Missing/malformed form fields; `LearningMaterials.EmptyFile`, `InvalidFile`, `InvalidFileName`, `UnsupportedFormat` or `InvalidFileContent` (all prefixed with `LearningMaterials.`) |
 | 401 | Missing authentication or invalid/missing account identity |
 | 403 | Neither supported role is present |
-| 404 | `LearningMaterials.ContextNotFound`: TA unavailable to the caller, missing lesson or lesson from another TA |
+| 404 | `LearningMaterials.ContextNotFound`: detail identifies an unavailable TA or a missing lesson in the specified TA |
 | 413 | `LearningMaterials.FileTooLarge`: file exceeds the configured limit |
 | 422 | `LearningMaterials.InvalidMetadata`: invalid domain metadata |
 | 500 | `LearningMaterials.UploadFailed`: material persistence failed after saving the file |
