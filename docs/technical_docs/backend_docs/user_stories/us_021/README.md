@@ -6,7 +6,7 @@
 
 Implemented in the backend. Both tutor and student participants can upload a material to their tutoring agreement (TA), optionally attaching it to a lesson in that same TA. Role authorization is followed by a participant check using the authenticated account ID.
 
-Each material records its TA, optional lesson, authenticated uploader, title, file metadata, UTC creation time and initial `Draft` status. Upload does not create a `MaterialAssignment`. Download, listing, publishing and attaching an existing material are outside this endpoint's scope.
+Each material records its TA, optional lesson, authenticated uploader, title, file metadata, UTC creation time and initial `Draft` status. Upload does not create a `MaterialAssignment`. Download, listing and publishing are outside this endpoint's scope. Attaching an existing material is handled by [US-022](../us_022/README.md).
 
 ## FILES
 

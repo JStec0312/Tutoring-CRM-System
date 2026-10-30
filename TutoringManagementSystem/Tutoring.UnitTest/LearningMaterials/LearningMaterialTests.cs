@@ -11,6 +11,21 @@ public sealed class LearningMaterialTests
         new(name, "application/pdf", new FileSize(bytes), new StorageLocation("key.pdf"));
 
     [Fact]
+    public void AttachToLesson_CanAttachRepeatAndReplace()
+    {
+        var material = new LearningMaterial(TutoringAgreementId.New(), null, UserAccountId.New(), "Notes", File(), DateTimeOffset.UtcNow);
+        var first = LessonId.New();
+        var second = LessonId.New();
+        material.AttachToLesson(first);
+        material.AttachToLesson(first);
+        Assert.Equal(first, material.LessonId);
+        material.AttachToLesson(second);
+        Assert.Equal(second, material.LessonId);
+        Assert.Throws<InvalidLearningMaterialException>(() => material.AttachToLesson(new LessonId(Guid.Empty)));
+        Assert.Equal(second, material.LessonId);
+    }
+
+    [Fact]
     public void Create_ShouldPreserveContextAndUploaderAndStartAsDraft()
     {
         var ta = TutoringAgreementId.New();

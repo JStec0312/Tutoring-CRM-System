@@ -1,0 +1,13 @@
+@startuml
+actor Participant
+participant "Attach endpoint" as API
+participant Handler
+database Database
+Participant -> API: PUT material lesson
+API -> Handler: Command with authenticated account
+Handler -> Database: Find material in participant's agreement
+Handler -> Database: Check lesson belongs to agreement
+Handler -> Database: Save lesson association
+Handler --> API: Success
+API --> Participant: 204 No Content
+@enduml

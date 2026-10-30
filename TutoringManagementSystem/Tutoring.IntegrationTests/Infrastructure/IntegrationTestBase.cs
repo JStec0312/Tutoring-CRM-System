@@ -320,7 +320,8 @@ public abstract class IntegrationTestBase
 
     protected static async Task AssertProblemCodeAsync(HttpResponseMessage response, string expectedCode)
     {
-        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        var problem = System.Text.Json.JsonSerializer.Deserialize<ProblemDetails>(
+            await response.Content.ReadAsStringAsync(), new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
         Assert.NotNull(problem);
         Assert.True(problem.Extensions.TryGetValue("code", out var code));
         Assert.Equal(expectedCode, code?.ToString());

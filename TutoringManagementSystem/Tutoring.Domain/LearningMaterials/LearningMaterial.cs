@@ -46,6 +46,13 @@ public sealed class LearningMaterial
         CreatedAtUtc = createdAtUtc.ToUniversalTime();
     }
 
+    public void AttachToLesson(LessonId lessonId)
+    {
+        if (lessonId.Value == Guid.Empty)
+            throw new InvalidLearningMaterialException("Lesson ID must not be empty.");
+        LessonId = lessonId;
+    }
+
     public static void ValidateTitle(string title)
     {
         if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 200)
