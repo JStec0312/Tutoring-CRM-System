@@ -45,6 +45,8 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
             await admin.OpenAsync();
             await using var create = new SqlCommand("CREATE DATABASE TutoringDb;", admin);
             await create.ExecuteNonQueryAsync();
+            await using var createOther = new SqlCommand("CREATE DATABASE TutoringOtherDb;", admin);
+            await createOther.ExecuteNonQueryAsync();
         }
 
         connectionBuilder.InitialCatalog = "TutoringDb";

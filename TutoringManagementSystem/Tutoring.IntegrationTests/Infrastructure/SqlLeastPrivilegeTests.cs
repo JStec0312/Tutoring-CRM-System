@@ -34,7 +34,7 @@ public sealed class SqlLeastPrivilegeTests(IntegrationTestFixture fixture) : Int
 
     [Theory]
     [InlineData("CREATE TABLE dbo.PrivilegeProbe (Id int);", 262)]
-    [InlineData("ALTER TABLE dbo.UserAccounts ADD PrivilegeProbe int NULL;", 229)]
+    [InlineData("ALTER TABLE dbo.UserAccounts ADD PrivilegeProbe int NULL;", 1088)]
     [InlineData("SELECT * FROM dbo.__EFMigrationsHistory;", 229)]
     [InlineData("DELETE FROM dbo.__EFMigrationsHistory;", 229)]
     [InlineData("CREATE DATABASE ForbiddenRuntimeDatabase;", 262)]
@@ -51,7 +51,7 @@ public sealed class SqlLeastPrivilegeTests(IntegrationTestFixture fixture) : Int
     public async Task RuntimeIdentity_ShouldNotReadOtherDatabaseSecurityMetadata()
     {
         await using var connection = await OpenRuntimeConnectionAsync();
-        await using var command = new SqlCommand("SELECT * FROM msdb.dbo.sysjobs;", connection);
+        await using var command = new SqlCommand("SELECT * FROM TutoringOtherDb.sys.tables;", connection);
         var exception = await Assert.ThrowsAsync<SqlException>(() => command.ExecuteNonQueryAsync());
         Assert.Equal(916, exception.Number);
     }
@@ -60,10 +60,10 @@ public sealed class SqlLeastPrivilegeTests(IntegrationTestFixture fixture) : Int
     public async Task MigrationIdentity_ShouldApplyAllMigrationsWithoutDatabaseOrServerOwnership()
     {
         await using var db = new TutoringDbContext(new DbContextOptionsBuilder<TutoringDbContext>()
-            .UseSqlServer(fixture.MigrationConnectionString).Options);
+            .UseSqlServer(Fixture.MigrationConnectionString).Options);
         Assert.Empty(await db.Database.GetPendingMigrationsAsync());
 
-        await using var connection = new SqlConnection(fixture.MigrationConnectionString);
+        await using var connection = new SqlConnection(Fixture.MigrationConnectionString);
         await connection.OpenAsync();
         await using var command = new SqlCommand("""
             SELECT IS_SRVROLEMEMBER('sysadmin'), IS_MEMBER('db_owner'),
@@ -83,7 +83,7 @@ public sealed class SqlLeastPrivilegeTests(IntegrationTestFixture fixture) : Int
 
     private async Task<SqlConnection> OpenRuntimeConnectionAsync()
     {
-        using var scope = fixture.Services.CreateScope();
+        using var scope = Fixture.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<TutoringDbContext>();
         var connection = new SqlConnection(context.Database.GetConnectionString());
         await connection.OpenAsync();
