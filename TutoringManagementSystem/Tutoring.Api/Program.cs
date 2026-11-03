@@ -13,7 +13,21 @@ Env
     .TraversePath()
     .Load(Path.Combine(AppContext.BaseDirectory, ".env"));
 
-var builder = WebApplication.CreateBuilder(args);
+var runMigrations = args.Contains("--migrate", StringComparer.Ordinal);
+var builder = WebApplication.CreateBuilder(args.Where(arg => arg != "--migrate").ToArray());
+
+// Explicit deployment mode: no HTTP host, authentication, or messaging workers.
+if (runMigrations)
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("DefaultConnection is required for migrations.");
+    var options = new DbContextOptionsBuilder<TutoringDbContext>()
+        .UseSqlServer(connectionString)
+        .Options;
+    await using var dbContext = new TutoringDbContext(options);
+    await dbContext.Database.MigrateAsync();
+    return;
+}
 
 builder.Services.AddSerilog((services, loggerConfiguration) =>
 {
@@ -55,15 +69,6 @@ if (builder.Environment.IsDevelopment())
 
 
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
-{
-    await using var scope = app.Services.CreateAsyncScope();
-
-    var dbContext = scope.ServiceProvider
-        .GetRequiredService<TutoringDbContext>();
-
-    await dbContext.Database.MigrateAsync();
-}
 
 app.UseExceptionHandler();
 

@@ -8,3 +8,8 @@
 
 Dockerfile*
 docker-compose*
+
+# Never bake local credentials or security material into the API/migration image.
+**/.env
+**/.env.*
+**/.secrets

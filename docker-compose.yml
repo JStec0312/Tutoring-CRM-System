@@ -1,3 +1,4 @@
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -5,14 +6,65 @@ services:
 
     environment:
       ACCEPT_EULA: "Y"
+      MSSQL_PID: "Developer"
       MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD}"
 
     ports:
-      - "1433:1433"
+      - "127.0.0.1:1433:1433"
 
     volumes:
       - sqlserver-data:/var/opt/mssql
+      - ./.secrets:/var/opt/mssql/tde-backup:ro
+      - sql-audit-data:/var/opt/mssql/audit
 
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'SQLCMDPASSWORD="$$MSSQL_SA_PASSWORD" /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q "SELECT 1" >/dev/null 2>&1'
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  sql-security-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    user: "0:0"
+
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+    environment:
+      SQLCMDPASSWORD: "${MSSQL_SA_PASSWORD}"
+      TUTORING_APP_PASSWORD: "${TUTORING_APP_PASSWORD:?Set TUTORING_APP_PASSWORD}"
+      TUTORING_MIGRATIONS_PASSWORD: "${TUTORING_MIGRATIONS_PASSWORD:?Set TUTORING_MIGRATIONS_PASSWORD}"
+
+    volumes:
+      - ./database/security:/scripts:ro
+      - ./.secrets:/run/tde:ro
+      - sql-audit-data:/audit-volume
+
+    entrypoint: ["/bin/bash", "/scripts/init.sh"]
+    restart: "no"
+
+  migrations:
+    profiles:
+      - full
+      - migrations
+
+    build:
+      context: ./TutoringManagementSystem
+      dockerfile: Tutoring.Api/Dockerfile
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: 'Server=sqlserver,1433;Database=TutoringDb;User Id=tutoring_migrations;Password="${TUTORING_MIGRATIONS_PASSWORD:?Set TUTORING_MIGRATIONS_PASSWORD}";Encrypt=True;TrustServerCertificate=True'
+
+    command: ["--migrate"]
+    depends_on:
+      sql-security-init:
+        condition: service_completed_successfully
+    restart: "no"
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -29,7 +81,6 @@ services:
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
 
-
   mailpit:
     image: axllent/mailpit:latest
     container_name: tutoring-mailpit
@@ -37,7 +88,6 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
-
 
   api:
     profiles:
@@ -53,7 +103,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
 
-      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=TutoringDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: 'Server=sqlserver,1433;Database=TutoringDb;User Id=tutoring_app;Password="${TUTORING_APP_PASSWORD:?Set TUTORING_APP_PASSWORD}";Encrypt=True;TrustServerCertificate=True'
 
       RabbitMq__HostName: rabbitmq
       RabbitMq__Port: 5672
@@ -62,7 +112,6 @@ services:
 
       Jwt__SecretKey: "${JWT_SECRET}"
 
-
       Smtp__Host: mailpit
       Smtp__Port: 1025
 
@@ -70,11 +119,14 @@ services:
       - "5106:8080"
 
     depends_on:
-      - sqlserver
-      - rabbitmq
-      - mailpit
-
+      migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_started
+      mailpit:
+        condition: service_started
 
 volumes:
   sqlserver-data:
+  sql-audit-data:
   rabbitmq-data:

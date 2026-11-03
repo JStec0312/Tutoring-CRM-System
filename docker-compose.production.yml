@@ -1,0 +1,8 @@
+# SQL network restrictions only; combine with deployment-specific production settings.
+services:
+  sqlserver:
+    ports: !reset []
+
+  api:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
