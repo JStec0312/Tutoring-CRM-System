@@ -18,11 +18,14 @@ public sealed class DownloadLearningMaterialHandler(
         DownloadLearningMaterialQuery request, CancellationToken cancellationToken)
     {
         var materialId = new LearningMaterialId(request.MaterialId);
+        var accessibleAgreementIds = dbContext.TutoringAgreements
+            .ForParticipant(request.UserAccountId)
+            .Select(agreement => agreement.Id);
+
         var material = await dbContext.LearningMaterials.AsNoTracking().SingleOrDefaultAsync(
             material => material.Id == materialId &&
                 (material.Status == MaterialStatus.Draft || material.Status == MaterialStatus.Published) &&
-                dbContext.TutoringAgreements.ForParticipant(request.UserAccountId)
-                    .Any(agreement => agreement.Id == material.TutoringAgreementId),
+                accessibleAgreementIds.Contains(material.TutoringAgreementId),
             cancellationToken);
 
         if (material is null)
