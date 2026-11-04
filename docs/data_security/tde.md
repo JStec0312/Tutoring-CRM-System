@@ -16,7 +16,7 @@ The initializer requires the following existing files under the repository's `.s
 | `master-key-password.txt` | Password used when creating the DMK |
 | `certificate-backup-password.txt` | Password used to decrypt the imported private key |
 
-The script stops if any file is missing or empty; it does not generate or back up the certificate. `MSSQL_SA_PASSWORD` is supplied separately through Compose. Keep these files and credentials private; [.gitignore](../../.gitignore) ignores `.secrets/`. The initializer passes the two file passwords to `sqlcmd` as variables. See [example passwords](../../.secrets_example/README.md).
+The script stops if any file is missing or empty; it does not generate or back up the certificate. `MSSQL_SA_PASSWORD` is supplied separately through Compose. Keep these files and cedentials private; [.gitignore](../../.gitignore) ignores `.secrets/`. The initializer passes the two file passwords to `sqlcmd` as variables. See [example passwords](../../.secrets_example/README.md).
 
 If the SQL Server data volume is removed, initialization can create a new empty `TutoringDb` and import the same certificate when all required files remain available. It does not restore database contents; retain separate database backups and the matching certificate/private key and password for recovery. Do not remove volumes to perform the check below.
 
