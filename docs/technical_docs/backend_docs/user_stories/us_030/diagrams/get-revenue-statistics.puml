@@ -1,0 +1,14 @@
+@startuml
+actor Tutor
+participant API
+participant GetRevenueStatisticsHandler as Handler
+database SQLServer as DB
+
+Tutor -> API: GET /api/tutors/me/statistics/revenue
+API -> Handler: Query(tutor account ID, currency, startDate, endDate)
+Handler -> Handler: Resolve UTC period boundaries
+Handler -> DB: Sum owned payments by currency and period
+DB --> Handler: Revenue totals
+Handler --> API: RevenueStatisticsResponse
+API --> Tutor: 200 OK
+@enduml
