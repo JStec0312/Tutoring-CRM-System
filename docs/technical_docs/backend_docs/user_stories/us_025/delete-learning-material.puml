@@ -1,0 +1,23 @@
+@startuml
+actor "Tutor or student" as Participant
+participant "Materials API" as API
+database "SQL Server" as SQL
+participant "Outbox processor" as Worker
+participant "File storage" as Storage
+
+Participant -> API: DELETE /api/learning-materials/{materialId}
+API -> SQL: Mark authorized material Deleted\nand enqueue cleanup in one transaction
+alt Deletion scheduled or already pending
+    API --> Participant: 204 No Content
+else Material missing or inaccessible
+    API --> Participant: 404 ContextNotFound
+end
+
+Worker -> SQL: Read pending cleanup message
+Worker -> Storage: Delete file
+alt File removed or already absent
+    Worker -> SQL: Remove material metadata\nand mark message processed
+else Storage failure
+    Worker -> SQL: Record failure and leave message pending
+end
+@enduml

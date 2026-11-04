@@ -15,9 +15,11 @@ public sealed class AttachLearningMaterialToLessonHandler(
     public async Task Handle(AttachLearningMaterialToLessonCommand request, CancellationToken cancellationToken)
     {
         var materialId = new LearningMaterialId(request.MaterialId);
+        var accessibleAgreementIds = dbContext.TutoringAgreements.ForParticipant(request.UserAccountId)
+            .Select(agreement => agreement.Id);
         var material = await dbContext.LearningMaterials.SingleOrDefaultAsync(m => m.Id == materialId &&
-            dbContext.TutoringAgreements.ForParticipant(request.UserAccountId)
-                .Any(a => a.Id == m.TutoringAgreementId), cancellationToken);
+            m.Status != MaterialStatus.Deleted && accessibleAgreementIds.Contains(m.TutoringAgreementId),
+            cancellationToken);
         if (material is null)
             throw new MaterialContextNotFoundException("The learning material was not found or is not accessible to you.");
 

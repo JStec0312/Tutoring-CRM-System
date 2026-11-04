@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Tutoring.Infrastructure.FileStorage;
 using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.Infrastructure.Persistence;
 
@@ -39,7 +40,8 @@ public sealed class OutboxProcessor(
 
         var messages = await dbContext.OutboxMessages
             .Where(x => x.ProcessedAtUtc == null)
-            .OrderBy(x => x.OccurredAtUtc)
+            .OrderBy(x => x.RetryCount)
+            .ThenBy(x => x.OccurredAtUtc)
             .Take(options.Value.BatchSize)
             .ToListAsync(cancellationToken);
 
@@ -47,11 +49,15 @@ public sealed class OutboxProcessor(
         {
             try
             {
-                await publisher.PublishAsync(
-                    message.Id,
-                    message.Type,
-                    message.Payload,
-                    cancellationToken);
+                if (message.Type == LearningMaterialCleanup.MessageType)
+                {
+                    var storage = scope.ServiceProvider.GetRequiredService<IFileStorage>();
+                    await LearningMaterialCleanup.RemoveAsync(dbContext, storage, message.Payload, cancellationToken);
+                }
+                else
+                {
+                    await publisher.PublishAsync(message.Id, message.Type, message.Payload, cancellationToken);
+                }
 
                 message.ProcessedAtUtc =
                     timeProvider.GetUtcNow();
@@ -59,10 +65,10 @@ public sealed class OutboxProcessor(
                 message.Error = null;
 
                 logger.LogInformation(
-                    "Outbox message published. MessageId: {MessageId}",
+                    "Outbox message processed. MessageId: {MessageId}",
                     message.Id);
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
             {
                 message.RetryCount++;
 
@@ -70,11 +76,19 @@ public sealed class OutboxProcessor(
 
                 logger.LogError(
                     exception,
-                    "Failed to publish outbox message. MessageId: {MessageId}",
+                    "Failed to process outbox message. MessageId: {MessageId}",
                     message.Id);
             }
 
-            await dbContext.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException) when (message.Type == LearningMaterialCleanup.MessageType)
+            {
+                // Another worker may have removed the same material. Retry from a fresh context.
+                return;
+            }
         }
     }
 }

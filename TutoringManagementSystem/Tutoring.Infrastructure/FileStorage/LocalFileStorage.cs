@@ -65,10 +65,7 @@ public sealed class LocalFileStorage : IFileStorage
     {
         cancellationToken.ThrowIfCancellationRequested();
         var filePath = GetFullPath(storageKey);
-        if (File.Exists(filePath))
-        {
-            File.Delete(filePath);
-        }
+        File.Delete(filePath);
         return Task.CompletedTask;
     }
 
