@@ -52,12 +52,47 @@ IF EXISTS (
     WHERE members.member_principal_id IN (
         USER_ID(N'tutoring_app'), USER_ID(N'tutoring_migrations'),
         USER_ID(N'tutoring_runtime'), USER_ID(N'tutoring_schema_migrations'))
-      AND roles.name NOT IN (N'tutoring_runtime', N'tutoring_schema_migrations')
+      AND NOT (
+          (members.member_principal_id = USER_ID(N'tutoring_app') AND roles.name = N'tutoring_runtime')
+          OR (members.member_principal_id = USER_ID(N'tutoring_migrations') AND roles.name = N'tutoring_schema_migrations')
+      )
 )
     THROW 51000, 'Unexpected database role membership. Review manually.', 1;
 
-ALTER ROLE tutoring_runtime ADD MEMBER tutoring_app;
-ALTER ROLE tutoring_schema_migrations ADD MEMBER tutoring_migrations;
+IF EXISTS (
+    SELECT 1 FROM sys.database_permissions
+    WHERE grantee_principal_id IN (USER_ID(N'tutoring_app'), USER_ID(N'tutoring_migrations'))
+      AND NOT (class = 0 AND permission_name = 'CONNECT' AND state = 'G')
+) OR EXISTS (
+    SELECT 1 FROM sys.database_permissions
+    WHERE grantee_principal_id IN (USER_ID(N'tutoring_runtime'), USER_ID(N'tutoring_schema_migrations'))
+      AND NOT (
+          (state = 'G' AND class = 3
+              AND major_id IN (SCHEMA_ID(N'dbo'), SCHEMA_ID(N'messaging'))
+              AND (permission_name IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE')
+                  OR (grantee_principal_id = USER_ID(N'tutoring_schema_migrations')
+                      AND permission_name IN ('ALTER', 'REFERENCES'))))
+          OR (state = 'G' AND class = 0 AND permission_name = 'CREATE TABLE'
+              AND grantee_principal_id = USER_ID(N'tutoring_schema_migrations'))
+          OR (state = 'D' AND class = 1 AND major_id = OBJECT_ID(N'dbo.__EFMigrationsHistory')
+              AND permission_name IN ('SELECT', 'INSERT', 'UPDATE', 'DELETE')
+              AND grantee_principal_id = USER_ID(N'tutoring_runtime'))
+      )
+) OR EXISTS (
+    SELECT 1 FROM sys.schemas
+    WHERE principal_id IN (USER_ID(N'tutoring_app'), USER_ID(N'tutoring_migrations'),
+        USER_ID(N'tutoring_runtime'), USER_ID(N'tutoring_schema_migrations'))
+) OR EXISTS (
+    SELECT 1 FROM sys.databases
+    WHERE database_id = DB_ID()
+      AND owner_sid IN (SUSER_SID(N'tutoring_app'), SUSER_SID(N'tutoring_migrations'))
+)
+    THROW 51000, 'Unexpected direct permissions or ownership. Review manually.', 1;
+
+IF IS_ROLEMEMBER(N'tutoring_runtime', N'tutoring_app') <> 1
+    ALTER ROLE tutoring_runtime ADD MEMBER tutoring_app;
+IF IS_ROLEMEMBER(N'tutoring_schema_migrations', N'tutoring_migrations') <> 1
+    ALTER ROLE tutoring_schema_migrations ADD MEMBER tutoring_migrations;
 
 GRANT CONNECT TO tutoring_app;
 GRANT CONNECT TO tutoring_migrations;

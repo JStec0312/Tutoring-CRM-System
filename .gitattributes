@@ -1,0 +1,2 @@
+# Security initialization scripts execute inside Linux containers.
+database/security/*.sh text eol=lf
