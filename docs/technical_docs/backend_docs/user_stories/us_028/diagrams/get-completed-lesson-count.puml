@@ -1,0 +1,9 @@
+@startuml
+actor Tutor
+participant "Tutors API" as API
+database "SQL Server" as SQL
+Tutor -> API: GET /api/tutors/me/lessons/completed-count
+API -> SQL: Count Completed lessons owned by the tutor
+SQL --> API: Count
+API --> Tutor: 200 OK with completedLessonCount
+@enduml

@@ -83,3 +83,6 @@ Desktop.ini
 AGENTS.md
 /.codex/
 /.secrets/
+.agents/skills/implement-user-story/SKILL.md
+.agents/skills/sync-us-docs/SKILL.md
+.agents/skills/test-backend-feature/SKILL.md

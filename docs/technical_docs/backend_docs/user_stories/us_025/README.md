@@ -20,7 +20,7 @@ transaction. Download and lesson attachment reject deleted materials. The outbox
 the stored file and then removes its metadata, retrying storage failures on later passes.
 An already absent file counts as successful cleanup. A request after metadata removal returns `404`.
 
-[Deletion sequence](delete-learning-material.puml)
+![Learning material deletion sequence](diagrams/delete-learning-material.svg)
 
 ## Files
 

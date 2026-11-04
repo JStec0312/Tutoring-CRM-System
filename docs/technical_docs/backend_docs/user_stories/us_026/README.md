@@ -21,4 +21,7 @@ Upload and lesson attachment also require agreement membership. Deletion applies
 - [Download authorization and file streaming](../../../../../TutoringManagementSystem/Tutoring.Api/Features/LearningMaterials/DownloadLearningMaterial/)
 - [Agreement membership queries](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Common/Authorization/AgreementAccessQueries.cs)
 - [Download integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/LearningMaterials/DownloadLearningMaterial/DownloadLearningMaterialTests.cs) cover both participant roles, outsiders, unauthenticated callers, unsupported roles, and unavailable materials.
-- [Download sequence diagram](../us_024/diagrams/download_learning_material.svg)
+
+## Sequence diagram
+
+![Learning material download sequence](diagrams/download_learning_material.svg)
