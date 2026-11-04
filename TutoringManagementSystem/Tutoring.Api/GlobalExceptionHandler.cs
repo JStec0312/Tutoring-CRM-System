@@ -20,6 +20,10 @@ public sealed class GlobalExceptionHandler(
     {
         var error = exception switch
         {
+            Tutoring.Api.Features.LearningMaterials.Exceptions.MaterialDownloadFailedException downloadFailed => new ErrorDetails(
+                StatusCodes.Status500InternalServerError, "Download failed",
+                Tutoring.Api.Features.LearningMaterials.Exceptions.MaterialDownloadFailedException.Code,
+                downloadFailed.Message),
             Tutoring.Api.Features.LearningMaterials.Exceptions.MaterialUploadFailedException uploadFailed => new ErrorDetails(
                 StatusCodes.Status500InternalServerError, "Upload failed",
                 Tutoring.Api.Features.LearningMaterials.Exceptions.MaterialUploadFailedException.Code,

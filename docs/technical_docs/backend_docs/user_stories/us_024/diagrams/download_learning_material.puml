@@ -1,0 +1,24 @@
+@startuml
+actor Participant
+participant "Download endpoint" as API
+participant Handler
+database Database
+participant "File storage" as Storage
+
+Participant -> API: GET material download
+API -> Handler: Query with authenticated account
+Handler -> Database: Find available material in participant's agreement
+alt Material unavailable
+    Handler --> API: ContextNotFound
+    API --> Participant: 404 ProblemDetails
+else Material accessible
+    Handler -> Storage: Open stream using stored key
+    alt File missing
+        Handler --> API: FileNotFound
+        API --> Participant: 404 ProblemDetails
+    else File opened
+        Handler --> API: Stream and file metadata
+        API --> Participant: 200 attachment
+    end
+end
+@enduml
