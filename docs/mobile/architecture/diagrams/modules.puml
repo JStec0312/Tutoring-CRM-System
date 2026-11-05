@@ -1,0 +1,40 @@
+@startuml
+!pragma layout smetana
+title Target architecture - compile-time dependencies
+skinparam componentStyle rectangle
+skinparam shadowing false
+package app {
+  [Routes / layouts] as Routes
+  [Composition root] as Root
+}
+package features {
+  [auth workflows] as Auth
+  [lessons] as Lessons
+  [learning-materials] as Materials
+}
+package shared {
+  [UI primitives] as UI
+  [HTTP client] as Client
+  [Raw transport / DTOs] as Transport
+  [Session state] as Session
+  [Platform storage] as Storage
+}
+Routes --> Auth
+Routes --> Lessons
+Routes --> Materials
+Root --> Auth : wire refresh callback
+Root --> Client : inject callback
+Auth --> Transport : login / refresh / logout
+Auth --> Session
+Auth --> Storage
+Lessons --> Client
+Materials --> Client
+Lessons --> UI
+Materials --> UI
+Client --> Transport
+Client --> Session : token access
+note bottom of Client
+Refresh callback injected by app.
+No import from shared into features.
+end note
+@enduml

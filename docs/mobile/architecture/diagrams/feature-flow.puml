@@ -1,0 +1,41 @@
+@startuml
+title Feature flow - example: lesson list and mutation
+hide footbox
+skinparam shadowing false
+actor User
+participant "Screen / components" as UI
+participant "Feature hook / query cache" as Hook
+participant "Feature API + mapper" as API
+participant "Authenticated HTTP client" as HTTP
+participant Backend
+User -> UI : Open lessons
+UI -> Hook : Load lessons(accountId, filters)
+Hook -> API : Fetch lessons
+API -> HTTP : GET / feature endpoint
+HTTP -> Backend : Request + bearer token
+Backend --> HTTP : Response DTOs
+HTTP --> API : Response DTOs
+API -> API : DTOs -> Lesson[]
+API --> Hook : Frontend models
+Hook --> UI : Data / loading / error / empty
+UI --> User : Render
+User -> UI : Submit lesson form
+UI -> Hook : Submit form model
+Hook -> API : Validated input
+API -> API : Form model -> request DTO
+API -> HTTP : Mutation request
+HTTP -> Backend : Request + bearer token
+Backend --> HTTP : Success / structured error
+HTTP --> API : Result
+API --> Hook : Model / typed error
+alt success
+  Hook -> Hook : Update / invalidate affected queries
+  Hook --> UI : Updated data
+else validation / business error
+  Hook --> UI : Field / operation errors; retain draft
+end
+note over UI,API
+Components never depend on transport DTOs.
+Styling changes do not change this flow.
+end note
+@enduml
