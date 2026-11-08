@@ -4,17 +4,12 @@
 
 Related issue: [#161 — Frontend architecture and project structure](https://github.com/JStec0312/Tutoring-CRM-System/issues/161).
 
-**Current implementation:** [session and login walkthrough](../session/README.md) — startup, restoration, login, refresh and logout.
-
-**Earlier design example:** [application flow](application-flow.md).
-
-**Implemented foundation:** [session implementation](session-implementation.md). Business feature folders are placeholders; OpenAPI generation is not configured yet.
+**Code walkthrough:** [complete application flow](application-flow.md) — bootstrap, login, request, mapping, UI, refresh, logout.
 
 ## Structure
 
 ```text
 src/
-  bootstrap/              # composition root: wires auth, storage and HTTP client
   app/                    # routes, layouts, providers, dependency wiring
   features/
     auth/                 # login, logout, session bootstrap
