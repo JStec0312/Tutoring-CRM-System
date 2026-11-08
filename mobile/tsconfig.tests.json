@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "CommonJS", "moduleResolution": "Node",
+    "ignoreDeprecations": "6.0", "strict": true, "esModuleInterop": true,
+    "lib": ["ES2022", "DOM"], "types": ["node"], "skipLibCheck": true,
+    "rootDir": "src", "outDir": ".test-build"
+  },
+  "include": ["src/bootstrap/api-origin.ts", "src/shared/api/api-client.ts", "src/shared/api/transport.ts", "src/features/auth/models/auth-controller.ts"]
+}

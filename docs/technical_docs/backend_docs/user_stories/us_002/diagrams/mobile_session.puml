@@ -1,0 +1,31 @@
+@startuml
+title Native session transport
+hide footbox
+participant "Mobile auth controller" as Client
+database "Secure OS storage" as Store
+participant "Mobile API controller" as API
+participant "Existing auth handler" as Handler
+database "SQL Server" as DB
+Client -> API : POST /api/auth/mobile/login\nemail + password
+API -> Handler : LoginCommand + request metadata
+Handler -> DB : Save refresh token hash + family
+Handler --> API : Token pair + expiry
+API --> Client : JSON; no-store; no cookie
+Client -> Store : Persist refresh token
+note over Client : Access token stays in memory
+Client -> Store : Read refresh token on restart / expiry
+Store --> Client : Refresh token
+Client -> API : POST /api/auth/mobile/refresh\nrefreshToken JSON
+API -> Handler : RefreshTokenCommand
+Handler -> DB : Validate; revoke old token; save replacement
+Handler --> API : Rotated token pair
+API --> Client : JSON; no-store
+Client -> Store : Replace refresh token before publishing session
+Client -> Store : Read latest refresh token for logout
+Store --> Client : Captured credential
+Client -> Store : Delete local credential; clear in-memory session
+Client -> API : POST /api/auth/mobile/sign-out\nrefreshToken JSON
+API -> Handler : SignOutCommand
+Handler -> DB : Revoke presented token if active
+API --> Client : 204
+@enduml

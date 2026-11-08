@@ -1,0 +1,31 @@
+@startuml
+title Tab A does not know tab B — the browser forwards the event
+hide footbox
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName SansSerif
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #DBEAFE
+skinparam ParticipantBorderColor #93C5FD
+skinparam ArrowColor #475569
+participant "Tab A\nOwn session store" as A
+database "Browser\nlocalStorage + event delivery" as Browser
+participant "Tab B\nOwn session store" as B
+B -> B : Provider calls session.subscribeToChanges()\nRegister window storage listener
+... User signs out in A ...
+A -> A : Controller clears local session\nController announces SignedOut
+A -> Browser : setItem(session event,\n{event: signed-out, nonce: ...})
+Browser -> B : storage event
+B -> B : Check key, parse message\nValidate event name
+B -> B : externalSessionChanged(true)\nClear local session; block restoration
+note over A,B
+The sender gets no storage event from its own write.
+The message contains no credentials.
+Only other listening documents sharing this storage area participate.
+end note
+note over Browser,B
+Same origin = same scheme, host and port.
+No cross-device or cross-profile delivery.
+No replay of missed events; storage writes can fail.
+end note
+@enduml

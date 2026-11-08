@@ -1,0 +1,45 @@
+@startuml
+title Logout — immediate local change, then credential cleanup
+hide footbox
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName SansSerif
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #DBEAFE
+skinparam ParticipantBorderColor #93C5FD
+skinparam ArrowColor #475569
+actor User
+participant "Auth controller" as Auth
+participant "Session store" as Store
+database "Storage adapter" as Storage
+participant Backend
+User -> Auth : signOut()
+Auth -> Store : clear() immediately
+Store -> Store : Advance generation\nAnonymous state blocks protected work
+Store --> User : Protected workspace unavailable
+Auth -> Auth : Wait for earlier auth operations
+Auth -> Storage : Attempt pending = true
+Auth -> Storage : Read refresh token\nDelete saved native token in finally
+note over Auth,Storage
+Web: read returns null; delete is a no-op.
+Backend request uses the HttpOnly cookie.
+Storage failure can leave cleanup/revocation unconfirmed.
+end note
+alt Credential read / deletion succeeded
+  Auth -> Backend : Logout (native token / web cookie)
+  alt Server success AND marker write succeeded
+    Backend --> Auth : Success
+    Auth -> Storage : Remove pending marker
+  else Network / server failure OR earlier marker error
+    Auth -> Store : reportError(revocation unconfirmed)
+    note over Auth,Storage : Saved pending marker remains if not removed.
+  end
+else Credential read / deletion failed
+  Auth -> Store : reportError(revocation unconfirmed)
+end
+note over User,Storage
+App stays locally signed out on failure.
+A saved pending marker blocks restoration on next startup.
+No automatic logout retry worker is implemented.
+end note
+@enduml

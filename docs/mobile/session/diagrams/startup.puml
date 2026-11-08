@@ -1,0 +1,48 @@
+@startuml
+title Opening the app and signing in
+hide footbox
+skinparam backgroundColor #F8FAFC
+skinparam defaultFontName SansSerif
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #DBEAFE
+skinparam ParticipantBorderColor #93C5FD
+skinparam ArrowColor #475569
+participant "Provider / screen" as UI
+participant "Auth controller" as Auth
+database "Storage adapter" as Storage
+participant Backend
+participant "Session store" as Store
+UI -> Auth : restoreSession()
+Auth -> Store : restoring()
+Auth -> Storage : Check pending marker\nand native refresh token
+alt Pending logout OR missing native refresh token
+  Auth -> Store : clear() -> Anonymous
+else May attempt restoration
+  Auth -> Backend : Refresh (native token / web cookie)
+  alt Refresh succeeds
+    Backend --> Auth : Session data
+    Auth -> Storage : Save rotated native refresh token, if present
+    Auth -> Store : commit() -> Authenticated
+  else Refresh rejected (401) or response malformed
+    Auth -> Store : clear() -> Anonymous
+    Auth -> Storage : Mark pending; delete native credential
+  else Temporary refresh failure
+    Auth -> Store : restoreFailed() if generation still current
+    note over UI,Store : Session gate shows an error and retry button.
+  end
+end
+opt User explicitly signs in
+  UI -> Auth : signIn(email, password)
+  Auth -> Store : clear(); remember generation
+  Auth -> Backend : Login
+  Backend --> Auth : Successful session response
+  Auth -> Storage : Save native refresh token, if present\nClear pending marker
+  Auth -> Store : commit() if generation still current
+  Store --> UI : Notify subscribers -> authenticated UI
+end
+note over Auth,Backend
+Auth operations are serialized.
+Diagram assumes API URL is configured.
+end note
+@enduml

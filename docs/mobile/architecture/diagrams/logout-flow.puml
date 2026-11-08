@@ -1,0 +1,41 @@
+@startuml
+title Logout - local cleanup and server revocation
+hide footbox
+skinparam shadowing false
+actor User
+participant "Auth workflow" as Auth
+participant "Session / HTTP client" as Session
+participant "Platform storage" as Storage
+participant "Private query cache" as Cache
+participant Backend
+User -> Auth : Sign out
+Auth -> Session : Increment generation; block protected requests
+Auth -> Storage : Capture revocation credentials;
+Auth -> Storage : mark logout pending
+Auth -> Session : Clear token + identity; abort obsolete requests
+Auth -> Cache : Cancel queries; remove private data
+Auth -> Storage : Delete native stored refresh token
+Auth -> Backend : POST /api/auth/sign-out
+note over Auth,Backend
+Web: existing HttpOnly cookie.
+Native: captured credential; proposed contract.
+end note
+alt server logout succeeds
+  Backend -> Backend : Revoke refresh token
+  Backend --> Auth : 204; delete web refresh cookie
+  Auth -> Storage : Clear pending-logout marker
+  Auth --> User : Signed out
+else network / server failure
+  Backend --> Auth : Failure
+  Auth --> User : Locally signed out; server revocation unconfirmed
+  note over Auth,Storage
+Web cookie may remain: pending logout prevents
+automatic bootstrap until retry or explicit login.
+Native credentials stay deleted.
+end note
+end
+note over Session,Cache
+Late responses from the old generation are ignored.
+Already issued JWTs remain valid until expiry.
+end note
+@enduml
