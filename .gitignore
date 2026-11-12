@@ -79,6 +79,16 @@ Desktop.ini
 # env
 *.env
 
+# Mobile Expo workspace
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
+/mobile/.test-build/
+/mobile/android/
+/mobile/ios/
+/mobile/expo-env.d.ts
+/mobile/.env.*
+!/mobile/.env.example
 
 AGENTS.md
 /.codex/

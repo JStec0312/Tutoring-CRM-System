@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    "expo-secure-store",
+    "expo-router",
+    "expo-status-bar"
+  ],
+  "android": {
+    "package": "com.anonymous.mobile"
+  }
+}
