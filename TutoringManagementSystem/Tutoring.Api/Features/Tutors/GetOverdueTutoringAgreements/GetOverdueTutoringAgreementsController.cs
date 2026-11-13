@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Tutors.GetOverdueTutoringAgreements;
 
 [ApiController]
-[Authorize(Roles = "Tutor")]
+[Authorize(Roles = nameof(UserRole.Tutor))]
 [Route("api/tutors/tutoring-agreements")]
 public sealed class GetOverdueTutoringAgreementsController(
     ISender sender,

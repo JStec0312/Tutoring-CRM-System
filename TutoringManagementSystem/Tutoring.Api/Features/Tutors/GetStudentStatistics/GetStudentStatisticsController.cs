@@ -8,7 +8,7 @@ using Tutoring.Domain.Students;
 namespace Tutoring.Api.Features.Tutors.GetStudentStatistics;
 
 [ApiController]
-[Authorize(Roles = "Tutor")]
+[Authorize(Roles = nameof(UserRole.Tutor))]
 [Route("api/tutors/me/students")]
 public sealed class GetStudentStatisticsController(ISender sender) : ControllerBase
 {

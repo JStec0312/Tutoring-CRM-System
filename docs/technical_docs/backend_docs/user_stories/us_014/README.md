@@ -4,7 +4,7 @@
 
 ## Scope
 
-An authenticated tutor can retrieve the lesson history for a specific student through a tutor-owned tutor–student relationship represented by `TutoringAgreement`.
+An authenticated tutor can retrieve the lesson history for a specific student through a tutor-owned tutor-student relationship represented by `TutoringAgreement`.
 
 The endpoint returns lessons whose `StartsAtUtc` is before the current UTC time. Results are ordered from newest to oldest and include lessons from all agreements between the authenticated tutor and the student. Future lessons are excluded. An ended agreement does not remove its existing lessons from the history, and a valid relationship with no historical lessons returns `200 OK` with an empty collection.
 
@@ -57,7 +57,7 @@ Each item is a `StudentLessonHistoryResponse` containing:
 
 ## Implementation
 
-- `GetStudentLessonHistoryController` is restricted to the `Tutor` role by `[Authorize(Roles = "Tutor")]`.
+- `GetStudentLessonHistoryController` is restricted to the `Tutor` role by `[Authorize(Roles = nameof(UserRole.Tutor))]`.
 - The controller reads `sub` from the JWT, creates `RequestMetadata` containing the request IP, user agent, and trace identifier, and sends `GetStudentLessonHistoryQuery` through MediatR. An unparseable `sub` returns `401 Unauthorized`.
 - `GetStudentLessonHistoryHandler` resolves the `Tutor` by `UserAccountId`. A missing tutor raises `TutorNotFoundException`.
 - Ownership is checked with `TutorId + StudentId` against `TutoringAgreement`. Missing ownership or a student without a matching agreement raises `TutoringAgreementNotFoundException`, which is exposed as `404 Not Found`.
@@ -77,7 +77,7 @@ Each item is a `StudentLessonHistoryResponse` containing:
 | Tutor record cannot be resolved from `sub` | `404 Not Found` | `Tutors.NotFound` |
 | Student does not exist or has no agreement with the tutor | `404 Not Found` | `TutoringAgreements.NotFound` |
 | Student belongs to another tutor | `404 Not Found` | `TutoringAgreements.NotFound` |
-| Valid tutor–student relationship with no historical lessons | `200 OK` | — |
+| Valid tutor-student relationship with no historical lessons | `200 OK` | - |
 
 `GlobalExceptionHandler` maps `NotFoundException` to `404` and includes the exception code in the Problem Details `code` extension.
 

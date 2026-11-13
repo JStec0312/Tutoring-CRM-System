@@ -134,7 +134,7 @@ public sealed class AttachLearningMaterialToLessonTests(IntegrationTestFixture f
     private string Token(string kind)
     {
         var options = Fixture.Services.GetRequiredService<IOptions<JwtOptions>>().Value;
-        var claims = new List<Claim> { new("role", kind == "parent" ? "Parent" : "Tutor") };
+        var claims = new List<Claim> { new("role", kind == "parent" ? "Parent" : nameof(UserRole.Tutor)) };
         if (kind != "missing") claims.Add(new Claim("sub", kind switch { "invalid" => "invalid", "empty" => Guid.Empty.ToString(), _ => Guid.NewGuid().ToString() }));
         return new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {

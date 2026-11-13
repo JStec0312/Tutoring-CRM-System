@@ -8,7 +8,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Students.AcceptStudentInvitation;
 
 [ApiController]
-[Authorize(Roles = "Student")]
+[Authorize(Roles = nameof(UserRole.Student))]
 [Route("api/student-invitations")]
 public sealed class AcceptStudentInvitationController(
     ISender sender,

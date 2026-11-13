@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Tutors.ScheduleLesson;
 
 [ApiController]
-[Authorize(Roles = "Tutor")]
+[Authorize(Roles = nameof(UserRole.Tutor))]
 [Route("api/tutors/me/lessons")]
 public sealed class ScheduleLessonController(
     ISender sender,

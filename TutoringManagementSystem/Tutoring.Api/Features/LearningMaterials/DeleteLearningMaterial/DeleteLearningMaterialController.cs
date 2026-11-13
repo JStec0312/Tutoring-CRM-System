@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.LearningMaterials.DeleteLearningMaterial;
 
 [ApiController]
-[Authorize(Roles = "Tutor,Student")]
+[Authorize(Roles = nameof(UserRole.Tutor) + "," + nameof(UserRole.Student))]
 [Route("api/learning-materials")]
 public sealed class DeleteLearningMaterialController(ISender sender) : ControllerBase
 {
@@ -20,7 +20,7 @@ public sealed class DeleteLearningMaterialController(ISender sender) : Controlle
         var metadata = new RequestMetadata(HttpContext.Connection.RemoteIpAddress?.ToString(),
             Request.Headers.UserAgent.ToString(), HttpContext.TraceIdentifier);
         await sender.Send(new DeleteLearningMaterialCommand(
-            new UserAccountId(accountId), materialId, User.IsInRole("Tutor"), metadata), cancellationToken);
+            new UserAccountId(accountId), materialId, User.IsInRole(nameof(UserRole.Tutor)), metadata), cancellationToken);
         return NoContent();
     }
 }

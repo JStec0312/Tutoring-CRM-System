@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.LearningMaterials.UploadLearningMaterial;
 
 [ApiController]
-[Authorize(Roles = "Tutor,Student")]
+[Authorize(Roles = nameof(UserRole.Tutor) + "," + nameof(UserRole.Student))]
 [Route("api/learning-materials")]
 public sealed class UploadLearningMaterialController(ISender sender) : ControllerBase
 {

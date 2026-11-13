@@ -6,7 +6,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Tutors.GetAssignedStudents;
 
 [ApiController]
-[Authorize(Roles = "Tutor")]
+[Authorize(Roles = nameof(UserRole.Tutor))]
 [Route("api/tutors/me/students")]
 public sealed class GetAssignedStudentsController(
     ISender sender)

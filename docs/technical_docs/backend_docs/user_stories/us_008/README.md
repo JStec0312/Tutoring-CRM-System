@@ -1,4 +1,4 @@
-# US-008 — Update tutoring agreement status
+# US-008 - Update tutoring agreement status
 
 > As a tutor, I want to mark a tutoring agreement with a student as active or inactive so that I can manage whether that specific teaching relationship is currently active.
 
@@ -30,7 +30,7 @@ Request body:
 ## Implementation
 
 - `UpdateTutoringAgreementStatusController` reads the current user from the `sub` claim and rejects invalid or missing values with `401 Unauthorized`.
-- The controller is guarded by `[Authorize(Roles = "Tutor")]`, so callers without the `Tutor` role receive `403 Forbidden`.
+- The controller is guarded by `[Authorize(Roles = nameof(UserRole.Tutor))]`, so callers without the `Tutor` role receive `403 Forbidden`.
 - `UpdateTutoringAgreementStatusHandler` resolves the authenticated tutor by `UserAccountId` and then loads the target agreement by `TutoringAgreementId`, `TutorId == current tutor Id`, and `Status != AgreementStatus.Ended`.
 - If the tutor account is missing, the handler throws `TutorNotFoundException` and the API returns `404 Not Found`.
 - If the agreement is missing, belongs to another tutor, or is already `Ended`, the handler throws `TutoringAgreementNotFoundByIdException`, which is surfaced as `404 Not Found`.
