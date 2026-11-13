@@ -1,8 +1,3 @@
-import { SessionEventValue } from './session-sync-types';
-export { SessionEvent } from './session-sync-types';
+import type { SessionSync } from "./session-types";
 
-// Native has no browser tabs; keep the same interface without cross-tab work.
-export const sessionSync = {
-  publish(_event: SessionEventValue) {},
-  subscribe(_listener: (event: SessionEventValue) => void) { return () => {}; },
-};
+export const sessionSync: SessionSync | undefined = undefined;

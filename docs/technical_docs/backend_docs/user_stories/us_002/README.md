@@ -45,6 +45,8 @@ Native clients use separate JSON endpoints below; their refresh tokens are store
 
 Native code: [MobileLogin](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/MobileLogin/), [MobileRefreshToken](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/MobileRefreshToken/), [MobileSignOut](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/MobileSignOut/). Tests: [MobileSessionTests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/Mobile/MobileSessionTests.cs).
 
+The [mobile auth documentation](../../../../mobile/auth/README.md) describes protected request replay after `401`, session invalidation and web tab synchronization.
+
 ## Tests
 
 `Tutoring.IntegrationTests`: login with valid/invalid credentials and inactive accounts, refresh rotation/reuse detection/invalid-token rejection, and sign-out/sign-out-all cookie and revocation behavior.

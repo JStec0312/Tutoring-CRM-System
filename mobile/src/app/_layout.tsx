@@ -1,51 +1,106 @@
-import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { api, session } from '@/bootstrap/runtime';
-import { SessionGate } from '@/features/auth';
-import { ApiProvider } from '@/shared/api/api-context';
-import { RouteName } from '@/shared/config/navigation';
-import { SessionProvider, useSession } from '@/shared/session/session-context';
-import { SessionStatus } from '@/shared/session/session-types';
-import { Colors } from '@/shared/theme/theme';
+import { Stack } from "expo-router";
+import { useMemo, useState, type PropsWithChildren } from "react";
+import { Platform } from "react-native";
 
-void SplashScreen.preventAutoHideAsync().catch(() => undefined);
+import {
+  AuthProvider,
+  useAuth,
+  useSessionManager,
+} from "@/shared/session/AuthProvider";
 
-const navigationTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: Colors.light.background,
-    text: Colors.light.text,
-  },
-};
+import { createApiClient } from "@/shared/api/api-client";
+import { ApiProvider } from "@/shared/api/api-context";
 
-function SessionRoutes() {
-  const { status, isLoggedIn } = useSession();
-  const waiting = status === SessionStatus.Restoring || status === SessionStatus.RestoreError;
-  useEffect(() => {
-    if (status !== SessionStatus.Restoring) void SplashScreen.hideAsync();
-  }, [status]);
-  if (waiting) return <SessionGate />;
+import { refreshTokenStorage } from "@/shared/session/refresh-token-storage";
+import { createSessionApi } from "@/shared/session/session-api";
+import { withSessionLock } from "@/shared/session/session-lock";
+import { createSessionManager } from "@/shared/session/session-manager";
+import { sessionSync } from "@/shared/session/session-sync";
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+
+const credentials = Platform.OS === "web" ? "include" : "omit";
+
+// Tworzymy zależności sesji.
+function createSession() {
+  const authHttp = createApiClient({
+    baseUrl: BASE_URL,
+    credentials,
+  });
+
+  const sessionApi = createSessionApi(
+    authHttp,
+    Platform.OS === "web" ? "web" : "native",
+  );
+
+  return createSessionManager({
+    api: sessionApi,
+    storage: refreshTokenStorage,
+    exclusive: withSessionLock,
+    sync: sessionSync,
+  });
+}
+
+// Łączymy SessionManager z klientem HTTP.
+function ApiBridge({ children }: PropsWithChildren) {
+  const manager = useSessionManager();
+
+  const api = useMemo(
+    () =>
+      createApiClient({
+        baseUrl: BASE_URL,
+        credentials,
+        session: manager,
+      }),
+    [manager],
+  );
+
+  return <ApiProvider client={api}>{children}</ApiProvider>;
+}
+
+// Decydujemy, które grupy tras są dostępne.
+function AppNavigator() {
+  const { status } = useAuth();
+  const restoring = status === "restoring" || status === "restore-error";
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!isLoggedIn}><Stack.Screen name={RouteName.SignIn} /></Stack.Protected>
-      <Stack.Protected guard={isLoggedIn}><Stack.Screen name={RouteName.Workspace} /></Stack.Protected>
+      <Stack.Protected
+        guard={status === "authenticated"}
+        redirectTo={restoring ? "/session-status" : "/sign-in"}
+      >
+        <Stack.Screen name="(app)" />
+      </Stack.Protected>
+
+      <Stack.Protected
+        guard={status === "anonymous"}
+        redirectTo={restoring ? "/session-status" : "/"}
+      >
+        <Stack.Screen name="(auth)/sign-in" />
+        <Stack.Screen name="(auth)/register" />
+      </Stack.Protected>
+
+      <Stack.Protected
+        guard={restoring}
+        redirectTo={status === "authenticated" ? "/" : "/sign-in"}
+      >
+        <Stack.Screen name="session-status" />
+      </Stack.Protected>
+
+      <Stack.Screen name="(auth)/forgot-password" />
+      <Stack.Screen name="(auth)/reset-password" />
     </Stack>
   );
 }
 
 export default function RootLayout() {
+  const [manager] = useState(createSession);
+
   return (
-    <SafeAreaProvider style={{ backgroundColor: Colors.light.background }}>
-      <StatusBar style="dark" />
-      <ThemeProvider value={navigationTheme}>
-        <SessionProvider session={session}>
-          <ApiProvider client={api}><SessionRoutes /></ApiProvider>
-        </SessionProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <AuthProvider manager={manager}>
+      <ApiBridge>
+        <AppNavigator />
+      </ApiBridge>
+    </AuthProvider>
   );
 }

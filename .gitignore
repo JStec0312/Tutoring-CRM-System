@@ -79,6 +79,16 @@ Desktop.ini
 # env
 *.env
 
+# Mobile Expo workspace
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
+/mobile/.test-build/
+/mobile/android/
+/mobile/ios/
+/mobile/expo-env.d.ts
+/mobile/.env.*
+!/mobile/.env.example
 
 AGENTS.md
 /.codex/
@@ -86,3 +96,4 @@ AGENTS.md
 .agents/skills/implement-user-story/SKILL.md
 .agents/skills/sync-us-docs/SKILL.md
 .agents/skills/test-backend-feature/SKILL.md
+.agents/

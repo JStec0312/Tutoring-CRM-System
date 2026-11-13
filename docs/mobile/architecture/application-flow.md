@@ -1,8 +1,6 @@
 # Application flow in code
 
-For current names and behavior, use the [implemented session and login guide](../session/README.md). The code below is an earlier design example.
-
-**Design example, not production implementation.** Read sections in order; identifiers continue between blocks. Example: web client using the refresh-cookie contract. UI rendering is a port, independent of styling/framework. The implemented native contract and secure-storage adapter are linked in [session implementation](session-implementation.md).
+**Design example, not production implementation.** Read sections in order; identifiers continue between blocks. Example: web client using the existing refresh-cookie contract. UI rendering is a port, independent of styling/framework. Native replaces auth transport with a secure-storage adapter after the backend contract is added.
 
 ## 1. Contracts and state — `shared/session`
 
