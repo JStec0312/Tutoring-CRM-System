@@ -1,0 +1,18 @@
+@startuml
+actor Tutor
+participant "Statistics endpoint" as API
+participant "GetStudentStatisticsHandler" as Handler
+database "SQL Server" as DB
+Tutor -> API: GET student statistics (from, to)
+API -> Handler: GetStudentStatisticsQuery
+Handler -> DB: Check tutor and owned agreements
+alt No owned agreement
+    Handler --> API: TutoringAgreements.NotFound
+    API --> Tutor: 404
+else Owned agreement
+    Handler -> DB: Aggregate lessons by status and cancellation party
+    Handler -> DB: Aggregate active lesson charges by currency
+    Handler --> API: Lessons, attendance, payments
+    API --> Tutor: 200 OK
+end
+@enduml

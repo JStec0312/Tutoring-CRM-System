@@ -1,0 +1,15 @@
+@startuml
+actor Tutor
+participant "Tutors API" as API
+database "SQL Server" as SQL
+Tutor -> API: PUT /api/tutors/me/lessons/{lessonId}/note
+API -> SQL: Find the tutor's lesson and its note
+alt Owned lesson and valid fields
+    API -> SQL: Insert or update the lesson note
+    API --> Tutor: 204 No Content
+else Missing or inaccessible lesson
+    API --> Tutor: 404 Not Found
+else Invalid fields
+    API --> Tutor: 422 Unprocessable Entity
+end
+@enduml

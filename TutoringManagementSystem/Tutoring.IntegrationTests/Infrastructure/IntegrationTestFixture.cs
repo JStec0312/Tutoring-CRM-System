@@ -32,6 +32,10 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
 
     public IServiceProvider Services => _factory.Services;
 
+    public WebApplicationFactory<Program> WithTimeProvider(TimeProvider timeProvider) =>
+        _factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.Replace(ServiceDescriptor.Singleton(timeProvider))));
+
     public async Task InitializeAsync()
     {
         //  sql server container start

@@ -1,0 +1,14 @@
+@startuml
+actor Tutor
+participant API
+participant GetTotalTeachingTimeHandler as Handler
+database SQLServer as DB
+
+Tutor -> API: GET /api/tutors/me/lessons/total-teaching-time
+API -> Handler: Query(authenticated tutor account ID)
+Handler -> DB: Select start and end of owned completed lessons
+DB --> Handler: Lesson time slots
+Handler -> Handler: Sum durations in seconds
+Handler --> API: TotalTeachingTimeResponse
+API --> Tutor: 200 OK (totalTeachingSeconds)
+@enduml

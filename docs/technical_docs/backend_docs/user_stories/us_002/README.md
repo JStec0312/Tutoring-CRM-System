@@ -6,6 +6,8 @@
 
 An active user logs in with email/password and receives a JWT access token plus an `HttpOnly` refresh-token cookie. The refresh endpoint rotates the token and issues a new access token. Sign-out revokes the current refresh token (or all of a user's active tokens) and clears the cookie.
 
+Native clients use separate JSON endpoints below; their refresh tokens are stored in the device secure store. Both transports reuse the same handlers and token-family rules.
+
 ## FILES
 
 - Implementation: [Login](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login/), [RefreshToken](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RefreshToken/), [SignOut](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOut/), [SignOutAll](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOutAll/)
@@ -19,6 +21,9 @@ An active user logs in with email/password and receives a JWT access token plus 
 | POST | `/api/auth/refresh` | Refresh-token cookie | Rotates the refresh token, returns a new access token, replaces the cookie. |
 | POST | `/api/auth/sign-out` | Anonymous (cookie-based) | Revokes the presented refresh token when active and deletes the cookie. |
 | POST | `/api/auth/sign-out-all` | JWT | Revokes all active refresh tokens for the authenticated account and deletes the cookie. |
+| POST | `/api/auth/mobile/login` | Email/password JSON | Returns `accessToken`, `expiresAt`, `refreshToken`, `refreshTokenExpiresAt`; no cookie. |
+| POST | `/api/auth/mobile/refresh` | `{ "refreshToken": "..." }` JSON | Returns rotated token pair; no cookie fallback. |
+| POST | `/api/auth/mobile/sign-out` | `{ "refreshToken": "..." }` JSON | Idempotent revocation of the presented token; returns `204`. |
 
 ## Implementation
 
@@ -27,7 +32,8 @@ An active user logs in with email/password and receives a JWT access token plus 
 - Refresh tokens form a rotation family: a valid refresh call revokes the old token (`ReplacedByTokenId`) and issues a new one in the same family; a revoked/expired token being reused revokes the rest of the family (reuse detection) before rejecting with `401`.
 - Refresh rejects a missing cookie, unknown token, or an inactive/missing account.
 - Sign-out is idempotent for a missing, unknown, or already-revoked cookie token; sign-out-all revokes every active refresh token for the authenticated account.
-- The raw refresh token is only ever sent through the configured `HttpOnly` cookie; only its hash is persisted.
+- Web responses keep the refresh token in the configured `HttpOnly` cookie. Native responses carry it in JSON with `Cache-Control: no-store`; only its hash is persisted server-side. Use HTTPS in production; never log/store raw tokens outside device secure storage.
+- Mobile login shares existing invalid-credentials/inactive-account errors. Mobile refresh returns `401 Auth.InvalidRefreshToken` for empty, unknown, expired/reused tokens or inactive accounts. Missing required JSON fields return `400`; missing JSON content type/body may return `415`. Access-token validity is unaffected by refresh revocation until JWT expiry.
 
 ## Diagram
 
@@ -35,6 +41,12 @@ An active user logs in with email/password and receives a JWT access token plus 
 
 ![Refresh token rotation](diagrams/refresh_token.svg)
 
+![Native session](diagrams/mobile_session.svg)
+
+Native code: [MobileLogin](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/MobileLogin/), [MobileRefreshToken](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/MobileRefreshToken/), [MobileSignOut](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/MobileSignOut/). Tests: [MobileSessionTests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/Mobile/MobileSessionTests.cs).
+
 ## Tests
 
 `Tutoring.IntegrationTests`: login with valid/invalid credentials and inactive accounts, refresh rotation/reuse detection/invalid-token rejection, and sign-out/sign-out-all cookie and revocation behavior.
+
+Native coverage adds JSON/no-cookie transport, no-store response, persisted hash, rotation/family revocation, session-isolated idempotent logout, invalid/expired tokens, inactive accounts, missing body and unchanged web response shape.

@@ -40,6 +40,18 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+const string expoDevelopmentCors = "ExpoDevelopment";
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+        options.AddPolicy(expoDevelopmentCors, policy =>
+            policy.WithOrigins("http://localhost:8081", "http://127.0.0.1:8081")
+                .WithMethods("GET", "POST", "PUT", "DELETE")
+                .WithHeaders("Authorization", "Content-Type")
+                .WithExposedHeaders("Content-Disposition")
+                .AllowCredentials()));
+}
+
 builder.Services.AddInfrastructure(builder.Configuration);
 
 if (!builder.Environment.IsEnvironment("IntegrationTests"))
@@ -76,6 +88,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    app.UseCors(expoDevelopmentCors);
 }
 
 app.UseHttpsRedirection();
