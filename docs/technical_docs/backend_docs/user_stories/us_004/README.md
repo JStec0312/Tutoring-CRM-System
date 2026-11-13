@@ -23,8 +23,9 @@ An authenticated user can update their username, first/last name, and phone numb
 - `UpdateProfileRequest` fields are all optional; unspecified fields keep their current value, and username/phone are checked for uniqueness against other accounts before saving.
 - `RequestPasswordResetHandler` invalidates a user's other active reset tokens and creates a new one, saved with a `PasswordResetRequested` outbox event in the same transaction. It responds identically for unknown emails and inactive accounts to avoid leaking account existence.
 - The outbox/RabbitMQ/email pipeline mirrors registration: `OutboxProcessor` → RabbitMQ → `EmailConsumer` → `EmailEventDispatcher` → `SmtpMailer`.
+- The email handler reads the frontend page URL from `PasswordReset:ResetUrl` and appends the encoded token. The local default targets Expo Web at `http://localhost:8081/reset-password`. Override it with `PasswordReset__ResetUrl` when deploying.
 - `ResetPasswordHandler` validates the token hash, enforces the password policy, then changes the password, marks the token used, revokes all of the user's active refresh tokens (forces re-login everywhere), and invalidates the user's other active reset tokens.
-- Invalid, expired, or already-used reset tokens return `401 InvalidPasswordResetToken`.
+- Invalid, expired, or already-used reset tokens return `401 Auth.InvalidPasswordResetToken`.
 
 ## Diagram
 
@@ -34,4 +35,4 @@ An authenticated user can update their username, first/last name, and phone numb
 
 ## Tests
 
-`Tutoring.IntegrationTests`: profile update requiring authentication, successful update, username/phone conflicts; password-reset request token/outbox creation and inactive/unknown-account handling; password reset with valid/used/unknown/expired/invalidated tokens, policy violations, and refresh-token/reset-token invalidation side effects.
+`Tutoring.IntegrationTests`: profile update requiring authentication, successful update, username/phone conflicts; password-reset request token/outbox creation, the configured URL in the rendered email, and inactive/unknown-account handling; password reset with valid/used/unknown/expired/invalidated tokens, policy violations, and refresh-token/reset-token invalidation side effects.

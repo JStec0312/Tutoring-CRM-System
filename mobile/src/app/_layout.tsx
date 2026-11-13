@@ -70,14 +70,7 @@ function AppNavigator() {
 
       <Stack.Protected guard={status === "anonymous"}>
         <Stack.Screen name="(auth)/sign-in" />
-        <Stack.Screen
-          name="(auth)/register"
-          options={{ headerShown: true, title: "Rejestracja" }}
-        />
-        <Stack.Screen
-          name="(auth)/forgot-password"
-          options={{ headerShown: true, title: "Odzyskiwanie hasła" }}
-        />
+        <Stack.Screen name="(auth)/register" />
       </Stack.Protected>
 
       <Stack.Protected
@@ -85,6 +78,8 @@ function AppNavigator() {
       >
         <Stack.Screen name="session-status" />
       </Stack.Protected>
+      <Stack.Screen name="(auth)/forgot-password" />
+      <Stack.Screen name="(auth)/reset-password" />
     </Stack>
   );
 }

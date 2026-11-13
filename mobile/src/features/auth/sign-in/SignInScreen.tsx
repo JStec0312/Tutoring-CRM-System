@@ -1,106 +1,72 @@
-import { useRef, useState } from "react";
-import { ActivityIndicator, Button, Text, TextInput, View } from "react-native";
-
-import { ApiError } from "@/shared/api/api-error";
-import { useAuth } from "@/shared/session/AuthProvider";
 import { Link } from "expo-router";
+import { useRef, useState } from "react";
+import { Text, View } from "react-native";
 
-function getSignInError(error: unknown): string {
-  if (error instanceof ApiError) {
-    switch (error.code) {
-      case "Auth.InvalidCredentials":
-        return "Nieprawidłowy email lub hasło.";
-
-      case "Auth.InactiveAccount":
-        return "Konto jest nieaktywne.";
-
-      case "Network.Unavailable":
-        return "Nie można połączyć się z serwerem.";
-    }
-  }
-
-  return "Nie udało się zalogować. Spróbuj ponownie.";
-}
+import { useAuth } from "@/shared/session/AuthProvider";
+import { FormField, FormScreen, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
+import { getSignInError } from "./sign-in-error";
 
 export function SignInScreen() {
   const { signIn } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const submitting = useRef(false);
 
   async function handleSignIn() {
     if (submitting.current) return;
 
     if (!email.trim() || !password) {
-      setError("Podaj email i hasło.");
+      setError("Podaj adres e-mail i hasło.");
       return;
     }
 
     submitting.current = true;
-    setLoading(true);
+    setPending(true);
     setError(null);
-
     try {
-      await signIn({
-        email: email.trim(),
-        password,
-      });
+      await signIn({ email: email.trim(), password });
     } catch (err) {
       setError(getSignInError(err));
     } finally {
       submitting.current = false;
-      setLoading(false);
+      setPending(false);
     }
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        padding: 24,
-        gap: 12,
-      }}
-    >
-      <Text>Logowanie</Text>
-
-      <TextInput
-        placeholder="Email"
+    <FormScreen title="Zaloguj się">
+      <FormField
+        label="Adres e-mail"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
         autoComplete="email"
-        editable={!loading}
-        style={{ borderWidth: 1, padding: 10 }}
+        editable={!pending}
       />
-
-      <TextInput
-        placeholder="Hasło"
+      <FormField
+        label="Hasło"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
         autoComplete="current-password"
-        editable={!loading}
-        style={{ borderWidth: 1, padding: 10 }}
+        returnKeyType="go"
+        onSubmitEditing={handleSignIn}
+        editable={!pending}
       />
-
       {error && (
-        <Text accessibilityRole="alert" style={{ color: "red" }}>
-          {error}
-        </Text>
+        <Text accessibilityRole="alert" style={formStyles.error}>{error}</Text>
       )}
-
-      <Button title="Zaloguj się" onPress={handleSignIn} disabled={loading} />
-      <Link href="/register">Utwórz konto</Link>
-      <Link href="/forgot-password">Nie pamiętam hasła</Link>
-
-      {loading && <ActivityIndicator />}
-    </View>
+      <FormSubmit label="Zaloguj się" pending={pending} onPress={handleSignIn} />
+      {!pending && (
+        <View>
+          <Link href="/forgot-password" style={formStyles.link}>Nie pamiętam hasła</Link>
+          <Link href="/register" style={formStyles.link}>Utwórz konto</Link>
+        </View>
+      )}
+    </FormScreen>
   );
 }

@@ -1,6 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Mailing;
+using Tutoring.Infrastructure.Mailing.Handlers;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.RequestPasswordReset;
@@ -66,6 +72,27 @@ public sealed class RequestPasswordResetTests(
         Assert.Equal(account.Id.Value, resetEvent.UserId);
         Assert.Equal(email, resetEvent.Email);
         Assert.False(string.IsNullOrWhiteSpace(resetEvent.ResetToken));
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_WithActiveUser_ShouldRenderLinkToConfiguredFrontend()
+    {
+        const string email = "student@test.pl";
+        await RegisterAndConfirmStudentAsync(email, "Password123!");
+        var response = await RequestPasswordResetAsync(email);
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var resetEvent = await GetPasswordResetEventAsync(email);
+        var mailer = new CapturingMailer();
+        var options = Fixture.Services.GetRequiredService<IOptions<PasswordResetOptions>>();
+        var handler = new PasswordResetRequestedEmailHandler(mailer, options);
+
+        await handler.HandleAsync(JsonSerializer.Serialize(resetEvent), CancellationToken.None);
+
+        Assert.Equal(email, mailer.Recipient);
+        var expectedUrl = $"https://test.local/reset-password?token={Uri.EscapeDataString(resetEvent.ResetToken)}";
+        Assert.NotNull(mailer.HtmlBody);
+        Assert.Contains($"href=\"{expectedUrl}\"", mailer.HtmlBody);
     }
 
     [Fact]
@@ -156,5 +183,22 @@ public sealed class RequestPasswordResetTests(
 
         Assert.Equal(0, tokenCount);
         Assert.Equal(0, outboxCount);
+    }
+
+    private sealed class CapturingMailer : IMailer
+    {
+        public string? Recipient { get; private set; }
+        public string? HtmlBody { get; private set; }
+
+        public Task SendAsync(
+            string recipient,
+            string subject,
+            string htmlBody,
+            CancellationToken cancellationToken)
+        {
+            Recipient = recipient;
+            HtmlBody = htmlBody;
+            return Task.CompletedTask;
+        }
     }
 }

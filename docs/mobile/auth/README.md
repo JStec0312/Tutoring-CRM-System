@@ -4,7 +4,24 @@
 
 - [`src/app/_layout.tsx`](../../../mobile/src/app/_layout.tsx) creates one session manager per root mount. It injects a plain HTTP client into the auth API and exposes a separate bearer-authenticated client via `ApiProvider`. Both clients use `EXPO_PUBLIC_API_URL`.
 - [`AuthProvider`](../../../mobile/src/shared/session/AuthProvider.tsx) starts `restoreSession()` on mount. `useAuth()` subscribes to manager snapshots via `useSyncExternalStore` and exposes `signIn` and `signOut`.
-- [`SignInScreen`](../../../mobile/src/features/auth/sign-in/SignInScreen.tsx) trims email, checks both fields, prevents duplicate submissions and maps API error codes to UI messages. `/register` and `/forgot-password` are placeholder screens.
+- [`SignInScreen`](../../../mobile/src/features/auth/sign-in/SignInScreen.tsx) trims email, checks both fields, prevents duplicate submissions and maps API error codes to UI messages.
+
+## Account registration
+
+[RegisterScreen](../../../mobile/src/features/auth/register/components/RegisterScreen.tsx) collects the account type, email, username and password. It sends an anonymous request through the shared API client, handles conflicts and password policy errors, and prevents duplicate submission. A successful `201 Created` shows instructions for confirming the address by email. The account stays pending until the link is confirmed.
+
+| Account type | Method and endpoint | JSON body |
+| --- | --- | --- |
+| Student | `POST /api/auth/register/student` | `{ email, userName, password }` |
+| Tutor | `POST /api/auth/register/tutor` | `{ email, userName, password }` |
+
+See [US-001](../../technical_docs/backend_docs/user_stories/us_001/README.md) for optional profile fields and the verification email flow.
+
+## Password recovery
+
+From `/sign-in`, open `/forgot-password` and submit the account email. The app sends `POST /api/auth/password-reset/request` with `{ email }` and shows the same confirmation for any `204 No Content` response. The emailed link opens `/reset-password?token=...`, where the app sends `POST /api/auth/password-reset` with `{ token, newPassword }`. Both requests are anonymous. An invalid or expired link offers a new request.
+
+The backend reads the frontend reset URL from `PasswordReset:ResetUrl` in `appsettings.json`. The local default is `http://localhost:8081/reset-password`. For a deployed frontend, override it with `PasswordReset__ResetUrl` set to the public HTTPS reset page. See [US-004](../../technical_docs/backend_docs/user_stories/us_004/README.md) for token handling.
 
 ## HTTP contract
 
@@ -33,8 +50,9 @@ The authenticated client attaches a bearer token and captures the session genera
 | Session state | Available routes |
 | --- | --- |
 | `restoring`, `restore-error` | `/session-status` |
-| `anonymous` | `/sign-in`, `/register`, `/forgot-password` |
+| `anonymous` | `/sign-in`, `/register` |
 | `authenticated` | `(app)` with `/` as its index |
+| Any session state | `/forgot-password`, `/reset-password` |
 
 The root `Stack.Protected` registers `(auth)/sign-in` first among the anonymous routes. Expo Router uses `/sign-in` as the fallback when the current route becomes unavailable. The `(auth)` directory groups files and contributes no URL segment. Successful sign-in and sign-out change the session snapshot, which updates the route guards.
 

@@ -1,9 +1,3 @@
-import { Text, View } from "react-native";
+import { ForgotPasswordScreen } from "@/features/auth/forgot-password/components/ForgotPasswordScreen";
 
-export default function ForgotPasswordScreen() {
-  return (
-    <View style={{ padding: 24 }}>
-      <Text>Formularz odzyskiwania hasła jest w przygotowaniu.</Text>
-    </View>
-  );
-}
+export default ForgotPasswordScreen;

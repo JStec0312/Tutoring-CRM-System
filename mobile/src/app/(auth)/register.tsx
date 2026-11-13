@@ -1,9 +1,3 @@
-import { Text, View } from "react-native";
+import { RegisterScreen } from "@/features/auth/register/components/RegisterScreen";
 
-export default function RegisterScreen() {
-  return (
-    <View style={{ padding: 24 }}>
-      <Text>Formularz rejestracji jest w przygotowaniu.</Text>
-    </View>
-  );
-}
+export default RegisterScreen;
