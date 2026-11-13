@@ -61,23 +61,32 @@ function ApiBridge({ children }: PropsWithChildren) {
 // Decydujemy, które grupy tras są dostępne.
 function AppNavigator() {
   const { status } = useAuth();
+  const restoring = status === "restoring" || status === "restore-error";
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={status === "authenticated"}>
+      <Stack.Protected
+        guard={status === "authenticated"}
+        redirectTo={restoring ? "/session-status" : "/sign-in"}
+      >
         <Stack.Screen name="(app)" />
       </Stack.Protected>
 
-      <Stack.Protected guard={status === "anonymous"}>
+      <Stack.Protected
+        guard={status === "anonymous"}
+        redirectTo={restoring ? "/session-status" : "/"}
+      >
         <Stack.Screen name="(auth)/sign-in" />
         <Stack.Screen name="(auth)/register" />
       </Stack.Protected>
 
       <Stack.Protected
-        guard={status === "restoring" || status === "restore-error"}
+        guard={restoring}
+        redirectTo={status === "authenticated" ? "/" : "/sign-in"}
       >
         <Stack.Screen name="session-status" />
       </Stack.Protected>
+
       <Stack.Screen name="(auth)/forgot-password" />
       <Stack.Screen name="(auth)/reset-password" />
     </Stack>

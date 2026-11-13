@@ -54,7 +54,7 @@ The authenticated client attaches a bearer token and captures the session genera
 | `authenticated` | `(app)` with `/` as its index |
 | Any session state | `/forgot-password`, `/reset-password` |
 
-The root `Stack.Protected` registers `(auth)/sign-in` first among the anonymous routes. Expo Router uses `/sign-in` as the fallback when the current route becomes unavailable. The `(auth)` directory groups files and contributes no URL segment. Successful sign-in and sign-out change the session snapshot, which updates the route guards.
+The root guards send protected routes to `/session-status` while restoring. After restoration, the fallback is `/sign-in` for anonymous users and `/` for authenticated users. Password recovery routes are public, so opening `/reset-password?token=...` directly retains the token while the session restores. The `(auth)` directory contributes no URL segment.
 
 ## Local verification
 
