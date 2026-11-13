@@ -165,8 +165,8 @@ public sealed class UploadLearningMaterialTests(IntegrationTestFixture fixture) 
 
     [Theory]
     [InlineData("Parent", "valid", 403)]
-    [InlineData("Tutor", "invalid", 401)]
-    [InlineData("Student", "missing", 401)]
+    [InlineData(nameof(UserRole.Tutor), "invalid", 401)]
+    [InlineData(nameof(UserRole.Student), "missing", 401)]
     public async Task Upload_WithInvalidRoleOrSubject_ShouldReject(string role, string subject, int status)
     {
         var token = Token(role, subject);

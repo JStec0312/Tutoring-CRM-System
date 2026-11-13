@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Calendar.GetCalendarLessons;
 
 [ApiController]
-[Authorize(Roles = "Tutor,Student")]
+[Authorize(Roles = nameof(UserRole.Tutor) + "," + nameof(UserRole.Student))]
 [Route("api/calendar")]
 public sealed class GetCalendarLessonsController(
     ISender sender,

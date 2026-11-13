@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Tutors.UpdateTutoringAgreementHourlyRate;
 
 [ApiController]
-[Authorize(Roles = "Tutor")]
+[Authorize(Roles = nameof(UserRole.Tutor))]
 [Route("api/tutors/tutoring-agreements")]
 public sealed class UpdateTutoringAgreementHourlyRateController(
     ISender sender,

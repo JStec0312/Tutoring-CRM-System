@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Tutors.GetTutoringAgreementBalance;
 
 [ApiController]
-[Authorize(Roles = "Tutor")]
+[Authorize(Roles = nameof(UserRole.Tutor))]
 [Route("api/tutors/tutoring-agreements")]
 public sealed class GetTutoringAgreementBalanceController(
     ISender sender,

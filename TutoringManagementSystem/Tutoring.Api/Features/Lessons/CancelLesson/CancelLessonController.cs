@@ -7,7 +7,7 @@ using Tutoring.Domain.Identity;
 namespace Tutoring.Api.Features.Lessons.CancelLesson;
 
 [ApiController]
-[Authorize(Roles = "Tutor,Student")]
+[Authorize(Roles = nameof(UserRole.Tutor) + "," + nameof(UserRole.Student))]
 [Route("api/lessons")]
 public sealed class CancelLessonController(
     ISender sender,
