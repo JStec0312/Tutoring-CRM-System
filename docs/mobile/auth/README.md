@@ -16,14 +16,17 @@ All operations use `POST` with `auth: false` to skip bearer injection.
 | Refresh | `/api/auth/refresh` with a cookie and no JSON body | `/api/auth/mobile/refresh` with `{ refreshToken }` |
 | Sign out | `/api/auth/sign-out` with a cookie and no JSON body | `/api/auth/mobile/sign-out` with `{ refreshToken }` |
 
-[`session-api.ts`](../../../mobile/src/shared/session/session-api.ts) validates `accessToken` and `expiresAt` from login and refresh responses. Native responses also require `refreshToken` and `refreshTokenExpiresAt`. Expiry values must be valid future timestamps. The authenticated client obtains an access token before each request and sets `Authorization: Bearer …`. The client returns `ApiError` for HTTP failures and preserves the backend `ProblemDetails.code` when present. Automatic refresh and replay after an API `401` are not wired into the HTTP client.
+[`session-api.ts`](../../../mobile/src/shared/session/session-api.ts) validates `accessToken` and `expiresAt` from login and refresh responses. Native responses also require `refreshToken` and `refreshTokenExpiresAt`. Expiry values must be valid future timestamps.
+
+The authenticated client attaches a bearer token and captures the session generation. It checks the generation after obtaining the token, receiving headers, reading the body and refreshing. An obsolete request throws `SessionChangedError`. A protected `401` passes the failed bearer token to the manager, which shares any in-flight refresh or returns an already rotated token. The client retries once with the same method, JSON body and abort signal. A second `401` returns `ApiError`. A `403`, network failure, cancellation or `auth: false` request skips this recovery path.
 
 ## Session lifecycle
 
-- The [session manager](../../../mobile/src/shared/session/session-manager.ts) keeps the access token in memory. Native stores the refresh token in Expo SecureStore and saves each rotated token before publishing `authenticated`. Web uses `credentials: "include"` and the backend's HttpOnly cookie. Web local storage holds only the pending sign-out marker for this feature.
+- The [session manager](../../../mobile/src/shared/session/session-manager.ts) keeps the access token in memory. Native stores the refresh token in Expo SecureStore and saves each rotated token before publishing `authenticated`. Web uses `credentials: "include"` and the backend's HttpOnly cookie.
 - Restore starts in `restoring`. Native without a stored refresh token, or a rejected refresh with `401` or an invalid session payload, moves to `anonymous`. Other restore failures publish `restore-error`, which exposes a retry action.
 - `getValidAccessToken()` refreshes on demand when the access token has 30 seconds or less remaining. The manager shares in-flight restore and refresh promises, serializes credential mutations and uses a session generation counter to prevent stale work from restoring a cleared session. On web, mutations also use an exclusive Web Lock shared by tabs on the same origin.
-- Sign-out clears in-memory auth immediately. The queued operation persists a pending marker, requests server revocation and clears stored credentials and the marker on success. Restore or the next sign-in retries an interrupted sign-out if the marker is set.
+- Sign-out clears in-memory auth immediately. The queued operation persists a pending marker, requests server revocation and clears stored credentials and the marker on success. Native restore and the next sign-in retry an interrupted sign-out if the marker is set.
+- Web tabs use a [storage event](../../../mobile/src/shared/session/session-sync.web.ts) containing only an event ID and type. Sign-in publishes after the backend sets the cookie while the originating tab holds the Web Lock. Other tabs discard their in-memory session and restore from that cookie. Sign-out publishes immediately, invalidating any earlier restore and clearing other tabs without another sign-out request. The manager also reads the latest event under the Web Lock because event delivery is asynchronous.
 
 ## Route guards
 
@@ -46,4 +49,4 @@ npx vitest run
 npx expo start --web
 ```
 
-The Vitest suite covers platform-specific session API requests, native response validation and the browser storage adapter. See the [target mobile architecture](../architecture/README.md) for the broader design.
+The Vitest suite covers platform-specific session API requests, native response validation, stale responses, concurrent `401` recovery, cancellation and sign-in/sign-out across simulated tabs. See the [target mobile architecture](../architecture/README.md) for the broader design.

@@ -15,6 +15,7 @@ import { refreshTokenStorage } from "@/shared/session/refresh-token-storage";
 import { createSessionApi } from "@/shared/session/session-api";
 import { withSessionLock } from "@/shared/session/session-lock";
 import { createSessionManager } from "@/shared/session/session-manager";
+import { sessionSync } from "@/shared/session/session-sync";
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -36,6 +37,7 @@ function createSession() {
     api: sessionApi,
     storage: refreshTokenStorage,
     exclusive: withSessionLock,
+    sync: sessionSync,
   });
 }
 
@@ -48,7 +50,7 @@ function ApiBridge({ children }: PropsWithChildren) {
       createApiClient({
         baseUrl: BASE_URL,
         credentials,
-        getAccessToken: manager.getValidAccessToken,
+        session: manager,
       }),
     [manager],
   );

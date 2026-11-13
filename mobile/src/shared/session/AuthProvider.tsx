@@ -16,7 +16,9 @@ type Props = PropsWithChildren<{
 
 export function AuthProvider({ manager, children }: Props) {
   useEffect(() => {
+    const unsubscribe = manager.subscribeToSessionChanges();
     void manager.restoreSession();
+    return unsubscribe;
   }, [manager]);
 
   return (

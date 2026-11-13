@@ -6,7 +6,7 @@ import type {
     SessionApi,
 } from "./session-api";
 import { InvalidSessionResponseError } from "./session-api";
-import type { AuthStatus } from "./session-types";
+import type { AuthStatus, SessionChangeType, SessionSync } from "./session-types";
 // the session maanger is an object that manages authentication state and refresh token lifecycle.
 
 type Snapshot = Readonly<{
@@ -25,6 +25,7 @@ type Options = {
   api: SessionApi;
   storage: RefreshTokenStorage;
   exclusive?: Exclusive;
+  sync?: SessionSync;
   now?: () => number;
 };
 
@@ -52,6 +53,7 @@ export function createSessionManager({
   api,
   storage,
   exclusive = (operation) => operation(),
+  sync,
   now = Date.now,
 }: Options) {
   let generation = 0;
@@ -63,9 +65,10 @@ export function createSessionManager({
   };
 
   let queue: Promise<void> = Promise.resolve();
-  let refreshFlight: Promise<void> | null = null;
-  let restoreFlight: Promise<void> | null = null;
+  let refreshFlight: { generation: number; task: Promise<void> } | null = null;
+  let restoreFlight: { generation: number; task: Promise<void> } | null = null;
   let loginRunning = false;
+  let lastChangeId: string | undefined;
 
   const listeners = new Set<() => void>();
 
@@ -74,20 +77,48 @@ export function createSessionManager({
     listeners.forEach((listener) => listener());
   }
 
+  function synchronizeSession() {
+    // Read under the credential lock too, since storage events arrive asynchronously.
+    const change = sync?.read();
+    if (change && change.id !== lastChangeId) {
+      lastChangeId = change.id;
+      if (change.type === "signed-in") {
+        resetLocal("restoring");
+        void restoreSession();
+      } else {
+        clearLocal();
+      }
+    }
+
+    return generation;
+  }
+
+  function announce(type: SessionChangeType) {
+    const change = sync?.publish(type);
+    if (change) {
+      lastChangeId = change.id;
+    }
+    return change;
+  }
+
   function assertCurrent(expected: number) {
-    if (expected !== generation) {
+    if (expected !== synchronizeSession()) {
       throw new SessionChangedError();
     }
   }
 
-  function clearLocal(error: string | null = null) {
+  function resetLocal(status: AuthStatus, error: string | null = null) {
     generation += 1;
     accessToken = null;
 
     publish({
-      status: "anonymous",
+      status,
       error,
     });
+  }
+
+  function clearLocal(error: string | null = null) {
+    resetLocal("anonymous", error);
   }
 
   // Serializes operations that modify refresh credentials.
@@ -116,7 +147,11 @@ export function createSessionManager({
     await storage.setLogoutPending(false);
   }
 
-  async function commitIssued(issued: IssuedSession, expected: number) {
+  async function commitIssued(
+    issued: IssuedSession,
+    expected: number,
+    signingIn = false,
+  ) {
     if (storage.native) {
       if (!issued.refreshToken) {
         throw new InvalidSessionResponseError();
@@ -139,6 +174,9 @@ export function createSessionManager({
     }
 
     assertCurrent(expected);
+    if (signingIn) {
+      announce("signed-in");
+    }
 
     accessToken = {
       value: issued.accessToken,
@@ -152,6 +190,7 @@ export function createSessionManager({
   }
 
   async function signIn(credentials: LoginCredentials): Promise<void> {
+    synchronizeSession();
     if (loginRunning || snapshot.status !== "anonymous") {
       throw new Error("Session.SignInNotAllowed");
     }
@@ -166,14 +205,16 @@ export function createSessionManager({
         assertCurrent(expected);
 
         // Finish a previously interrupted logout first.
-        if (await storage.isLogoutPending()) {
+        const logoutPending = await storage.isLogoutPending();
+        assertCurrent(expected);
+        if (logoutPending) {
           await revokeStoredToken();
         }
 
         assertCurrent(expected);
 
         const issued = await api.login(credentials);
-        await commitIssued(issued, expected);
+        await commitIssued(issued, expected, true);
       });
     } finally {
       loginRunning = false;
@@ -181,7 +222,7 @@ export function createSessionManager({
   }
 
   function restoreSession(): Promise<void> {
-    if (restoreFlight) return restoreFlight;
+    if (restoreFlight?.generation === generation) return restoreFlight.task;
 
     if (
       snapshot.status !== "restoring" &&
@@ -200,7 +241,9 @@ export function createSessionManager({
     const task = enqueue(async () => {
       assertCurrent(expected);
 
-      if (await storage.isLogoutPending()) {
+      const logoutPending = await storage.isLogoutPending();
+      assertCurrent(expected);
+      if (logoutPending) {
         await revokeStoredToken();
         assertCurrent(expected);
         clearLocal();
@@ -220,7 +263,7 @@ export function createSessionManager({
         const issued = await api.refresh(refreshToken);
         await commitIssued(issued, expected);
       } catch (error) {
-        if (generation === expected && invalidCredential(error)) {
+        if (synchronizeSession() === expected && invalidCredential(error)) {
           clearLocal();
 
           try {
@@ -238,34 +281,34 @@ export function createSessionManager({
         throw error;
       }
     }).catch((error) => {
-      if (generation === expected) {
+      if (synchronizeSession() === expected) {
         publish({
           status: "restore-error",
           error: errorCode(error),
         });
       }
+    }).finally(() => {
+      if (restoreFlight?.task === task) restoreFlight = null;
     });
 
-    restoreFlight = task.finally(() => {
-      restoreFlight = null;
-    });
-
-    return restoreFlight;
+    restoreFlight = { generation: expected, task };
+    return task;
   }
 
   function refreshSession(): Promise<void> {
-    if (refreshFlight) return refreshFlight;
+    const expected = synchronizeSession();
+    if (refreshFlight?.generation === expected) return refreshFlight.task;
 
     if (snapshot.status !== "authenticated") {
       return Promise.reject(new Error("Session.Required"));
     }
 
-    const expected = generation;
-
     const task = enqueue(async () => {
       assertCurrent(expected);
 
-      if (await storage.isLogoutPending()) {
+      const logoutPending = await storage.isLogoutPending();
+      assertCurrent(expected);
+      if (logoutPending) {
         clearLocal("Session.LogoutPending");
         throw new Error("Session.LogoutPending");
       }
@@ -283,7 +326,7 @@ export function createSessionManager({
         const issued = await api.refresh(refreshToken);
         await commitIssued(issued, expected);
       } catch (error) {
-        if (generation === expected && invalidCredential(error)) {
+        if (synchronizeSession() === expected && invalidCredential(error)) {
           clearLocal();
 
           try {
@@ -298,18 +341,19 @@ export function createSessionManager({
 
         throw error;
       }
+    }).finally(() => {
+      if (refreshFlight?.task === task) refreshFlight = null;
     });
 
-    refreshFlight = task.finally(() => {
-      refreshFlight = null;
-    });
-
-    return refreshFlight;
+    refreshFlight = { generation: expected, task };
+    return task;
   }
 
   async function getValidAccessToken(): Promise<string | null> {
+    const expected = synchronizeSession();
     if (snapshot.status === "restoring") {
       await restoreSession();
+      assertCurrent(expected);
     }
 
     if (snapshot.status === "restore-error") {
@@ -320,17 +364,12 @@ export function createSessionManager({
       return null;
     }
 
-    const expected = generation;
-
-    if (await storage.isLogoutPending()) {
-      if (generation === expected) {
-        clearLocal("Session.LogoutPending");
-      }
-
+    const logoutPending = await storage.isLogoutPending();
+    assertCurrent(expected);
+    if (logoutPending) {
+      clearLocal("Session.LogoutPending");
       return null;
     }
-
-    assertCurrent(expected);
 
     if (!accessToken || accessToken.expiresAt <= now() + REFRESH_MARGIN_MS) {
       await refreshSession();
@@ -345,11 +384,11 @@ export function createSessionManager({
   async function refreshAfterUnauthorized(
     failedToken: string,
   ): Promise<string | null> {
+    const expected = synchronizeSession();
     if (snapshot.status !== "authenticated") {
       return null;
     }
 
-    const expected = generation;
     const current = accessToken?.value;
 
     // Another request may have refreshed the token already.
@@ -366,8 +405,11 @@ export function createSessionManager({
   function signOut(): Promise<void> {
     // Immediately hide authenticated UI.
     clearLocal();
+    const change = announce("signed-out");
 
     return enqueue(async () => {
+      if (change && sync?.read()?.id !== change.id) return;
+
       // Keep the marker if server revocation fails.
       await storage.setLogoutPending(true);
       await revokeStoredToken();
@@ -376,6 +418,14 @@ export function createSessionManager({
 
   return {
     getSnapshot: () => snapshot,
+    getGeneration: () => generation,
+    assertCurrent,
+
+    subscribeToSessionChanges() {
+      const unsubscribe = sync?.subscribe(synchronizeSession);
+      synchronizeSession();
+      return () => unsubscribe?.();
+    },
 
     subscribe(listener: () => void) {
       listeners.add(listener);

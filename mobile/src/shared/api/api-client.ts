@@ -4,6 +4,7 @@
 // it hides the complexity of making authenticated API requests and reduces it to
 // api.post(path, body, options)
 import { ApiError, type ProblemDetails } from "./api-error";
+import type { SessionManager } from "../session/session-manager";
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -15,14 +16,17 @@ type RequestOptions = {
 type ApiClientOptions = {
   baseUrl: string;
   credentials?: RequestCredentials;
-  getAccessToken?: () => string | null | Promise<string | null>;
+  session?: Pick<
+    SessionManager,
+    "getGeneration" | "assertCurrent" | "getValidAccessToken" | "refreshAfterUnauthorized"
+  >;
   fetcher?: typeof fetch;
 };
 
 export function createApiClient({
   baseUrl,
   credentials = "omit",
-  getAccessToken,
+  session,
   fetcher = fetch,
 }: ApiClientOptions) {
   function resolveUrl(path: string): string {
@@ -50,50 +54,67 @@ export function createApiClient({
     body?: unknown,
     options: RequestOptions = {},
   ): Promise<T> {
+    const requestSession = options.auth === false ? undefined : session;
+    const generation = requestSession?.getGeneration();
     const url = resolveUrl(path);
-    const headers = new Headers({
-      Accept: "application/json",
-    });
+    const payload = body === undefined ? undefined : JSON.stringify(body);
+    const { signal } = options;
 
-    if (body !== undefined) {
-      headers.set("Content-Type", "application/json");
+    function assertActive() {
+      if (generation !== undefined) requestSession?.assertCurrent(generation);
+
+      if (signal?.aborted) {
+        const error = new Error("The request was aborted");
+        error.name = "AbortError";
+        throw signal.reason ?? error;
+      }
     }
 
-    if (options.auth !== false) {
-      const token = await getAccessToken?.();
+    async function send(token: string | null) {
+      const headers = new Headers({ Accept: "application/json" });
+      if (body !== undefined) headers.set("Content-Type", "application/json");
+      if (token) headers.set("Authorization", `Bearer ${token}`);
 
-      if (!token) {
+      try {
+        const response = await fetcher(url, {
+          method,
+          headers,
+          credentials,
+          signal,
+          body: payload,
+        });
+        assertActive();
+        const content = await response.text();
+        assertActive();
+        return { response, content };
+      } catch (error) {
+        assertActive();
+        if (error instanceof Error && error.name === "AbortError") throw error;
+        throw new ApiError(0, "Network.Unavailable");
+      }
+    }
+
+    assertActive();
+    let result;
+    try {
+      const token = (await requestSession?.getValidAccessToken()) ?? null;
+      assertActive();
+      if (options.auth !== false && !token) {
         throw new ApiError(401, "Auth.SessionRequired");
       }
 
-      headers.set("Authorization", `Bearer ${token}`);
+      result = await send(token);
+      assertActive();
+      if (result.response.status === 401 && requestSession && token) {
+        const refreshed = await requestSession.refreshAfterUnauthorized(token);
+        assertActive();
+        if (refreshed) result = await send(refreshed);
+      }
+    } finally {
+      assertActive();
     }
 
-    let response: Response;
-
-    try {
-      response = await fetcher(url, {
-        method,
-        headers,
-        credentials,
-        signal: options.signal,
-        body: body === undefined ? undefined : JSON.stringify(body),
-      });
-    } catch (error) {
-      if (options.signal?.aborted) throw error;
-
-      throw new ApiError(0, "Network.Unavailable");
-    }
-
-    let content: string;
-
-    try {
-      content = await response.text();
-    } catch (error) {
-      if (options.signal?.aborted) throw error;
-
-      throw new ApiError(0, "Network.Unavailable");
-    }
+    const { response, content } = result;
 
     if (!response.ok) {
       let problem: ProblemDetails | undefined;

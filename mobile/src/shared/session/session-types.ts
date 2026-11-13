@@ -7,6 +7,16 @@ export type AuthStatus =
   | "restoring"
   | "restore-error";
 
+export type SessionChangeType = "signed-in" | "signed-out";
+
+export type SessionChange = { id: string; type: SessionChangeType };
+
+export type SessionSync = {
+  read(): SessionChange | null;
+  publish(type: SessionChangeType): SessionChange | null;
+  subscribe(listener: () => void): () => void;
+};
+
 export type SessionTokens = {
   accessToken: string;
   expiresAt: string;
