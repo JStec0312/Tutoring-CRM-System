@@ -249,3 +249,26 @@ describe("web session synchronization", () => {
     expect(b.api.refresh).toHaveBeenCalledTimes(2);
   });
 });
+
+it("updates portal roles from issued tokens and clears them on sign-out", async () => {
+  const { api, manager } = fixture();
+  const tokenWithRole = (role: string) => {
+    const payload = Buffer.from(JSON.stringify({ role })).toString("base64url");
+    return { ...issued(role), accessToken: "header." + payload + ".signature" };
+  };
+
+  api.login.mockResolvedValueOnce(tokenWithRole("Tutor"));
+  api.refresh.mockResolvedValueOnce(tokenWithRole("Student"));
+  expect(manager.getSnapshot().roles).toEqual([]);
+
+  await manager.restoreSession();
+  await manager.signIn(credentials);
+  expect(manager.getSnapshot().roles).toEqual(["Tutor"]);
+
+  await manager.refreshSession();
+  expect(manager.getSnapshot().roles).toEqual(["Student"]);
+
+  const signingOut = manager.signOut();
+  expect(manager.getSnapshot().roles).toEqual([]);
+  await signingOut;
+});

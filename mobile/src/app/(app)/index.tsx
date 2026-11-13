@@ -1,22 +1,12 @@
-import { Button, Text, View } from "react-native";
+import { Redirect } from "expo-router";
 
+import { UnsupportedPortalScreen } from "@/features/portals/UnsupportedPortalScreen";
 import { useAuth } from "@/shared/session/AuthProvider";
+import { getPortalRoute } from "@/shared/session/portal-route";
 
-export default function HomeScreen() {
-  const { signOut } = useAuth();
+export default function PortalIndex() {
+  const { roles } = useAuth();
+  const portal = getPortalRoute(roles);
 
-  async function handleSignOut() {
-    try {
-      await signOut();
-    } catch {
-      console.warn("Nie udało się zakończyć sesji na serwerze.");
-    }
-  }
-
-  return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
-      <Text>Jesteś zalogowany.</Text>
-      <Button title="Wyloguj się" onPress={handleSignOut} />
-    </View>
-  );
+  return portal ? <Redirect href={portal} /> : <UnsupportedPortalScreen />;
 }

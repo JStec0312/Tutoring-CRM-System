@@ -51,8 +51,10 @@ The authenticated client attaches a bearer token and captures the session genera
 | --- | --- |
 | `restoring`, `restore-error` | `/session-status` |
 | `anonymous` | `/sign-in`, `/register` |
-| `authenticated` | `(app)` with `/` as its index |
+| `authenticated` | `/` routes a Tutor to `/tutor` and a Student to `/student` |
 | Any session state | `/forgot-password`, `/reset-password` |
+
+The session manager exposes the `role` claim from the backend access token through `useAuth().roles`. It reads the claim on sign-in, restore and refresh, and clears roles on session reset. If neither portal role or both portal roles are present, `/` shows a message and a sign-out action. The Parent screen and route are reserved until the backend supports that role. Each portal has its own Expo Router guard.
 
 The root guards send protected routes to `/session-status` while restoring. After restoration, the fallback is `/sign-in` for anonymous users and `/` for authenticated users. Password recovery routes are public, so opening `/reset-password?token=...` directly retains the token while the session restores. The `(auth)` directory contributes no URL segment.
 

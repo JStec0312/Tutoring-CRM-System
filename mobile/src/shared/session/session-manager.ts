@@ -6,11 +6,13 @@ import type {
     SessionApi,
 } from "./session-api";
 import { InvalidSessionResponseError } from "./session-api";
+import { readAccessTokenRoles } from "./read-access-token-roles";
 import type { AuthStatus, SessionChangeType, SessionSync } from "./session-types";
 // the session maanger is an object that manages authentication state and refresh token lifecycle.
 
 type Snapshot = Readonly<{
   status: AuthStatus;
+  roles: readonly string[];
   error: string | null;
 }>;
 
@@ -61,6 +63,7 @@ export function createSessionManager({
 
   let snapshot: Snapshot = {
     status: "restoring",
+    roles: [],
     error: null,
   };
 
@@ -113,6 +116,7 @@ export function createSessionManager({
 
     publish({
       status,
+      roles: [],
       error,
     });
   }
@@ -185,6 +189,7 @@ export function createSessionManager({
 
     publish({
       status: "authenticated",
+      roles: readAccessTokenRoles(issued.accessToken),
       error: null,
     });
   }
@@ -235,6 +240,7 @@ export function createSessionManager({
 
     publish({
       status: "restoring",
+      roles: [],
       error: null,
     });
 
@@ -271,6 +277,7 @@ export function createSessionManager({
           } catch {
             publish({
               status: "anonymous",
+              roles: [],
               error: "Session.StorageFailed",
             });
           }
@@ -284,6 +291,7 @@ export function createSessionManager({
       if (synchronizeSession() === expected) {
         publish({
           status: "restore-error",
+          roles: [],
           error: errorCode(error),
         });
       }
@@ -334,6 +342,7 @@ export function createSessionManager({
           } catch {
             publish({
               status: "anonymous",
+              roles: [],
               error: "Session.StorageFailed",
             });
           }
