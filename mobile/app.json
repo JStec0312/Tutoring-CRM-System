@@ -2,7 +2,8 @@
   "plugins": [
     "expo-secure-store",
     "expo-router",
-    "expo-status-bar"
+    "expo-status-bar",
+    "expo-sharing"
   ],
   "android": {
     "package": "com.anonymous.mobile"

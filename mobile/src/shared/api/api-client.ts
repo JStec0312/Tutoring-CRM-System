@@ -53,11 +53,13 @@ export function createApiClient({
     path: string,
     body?: unknown,
     options: RequestOptions = {},
+    binary = false,
   ): Promise<T> {
     const requestSession = options.auth === false ? undefined : session;
     const generation = requestSession?.getGeneration();
     const url = resolveUrl(path);
-    const payload = body === undefined ? undefined : JSON.stringify(body);
+    const multipart = body instanceof FormData;
+    const payload = multipart ? body : body === undefined ? undefined : JSON.stringify(body);
     const { signal } = options;
 
     function assertActive() {
@@ -71,8 +73,8 @@ export function createApiClient({
     }
 
     async function send(token: string | null) {
-      const headers = new Headers({ Accept: "application/json" });
-      if (body !== undefined) headers.set("Content-Type", "application/json");
+      const headers = new Headers({ Accept: binary ? "*/*" : "application/json" });
+      if (body !== undefined && !multipart) headers.set("Content-Type", "application/json");
       if (token) headers.set("Authorization", `Bearer ${token}`);
 
       try {
@@ -84,7 +86,7 @@ export function createApiClient({
           body: payload,
         });
         assertActive();
-        const content = await response.text();
+        const content = binary && response.ok ? await response.arrayBuffer() : await response.text();
         assertActive();
         return { response, content };
       } catch (error) {
@@ -120,7 +122,7 @@ export function createApiClient({
       let problem: ProblemDetails | undefined;
 
       try {
-        const parsed: unknown = JSON.parse(content);
+        const parsed: unknown = JSON.parse(content as string);
 
         if (
           parsed !== null &&
@@ -145,9 +147,10 @@ export function createApiClient({
     if (!content || response.status === 204) {
       return undefined as T;
     }
+    if (binary) return content as T;
 
     try {
-      return JSON.parse(content) as T;
+      return JSON.parse(content as string) as T;
     } catch {
       throw new ApiError(response.status, "Response.InvalidJson");
     }
@@ -156,6 +159,9 @@ export function createApiClient({
   return {
     get: <T>(path: string, options?: RequestOptions) =>
       request<T>("GET", path, undefined, options),
+
+    download: (path: string, options?: RequestOptions) =>
+      request<ArrayBuffer>("GET", path, undefined, options, true),
 
     post: <T = void>(path: string, body?: unknown, options?: RequestOptions) =>
       request<T>("POST", path, body, options),
