@@ -11,7 +11,7 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Protected guard={portal === "/tutor"} redirectTo={portal ?? "/"}>
-        <Stack.Screen name="(tutor)/tutor" />
+        <Stack.Screen name="(tutor)" />
       </Stack.Protected>
       <Stack.Protected guard={portal === "/student"} redirectTo={portal ?? "/"}>
         <Stack.Screen name="(student)/student" />

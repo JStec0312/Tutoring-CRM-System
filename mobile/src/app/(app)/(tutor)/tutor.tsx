@@ -1,1 +1,1 @@
-export { default } from "@/features/tutor/components/tutor-dashboard";
+export { TodayScreen as default } from '@/features/tutor/today/components/today-screen';

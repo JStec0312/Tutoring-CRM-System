@@ -6,6 +6,8 @@ Related issue: [#161 — Frontend architecture and project structure](https://gi
 
 **Code walkthrough:** [complete application flow](application-flow.md) — bootstrap, login, request, mapping, UI, refresh, logout.
 
+See the [tutor workspace](../tutor-workspace/README.md) for Tutor routes, code structure, and API usage.
+
 ## Structure
 
 ```text

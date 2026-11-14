@@ -61,7 +61,8 @@ function ApiBridge({ children }: PropsWithChildren) {
 // Decydujemy, które grupy tras są dostępne.
 function AppNavigator() {
   const { status } = useAuth();
-  const restoring = status === "restoring" || status === "restore-error";
+  if (status === "restoring") return null;
+  const restoring = status === "restore-error";
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
