@@ -1,1 +1,1 @@
-export { ParentPortalScreen as default } from "@/features/portals/ParentPortalScreen";
+export { ParentDashboard as default } from "@/features/parent/ParentDashboard";

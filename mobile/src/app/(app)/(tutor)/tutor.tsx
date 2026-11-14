@@ -1,1 +1,1 @@
-export { TutorPortalScreen as default } from "@/features/portals/TutorPortalScreen";
+export { default } from "@/features/tutor/components/tutor-dashboard";

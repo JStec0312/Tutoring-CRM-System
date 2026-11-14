@@ -1,12 +1,12 @@
 import { Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { SignOutButton } from "./SignOutButton";
+import { SignOutButton } from "@/shared/components/ui/SignOutButton";
 
-export function TutorPortalScreen() {
+export function StudentDashboard() {
   return (
     <SafeAreaView style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <Text accessibilityRole="header">Tutor Portal</Text>
+      <Text accessibilityRole="header">Student Portal</Text>
       <SignOutButton />
     </SafeAreaView>
   );

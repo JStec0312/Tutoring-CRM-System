@@ -1,1 +1,1 @@
-export { StudentPortalScreen as default } from "@/features/portals/StudentPortalScreen";
+export { StudentDashboard as default } from "@/features/student/StudentDashboard";
