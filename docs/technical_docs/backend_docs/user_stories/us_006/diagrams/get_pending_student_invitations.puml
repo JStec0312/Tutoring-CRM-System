@@ -1,0 +1,21 @@
+@startuml
+skinparam backgroundColor white
+title List pending student invitations
+actor Tutor
+participant "Pending invitations API" as Api
+participant "GetPendingStudentInvitationsHandler" as Handler
+database "SQL Server" as Db
+
+Tutor -> Api: GET /api/tutors/me/student-invitations
+alt Missing or invalid authentication
+  Api --> Tutor: 401 Unauthorized
+else Caller lacks the Tutor role
+  Api --> Tutor: 403 Forbidden
+else Authenticated tutor
+  Api -> Handler: Query for account from JWT sub
+  Handler -> Db: Read owned Created or Sent invitations\nwith validity later than current UTC time
+  Db --> Handler: Display metadata, newest first
+  Handler --> Api: PendingStudentInvitationResponse[]
+  Api --> Tutor: 200 OK
+end
+@enduml

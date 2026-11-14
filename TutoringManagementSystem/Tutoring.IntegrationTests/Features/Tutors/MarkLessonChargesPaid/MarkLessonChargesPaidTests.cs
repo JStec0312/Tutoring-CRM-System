@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
+using Tutoring.Api.Features.Tutors.GetLessonCharges;
 using Tutoring.Domain.Billing;
 using Tutoring.Domain.Lessons;
 using Tutoring.Domain.Students;
@@ -55,6 +56,21 @@ public sealed class MarkLessonChargesPaidTests(
         Assert.Equal(75.50m, result.Payment.Amount);
         Assert.Equal(paidAt, result.Payment.PaidAtUtc);
         Assert.Equal("TRANSFER-001", result.Payment.Reference);
+
+        using var listRequest = CreateAuthorizedRequest(HttpMethod.Get, Endpoint, tutor.AccessToken);
+        using var list = await Client.SendAsync(listRequest);
+        Assert.Equal(HttpStatusCode.OK, list.StatusCode);
+        var charge = Assert.Single((await list.Content.ReadFromJsonAsync<LessonChargeResponse[]>())!);
+        Assert.Equal(data.ChargeIds[0], charge.ChargeId);
+        Assert.Equal(75.50m, charge.Amount);
+        Assert.Equal("PLN", charge.Currency);
+        Assert.Equal(paidAt, charge.PaidAtUtc);
+
+        var outsider = await CreateTutorAsync("other-reader@test.pl", "other-reader");
+        using var deniedRequest = CreateAuthorizedRequest(HttpMethod.Get, Endpoint, outsider.AccessToken);
+        using var denied = await Client.SendAsync(deniedRequest);
+        Assert.Equal(HttpStatusCode.OK, denied.StatusCode);
+        Assert.Empty((await denied.Content.ReadFromJsonAsync<LessonChargeResponse[]>())!);
     }
 
     [Fact]

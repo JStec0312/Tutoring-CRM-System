@@ -135,6 +135,9 @@ public sealed class GetAssignedStudentsTests(
         Assert.Equal(
             100m,
             agreementResult.HourlyRate);
+        Assert.Equal(agreement.AgreementTitle.Value, agreementResult.Title);
+        Assert.Equal("Active", agreementResult.Status);
+        Assert.Equal("PLN", agreementResult.Currency);
     }
 
     [Fact]

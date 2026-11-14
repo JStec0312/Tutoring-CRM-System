@@ -9,9 +9,3 @@ public sealed record AssignedStudentResponse(
     string? PhoneNumber,
     string Status,
     IReadOnlyCollection<StudentAgreementResponse> Agreements);
-
-public sealed record StudentAgreementResponse(
-    Guid TutoringAgreementId,
-    string Subject,
-    decimal? HourlyRate,
-    string? Notes);

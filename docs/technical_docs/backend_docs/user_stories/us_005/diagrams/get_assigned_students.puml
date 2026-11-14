@@ -13,8 +13,9 @@ database Database
 Tutor -> API: GET /api/tutors/me/students
 API -> GetAssignedStudentsHandler: GetAssignedStudentsQuery
 GetAssignedStudentsHandler -> Database: Find Tutor by UserAccountId
-GetAssignedStudentsHandler -> Database: Get active/non-ended agreements + students
-Database --> GetAssignedStudentsHandler: Students
+GetAssignedStudentsHandler -> Database: Query non-ended owned agreements and student data
+Database --> GetAssignedStudentsHandler: Agreement and student rows
+GetAssignedStudentsHandler -> GetAssignedStudentsHandler: Group by student\nInclude agreement title, status, rate, currency and notes
 GetAssignedStudentsHandler --> API: AssignedStudentResponse[]
 API --> Tutor: 200 OK
 

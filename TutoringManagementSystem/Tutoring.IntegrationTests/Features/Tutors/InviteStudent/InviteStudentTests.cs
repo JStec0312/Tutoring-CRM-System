@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Tutors.InviteStudent;
+using Tutoring.Api.Features.Tutors.GetPendingStudentInvitations;
 using Tutoring.Domain.Billing;
 using Tutoring.Domain.StudentInvitations;
 using Tutoring.Domain.Students;
@@ -21,6 +22,31 @@ public sealed class InviteStudentTests(
 {
     private const string Password = "Password123!";
     private const string Endpoint = "/api/tutors/me/student-invitations";
+
+    [Fact]
+    public async Task GetPendingInvitations_ReturnsOnlyCurrentInvitationsOfTheActingTutor()
+    {
+        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        var otherTutor = await CreateTutorAsync("other@test.pl", "other");
+        var student = await CreateStudentAsync("student@test.pl", "student");
+        var request = new { Email = "student@test.pl", Title = "Math tutoring", Subject = "Mathematics" };
+
+        foreach (var token in new[] { tutor.AccessToken, tutor.AccessToken, otherTutor.AccessToken })
+        {
+            var created = await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Post, Endpoint, token, request));
+            created.EnsureSuccessStatusCode();
+        }
+
+        var response = await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, Endpoint, tutor.AccessToken));
+        response.EnsureSuccessStatusCode();
+        var pending = Assert.Single((await response.Content.ReadFromJsonAsync<PendingStudentInvitationResponse[]>())!);
+        Assert.Equal("student@test.pl", pending.Email);
+        Assert.Equal("Mathematics", pending.Subject);
+        Assert.DoesNotContain("token", await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await Client.GetAsync(Endpoint)).StatusCode);
+        var forbidden = await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, Endpoint, student.AccessToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+    }
 
     [Fact]
     public async Task InviteStudent_WithoutAccessToken_ShouldReturnUnauthorized()

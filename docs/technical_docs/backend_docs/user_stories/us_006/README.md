@@ -29,7 +29,12 @@ Only the newest invitation for a given Tutor+Recipient pair remains available. W
 | --- | --- | --- | --- |
 | POST | `/api/tutors/me/students` | `Tutor` role | Creates a managed `Student` and active `TutoringAgreement`, returns `201 Created`. |
 | POST | `/api/tutors/me/student-invitations` | `Tutor` role | Requires the recipient email to belong to an existing, registered `Student` (`404 Students.NotFound` otherwise); expires previous active invitations for the same Tutor+Recipient, creates a new `StudentInvitation`, schedules delivery through the Outbox pipeline, and returns an invitation link with `200 OK`. |
+| GET | `/api/tutors/me/student-invitations` | `Tutor` role | Lists the tutor's unexpired `Created` and `Sent` invitations, most recent first. Each entry includes `invitationId`, `email`, `subject`, and `validUntilUtc`. |
 | POST | `/api/student-invitations/{token}/accept` | `Student` role | Accepts an available invitation for the authenticated student, creates a `TutoringAgreement`, returns `200 OK`. |
+
+### Pending invitation response
+
+The [pending invitation query](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/GetPendingStudentInvitations/) filters by the tutor linked to the JWT subject. It includes `Created` and `Sent` invitations whose `validUntilUtc` is strictly later than the server's UTC time. Results are ordered by creation time, newest first. The response contains display metadata and omits invitation credentials. With no matches, the endpoint returns `200 OK` with `[]`. Missing or invalid authentication returns `401`, and another role receives `403`.
 
 ## Implementation
 
@@ -95,7 +100,13 @@ Only the newest invitation for a given Tutor+Recipient pair remains available. W
 
 ![Add student by invitation flow](diagrams/student_invitation_flow.svg)
 
+![List pending invitations sequence](diagrams/get_pending_student_invitations.svg)
+
+[Pending invitations PlantUML source](diagrams/get_pending_student_invitations.puml)
+
 ## Tests
+
+`InviteStudentTests.GetPendingInvitations_ReturnsOnlyCurrentInvitationsOfTheActingTutor` covers tutor isolation, replaced invitations, exclusion of credentials, and `401`/`403` responses.
 
 `Tutoring.IntegrationTests.Features.Tutors.AddStudentManually.AddStudentManuallyTests` covers manual student and agreement persistence, optional `HourlyRate`, no `UserAccount` creation, authorization, missing tutor profile, value-object request errors, and visibility through `GET /api/tutors/me/students`.
 

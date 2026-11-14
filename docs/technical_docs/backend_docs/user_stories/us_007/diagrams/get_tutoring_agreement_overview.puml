@@ -1,0 +1,25 @@
+@startuml
+skinparam backgroundColor white
+title Read tutoring agreement overview
+actor Tutor
+participant "Agreement overview API" as Api
+participant "GetTutoringAgreementOverviewHandler" as Handler
+database "SQL Server" as Db
+
+Tutor -> Api: GET /api/tutors/tutoring-agreements/{agreementId}/overview
+Api -> Handler: Query with tutor account and agreement ID
+Handler -> Db: Read owned agreement, rate and student details
+Db --> Handler: Agreement or no match
+alt Missing or foreign agreement
+  Handler --> Api: TutoringAgreements.NotFound
+  Api --> Tutor: 404 Not Found
+else Agreement found
+  Handler -> Db: Find first scheduled lesson that has yet to end
+  Db --> Handler: Next lesson or no match
+  Handler -> Db: Count draft and published materials
+  Db --> Handler: Material count
+  Handler -> Handler: Calculate lesson estimate if rate is set
+  Handler --> Api: Agreement overview
+  Api --> Tutor: 200 OK
+end
+@enduml

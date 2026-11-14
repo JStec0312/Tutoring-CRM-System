@@ -27,9 +27,11 @@ else authenticated Tutor
         Controller -> MediatR: GetOverdueTutoringAgreementsQuery\n(UserAccountId, RequestMetadata)
         MediatR -> Handler: Handle(query, CancellationToken)
         activate Handler
-        Handler -> Db: Execute one AsNoTracking query\nFilter active charges with PaymentId == null\nAggregate by BillingAccount.TutoringAgreementId\nJoin agreements and filter Tutor.UserAccountId\nProject rows ordered by OutstandingAmount descending
-        note over Handler, Db: No full aggregate loading, N+1 queries, or per-agreement US-018 calls
-        Db --> Handler: Agreement rows or empty result
+        Handler -> Db: Aggregate active unpaid charges for the tutor\nGroup by agreement and currency
+        Db --> Handler: Amount and count per agreement and currency
+        Handler -> Db: Fetch the matching owned agreements in a batch
+        Db --> Handler: Agreement and student details
+        Handler -> Handler: Build agreement totals and the currency breakdown\nOrder by OutstandingAmount descending
         Handler --> MediatR: IReadOnlyCollection<OverdueTutoringAgreementResponse>
         deactivate Handler
         MediatR --> Controller: Collection

@@ -7,4 +7,5 @@ public sealed record OverdueTutoringAgreementResponse(
     string Subject,
     string AgreementTitle,
     decimal OutstandingAmount,
-    int UnpaidLessonCount);
+    int UnpaidLessonCount,
+    IReadOnlyList<UnpaidAmountByCurrency> AmountsByCurrency);

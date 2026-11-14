@@ -64,7 +64,12 @@ public sealed class GetAssignedStudentsHandler(
                     ? (decimal?)agreement.HourlyRate.PricePerHour.Amount
                     : null,
 
-                Notes = agreement.PrivateNotes
+                Notes = agreement.PrivateNotes,
+                Title = agreement.AgreementTitle.Value,
+                Status = agreement.Status.ToString(),
+                Currency = agreement.HourlyRate != null
+                    ? agreement.HourlyRate.PricePerHour.Currency.Code
+                    : null
             })
             .ToListAsync(cancellationToken);
 
@@ -92,7 +97,10 @@ public sealed class GetAssignedStudentsHandler(
                         agreement.TutoringAgreementId,
                         agreement.Subject,
                         agreement.HourlyRate,
-                        agreement.Notes))
+                        agreement.Notes,
+                        agreement.Title,
+                        agreement.Status,
+                        agreement.Currency))
                     .ToList()))
             .ToList();
 

@@ -17,40 +17,64 @@ public sealed class GetOverdueTutoringAgreementsHandler(
         GetOverdueTutoringAgreementsQuery request,
         CancellationToken cancellationToken)
     {
-        var unpaidByAgreement =
+        var ownedAgreements = dbContext.TutoringAgreements.AsNoTracking().ForTutor(request.UserAccountId);
+        var ownedCharges =
             from charge in dbContext.LessonCharges.AsNoTracking()
             join account in dbContext.BillingAccounts.AsNoTracking()
                 on charge.BillingAccountId equals account.Id
             where charge.Status == ChargeStatus.Active
                   && charge.PaymentId == null
-            group charge by account.TutoringAgreementId
-            into unpaidCharges
+                  && ownedAgreements.Any(agreement => agreement.Id == account.TutoringAgreementId)
+            select new { account.TutoringAgreementId, charge.Amount };
+
+        var unpaidByCurrency = await (
+            from charge in ownedCharges
+            group charge by new { charge.TutoringAgreementId, charge.Amount.Currency } into unpaidCharges
             select new
             {
-                TutoringAgreementId = unpaidCharges.Key,
-                TotalUnpaidAmount = unpaidCharges.Sum(charge => charge.Amount.Amount),
+                unpaidCharges.Key.TutoringAgreementId,
+                unpaidCharges.Key.Currency,
+                Amount = unpaidCharges.Sum(charge => charge.Amount.Amount),
                 UnpaidChargeCount = unpaidCharges.Count()
-            };
+            }).ToListAsync(cancellationToken);
 
-        var agreements = await (
-            from unpaid in unpaidByAgreement
-            join agreement in dbContext.TutoringAgreements.AsNoTracking().ForTutor(request.UserAccountId)
-                on unpaid.TutoringAgreementId equals agreement.Id
-            orderby unpaid.TotalUnpaidAmount descending
-            select new OverdueTutoringAgreementResponse(
-                agreement.Id.Value,
-                agreement.Student.Id.Value,
-                agreement.Student.DisplayName.Value,
-                agreement.Subject.Name,
-                agreement.AgreementTitle.Value,
-                unpaid.TotalUnpaidAmount,
-                unpaid.UnpaidChargeCount))
+        var agreementIds = unpaidByCurrency.Select(item => item.TutoringAgreementId).Distinct().ToArray();
+        var agreementDetails = await ownedAgreements.Where(agreement => agreementIds.Contains(agreement.Id))
+            .Select(agreement => new
+            {
+                agreement.Id,
+                agreement.StudentId,
+                Name = agreement.Student.DisplayName.Value,
+                Subject = agreement.Subject.Name,
+                Title = agreement.AgreementTitle.Value
+            })
             .ToListAsync(cancellationToken);
+
+        var agreements = agreementDetails.Join(
+            unpaidByCurrency.GroupBy(item => item.TutoringAgreementId),
+            agreement => agreement.Id,
+            group => group.Key,
+            (agreement, group) => new OverdueTutoringAgreementResponse(
+                agreement.Id.Value,
+                agreement.StudentId.Value,
+                agreement.Name,
+                agreement.Subject,
+                agreement.Title,
+                group.Sum(item => item.Amount),
+                group.Sum(item => item.UnpaidChargeCount),
+                group.OrderBy(item => item.Currency.Code, StringComparer.Ordinal)
+                    .Select(item => new UnpaidAmountByCurrency(
+                        item.Currency.Code,
+                        item.Amount,
+                        item.UnpaidChargeCount))
+                    .ToArray()))
+            .OrderByDescending(item => item.OutstandingAmount)
+            .ToArray();
 
         logger.LogInformation(
             "Overdue tutoring agreements retrieved. UserAccountId: {UserAccountId}, AgreementCount: {AgreementCount}, RequestMetadata: {RequestMetadata}",
             request.UserAccountId.Value,
-            agreements.Count,
+            agreements.Length,
             request.RequestMetadata);
 
         return agreements;

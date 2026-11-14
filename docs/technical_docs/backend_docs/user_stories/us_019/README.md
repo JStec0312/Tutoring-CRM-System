@@ -33,12 +33,17 @@ Example response:
     "subject": "Mathematics",
     "agreementTitle": "Algebra tutoring",
     "outstandingAmount": 120.00,
-    "unpaidLessonCount": 2
+    "unpaidLessonCount": 2,
+    "amountsByCurrency": [
+      { "currency": "PLN", "amount": 120.00, "unpaidLessonCount": 2 }
+    ]
   }
 ]
 ```
 
 An empty result is returned as `200 OK` with `[]`; it is not a `404`.
+
+Use `amountsByCurrency` to display monetary totals. The legacy `outstandingAmount` and `unpaidLessonCount` retain the agreement-wide aggregation and ordering.
 
 ## Overdue charge rules
 
@@ -63,13 +68,13 @@ Cancelled charges, corrected charges, and charges linked to a payment are exclud
 - `401 Unauthorized` — unauthenticated request or missing/invalid `sub` claim.
 - `403 Forbidden` — authenticated caller without the `Tutor` role.
 - Agreements are filtered to the tutor resolved from the caller's `UserAccountId`.
-- The handler performs a single no-tracking EF Core query that aggregates charges by agreement and joins the agreement data. It does not load full aggregates, issue per-agreement queries, or call US-018.
+- The handler aggregates charges by agreement and currency, retrieves the matching agreement details in a batch, and builds the response in memory.
 - `OutstandingAmount` is calculated for the response only; no overdue flag or amount is persisted.
 - No domain or database schema changes, due-date fields, or migrations are required.
 
 ## Tests
 
-`GetOverdueTutoringAgreementsTests` covers aggregation and sorting per agreement, paid/cancelled/corrected charge exclusion, foreign tutor exclusion, suspended and ended agreements, empty results, and authentication/role authorization.
+`GetOverdueTutoringAgreementsTests` covers aggregation and sorting per agreement, amounts and counts by currency, paid/cancelled/corrected charge exclusion, foreign tutor exclusion, suspended and ended agreements, empty results, and authentication and role authorization.
 
 ## Diagram
 

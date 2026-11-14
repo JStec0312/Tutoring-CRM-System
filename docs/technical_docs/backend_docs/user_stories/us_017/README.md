@@ -24,8 +24,11 @@ The billing account and lesson charges must already exist from the completed-les
 
 | Method | Endpoint | Auth | Result |
 | --- | --- | --- | --- |
+| GET | `/api/tutors/me/lesson-charges` | JWT, `Tutor` role | `200 OK` with active charges owned by the tutor. Optional `agreementId` and `lessonId` narrow the result. |
 | POST | `/api/tutors/me/lesson-charges/{lessonChargeId}/mark-paid` | JWT, `Tutor` role | `204 No Content` |
 | POST | `/api/tutors/me/lesson-charges/mark-paid` | JWT, `Tutor` role | `204 No Content` |
+
+Each listed charge includes its IDs, student name, subject, lesson times, amount, currency and optional `paidAtUtc`. A null payment timestamp identifies an unpaid charge.
 
 ### Single charge request
 

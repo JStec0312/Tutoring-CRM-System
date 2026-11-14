@@ -93,6 +93,10 @@ public sealed class GetOverdueTutoringAgreementsTests(
         Assert.Equal("Suspended agreement", suspendedResult.AgreementTitle);
         Assert.Equal(100m, suspendedResult.OutstandingAmount);
         Assert.Equal(2, suspendedResult.UnpaidLessonCount);
+        var currency = Assert.Single(suspendedResult.AmountsByCurrency);
+        Assert.Equal("PLN", currency.Currency);
+        Assert.Equal(100m, currency.Amount);
+        Assert.Equal(2, currency.UnpaidLessonCount);
     }
 
     [Fact]

@@ -19,6 +19,8 @@ Each material records its TA, optional lesson, authenticated uploader, title, fi
 
 ## API
 
+`GET /api/learning-materials?tutoringAgreementId={id}` lists draft and published materials for an agreement. The authenticated tutor or student must participate in that agreement. It returns `200 OK` with the material ID, optional lesson ID, title, file name, content type, size, and whether the uploader was the tutor. An unknown or inaccessible agreement returns `404`.
+
 `POST /api/learning-materials` accepts `multipart/form-data` and requires a `Tutor` or `Student` role.
 
 | Field | Required | Meaning |
