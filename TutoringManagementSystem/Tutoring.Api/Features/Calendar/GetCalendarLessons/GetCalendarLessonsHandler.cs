@@ -1,12 +1,15 @@
 using Tutoring.Api.Features.Common.Authorization;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Tutoring.Domain.Lessons;
+using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Calendar.GetCalendarLessons;
 
 public sealed class GetCalendarLessonsHandler(
     TutoringDbContext dbContext,
+    TimeProvider timeProvider,
     ILogger<GetCalendarLessonsHandler> logger)
     : IRequestHandler<
         GetCalendarLessonsQuery,
@@ -23,14 +26,32 @@ public sealed class GetCalendarLessonsHandler(
             request.ToUtc,
             request.RequestMetadata);
 
-        var lessons = await dbContext.Lessons
-            .AsNoTracking()
-            .ForParticipant(request.UserAccountId)
+        var source = dbContext.Lessons.AsNoTracking();
+        source = request.TutorOnly
+            ? source.Where(lesson => lesson.Agreement.Tutor.UserAccountId == request.UserAccountId)
+            : source.ForParticipant(request.UserAccountId);
+
+        if (request.AwaitingOutcome)
+        {
+            var now = timeProvider.GetUtcNow();
+            source = source.Where(lesson =>
+                lesson.Status == LessonStatus.Scheduled && lesson.TimeSlot.EndsAtUtc <= now);
+        }
+
+        if (request.AgreementId is { } agreementId)
+        {
+            var id = new TutoringAgreementId(agreementId);
+            source = source.Where(lesson => lesson.TutoringAgreementId == id);
+        }
+
+        var rows = await source
             .Where(lesson =>
                 lesson.TimeSlot.StartsAtUtc < request.ToUtc &&
                 lesson.TimeSlot.EndsAtUtc > request.FromUtc)
             .OrderBy(lesson => lesson.TimeSlot.StartsAtUtc)
-            .Select(lesson => new CalendarLessonResponse(
+            .Select(lesson => new
+            {
+                Lesson = new CalendarLessonResponse(
                 lesson.Id.Value,
                 lesson.TutoringAgreementId.Value,
                 lesson.LessonSeriesId.HasValue
@@ -45,17 +66,30 @@ public sealed class GetCalendarLessonsHandler(
                 lesson.Agreement.Student.DisplayName.Value,
                 lesson.Agreement.Tutor.Id.Value,
                 lesson.Agreement.Tutor.Account.Profile.FirstName,
-                lesson.Agreement.Tutor.Account.Profile.LastName))
+                lesson.Agreement.Tutor.Account.Profile.LastName),
+                Rate = request.TutorOnly ? lesson.Agreement.HourlyRate : null
+            })
             .ToListAsync(cancellationToken);
+
+        var lessons = rows.Select(row => WithEstimate(row.Lesson, row.Rate)).ToArray();
 
         logger.LogInformation(
             "Calendar lessons query completed. UserAccountId: {UserAccountId}, LessonsCount: {LessonsCount}, FromUtc: {FromUtc}, ToUtc: {ToUtc}, RequestMetadata: {RequestMetadata}",
             request.UserAccountId.Value,
-            lessons.Count,
+            lessons.Length,
             request.FromUtc,
             request.ToUtc,
             request.RequestMetadata);
 
         return lessons;
+    }
+
+    internal static CalendarLessonResponse WithEstimate(CalendarLessonResponse lesson, HourlyRate? rate)
+    {
+        if (rate is null || lesson.Status != nameof(LessonStatus.Scheduled))
+            return lesson;
+
+        var estimate = rate.CalculateCost(lesson.EndsAtUtc - lesson.StartsAtUtc);
+        return lesson with { EstimatedAmount = estimate.Amount, Currency = estimate.Currency.Code };
     }
 }

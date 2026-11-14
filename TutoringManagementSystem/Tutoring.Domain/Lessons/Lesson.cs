@@ -24,6 +24,7 @@ public sealed class Lesson
     public CancellationReason? CancellationReason { get; private set; }
 
     public LessonNote? Note { get; private set; }
+    public string? PlannedTopic { get; private set; }
 
     public DateTimeOffset CreatedAtUtc { get; private set; }
 
@@ -31,12 +32,14 @@ public sealed class Lesson
         TutoringAgreementId tutoringAgreementId,
         TimeSlot timeSlot,
         DateTimeOffset createdAtUtc,
-        LessonSeriesId? lessonSeriesId = null)
+        LessonSeriesId? lessonSeriesId = null,
+        string? plannedTopic = null)
     {
         TutoringAgreementId = tutoringAgreementId;
         TimeSlot = timeSlot ?? throw new ArgumentNullException(nameof(timeSlot));
 
         LessonSeriesId = lessonSeriesId;
+        SetPlannedTopic(plannedTopic);
 
         Status = LessonStatus.Scheduled;
         CreatedAtUtc = createdAtUtc;
@@ -50,6 +53,15 @@ public sealed class Lesson
         }
 
         TimeSlot = newTimeSlot;
+    }
+
+    public void SetPlannedTopic(string? topic)
+    {
+        var trimmed = topic?.Trim();
+        if (trimmed?.Length > 200)
+            throw new ArgumentException("The planned topic cannot exceed 200 characters.", nameof(topic));
+
+        PlannedTopic = string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
     public void Cancel(

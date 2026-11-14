@@ -8,6 +8,8 @@
 Only the tutor who owns the lesson's agreement can save the note. The operation is available
 regardless of lesson status.
 
+The tutor workspace reads the note from [lesson details](../us_013/README.md#tutor-lesson-details) and offers the editor for completed lessons.
+
 The JSON body contains three required strings. The API trims surrounding whitespace before
 applying these limits.
 

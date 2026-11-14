@@ -100,6 +100,8 @@ public sealed class RescheduleLessonHandler(
             endsAtUtc);
 
         lesson.Reschedule(timeSlot);
+        if (request.Topic is not null)
+            lesson.SetPlannedTopic(request.Topic);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 

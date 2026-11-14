@@ -61,6 +61,9 @@ internal sealed class LessonConfiguration
             .HasColumnType("datetimeoffset")
             .IsRequired();
 
+        builder.Property(lesson => lesson.PlannedTopic)
+            .HasMaxLength(200);
+
         builder.HasOne(lesson => lesson.Agreement)
             .WithMany()
             .HasForeignKey(lesson => lesson.TutoringAgreementId)

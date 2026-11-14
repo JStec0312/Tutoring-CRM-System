@@ -46,7 +46,8 @@ public sealed class RescheduleLessonController(
                 lessonId,
                 request.StartsAt,
                 request.DurationMinutes,
-                metadata),
+                metadata,
+                request.Topic),
             cancellationToken);
 
         return NoContent();

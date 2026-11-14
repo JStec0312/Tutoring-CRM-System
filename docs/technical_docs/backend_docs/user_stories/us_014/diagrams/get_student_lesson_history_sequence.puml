@@ -37,7 +37,7 @@ else authenticated Tutor
             Controller --> Tutor: 404 Not Found
         else relationship found
             Handler -> Handler: nowUtc = TimeProvider.GetUtcNow()
-            Handler -> Db: Query matching Lessons\nAsNoTracking\nstartsAtUtc < nowUtc\norder newest-first
+            Handler -> Db: Read matching lessons and optional note topic\nAsNoTracking, startsAtUtc < nowUtc\nOrder newest first
             Db --> Handler: Lessons
             Handler -> Handler: Select StudentLessonHistoryResponse
             Handler --> MediatR: IReadOnlyCollection<Response>

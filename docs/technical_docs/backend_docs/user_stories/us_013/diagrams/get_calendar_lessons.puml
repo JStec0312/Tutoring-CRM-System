@@ -9,7 +9,7 @@ participant MediatR
 participant "GetCalendarLessonsHandler" as Handler
 database "TutoringDbContext" as Db
 
-User -> Controller: GET /api/calendar?from={from}&to={to}
+User -> Controller: GET /api/calendar\nfrom, to, optional tutorOnly and awaitingOutcome
 
 Controller -> Controller: Read UserAccountId from JWT sub
 Controller -> Controller: Build RequestMetadata\nIP + UserAgent + TraceId
@@ -20,20 +20,22 @@ else authenticated user
 
     alt from >= to
         Controller --> User: 400 Bad Request
+    else tutor filter without the Tutor role
+        Controller --> User: 403 Forbidden
     else valid range
         Controller -> Controller: Convert from/to to UTC
 
-        Controller -> MediatR: GetCalendarLessonsQuery\n(UserAccountId, FromUtc, ToUtc,\nRequestMetadata)
+        Controller -> MediatR: GetCalendarLessonsQuery\nUTC range and tutor filters
 
         MediatR -> Handler: Handle(query)
         activate Handler
 
 
-        Handler -> Db: Query Lessons AsNoTracking\nwhere user belongs to Agreement\nand time ranges overlap\norder by StartsAtUtc
+        Handler -> Db: Read overlapping lessons by participant or tutor\nOptionally require Scheduled and already ended\nOrder by StartsAtUtc
 
         Db --> Handler: Calendar lessons
 
-        Handler -> Handler: Project CalendarLessonResponse
+        Handler -> Handler: Calculate estimated cost for eligible tutor results
 
         Handler --> MediatR: IReadOnlyCollection<CalendarLessonResponse>
         deactivate Handler

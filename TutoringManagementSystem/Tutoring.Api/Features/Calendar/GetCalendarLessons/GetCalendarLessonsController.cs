@@ -55,12 +55,18 @@ public sealed class GetCalendarLessonsController(
             return BadRequest();
         }
 
+        if ((request.TutorOnly || request.AwaitingOutcome) && !User.IsInRole(nameof(UserRole.Tutor)))
+            return Forbid();
+
         var lessons = await sender.Send(
             new GetCalendarLessonsQuery(
                 new UserAccountId(userAccountId),
                 request.From.ToUniversalTime(),
                 request.To.ToUniversalTime(),
-                metadata),
+                metadata,
+                request.TutorOnly || request.AwaitingOutcome,
+                request.AwaitingOutcome,
+                request.AgreementId),
             cancellationToken);
 
         logger.LogInformation(

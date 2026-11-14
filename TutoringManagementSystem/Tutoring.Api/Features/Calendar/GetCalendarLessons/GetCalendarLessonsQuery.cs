@@ -8,5 +8,8 @@ public sealed record GetCalendarLessonsQuery(
     UserAccountId UserAccountId,
     DateTimeOffset FromUtc,
     DateTimeOffset ToUtc,
-    RequestMetadata RequestMetadata)
+    RequestMetadata RequestMetadata,
+    bool TutorOnly,
+    bool AwaitingOutcome,
+    Guid? AgreementId = null)
     : IRequest<IReadOnlyCollection<CalendarLessonResponse>>;

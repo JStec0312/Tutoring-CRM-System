@@ -1,0 +1,21 @@
+@startuml
+skinparam backgroundColor white
+title Read tutor lesson details
+actor Tutor
+participant "Tutor lesson API" as Api
+participant "GetTutorLessonHandler" as Handler
+database "SQL Server" as Db
+
+Tutor -> Api: GET /api/tutors/me/lessons/{lessonId}
+Api -> Handler: Query with tutor account and lesson ID
+Handler -> Db: Read tutor-owned lesson, agreement, student and note
+Db --> Handler: Lesson or no match
+alt Missing or foreign lesson
+  Handler --> Api: Lessons.LessonNotFound
+  Api --> Tutor: 404 Not Found
+else Lesson found
+  Handler -> Handler: Calculate estimate for a scheduled lesson with a rate
+  Handler --> Api: Lesson and optional note
+  Api --> Tutor: 200 OK
+end
+@enduml

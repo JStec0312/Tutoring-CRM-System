@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Calendar.GetCalendarLessons;
+using Tutoring.Api.Features.Tutors.GetTutorLesson;
+using Tutoring.Api.Features.Tutors.GetTutoringAgreementOverview;
 using Tutoring.Domain.Billing;
+using Tutoring.Domain.LearningMaterials;
 using Tutoring.Domain.Lessons;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.TutoringAgreements;
@@ -20,6 +23,76 @@ public sealed class GetCalendarLessonsTests(
 
     private static readonly DateTimeOffset ReferenceDate =
         new(2026, 9, 24, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task GetCalendarLessons_TutorOutcomeFilter_ReturnsEndedScheduledLessonsWithEstimates()
+    {
+        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        var student = await CreateStudentAsync("student@test.pl", "student");
+        var agreement = await CreateAgreementAsync(tutor.Email, student.StudentId);
+        var now = DateTimeOffset.UtcNow;
+        var past = await CreateLessonAsync(agreement.Id.Value, now.AddHours(-3), now.AddHours(-1.5));
+        await CreateLessonAsync(agreement.Id.Value, now.AddHours(2), now.AddHours(3));
+        var path = BuildEndpoint(now.AddDays(-2), now.AddDays(2)) + "&awaitingOutcome=true";
+
+        var response = await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, path, tutor.AccessToken));
+        response.EnsureSuccessStatusCode();
+        var result = Assert.Single((await response.Content.ReadFromJsonAsync<CalendarLessonResponse[]>())!);
+        Assert.Equal(past, result.LessonId);
+        Assert.Equal(150m, result.EstimatedAmount);
+        Assert.Equal("PLN", result.Currency);
+
+        var forbidden = await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, path, student.AccessToken));
+        Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
+    }
+
+    [Fact]
+    public async Task TutorOverviewAndLesson_ReturnOwnedDataAndHideItFromOtherAccounts()
+    {
+        var tutor = await CreateTutorAsync("tutor@test.pl", "tutor");
+        var other = await CreateTutorAsync("other@test.pl", "other");
+        var student = await CreateStudentAsync("student@test.pl", "student");
+        var agreement = await CreateAgreementAsync(tutor.Email, student.StudentId);
+        var starts = DateTimeOffset.UtcNow.AddDays(4);
+        var lessonId = await CreateLessonAsync(agreement.Id.Value, starts, starts.AddMinutes(45));
+        await CreateLessonAsync(agreement.Id.Value, starts.AddDays(1), starts.AddDays(1).AddHours(1));
+        await ExecuteDbAsync(async db =>
+        {
+            var tutorAccountId = await db.Tutors.Where(item => item.Id == agreement.TutorId)
+                .Select(item => item.UserAccountId).SingleAsync();
+            db.LessonNotes.Add(new LessonNote(new LessonId(lessonId), "Linear equations", "Slope", "Solved exercises"));
+            db.LearningMaterials.Add(new LearningMaterial(agreement.Id, null, tutorAccountId, "Worksheet",
+                new FileDescriptor("worksheet.pdf", "application/pdf", new FileSize(50), new StorageLocation("test-file")),
+                DateTimeOffset.UtcNow));
+            await db.SaveChangesAsync();
+        });
+
+        var overviewPath = $"/api/tutors/tutoring-agreements/{agreement.Id.Value}/overview";
+        var lessonPath = $"/api/tutors/me/lessons/{lessonId}";
+        var overviewResponse = await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, overviewPath, tutor.AccessToken));
+        overviewResponse.EnsureSuccessStatusCode();
+        var overview = await overviewResponse.Content.ReadFromJsonAsync<TutoringAgreementOverviewResponse>();
+        Assert.NotNull(overview);
+        Assert.Equal(student.StudentId, overview.StudentId);
+        Assert.Equal(1, overview.MaterialCount);
+        Assert.Equal(lessonId, overview.NextLesson?.LessonId);
+        Assert.Equal(75m, overview.NextLesson?.EstimatedAmount);
+
+        var lessonResponse = await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, lessonPath, tutor.AccessToken));
+        lessonResponse.EnsureSuccessStatusCode();
+        var lesson = await lessonResponse.Content.ReadFromJsonAsync<TutorLessonResponse>();
+        Assert.NotNull(lesson);
+        Assert.Equal("Linear equations", lesson.Note?.Topic);
+
+        foreach (var path in new[] { overviewPath, lessonPath })
+        {
+            Assert.Equal(HttpStatusCode.Unauthorized, (await Client.GetAsync(path)).StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden,
+                (await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, path, student.AccessToken))).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound,
+                (await Client.SendAsync(CreateAuthorizedRequest(HttpMethod.Get, path, other.AccessToken))).StatusCode);
+        }
+    }
 
     [Fact]
     public async Task GetCalendarLessons_WithoutAccessToken_ShouldReturnUnauthorized()

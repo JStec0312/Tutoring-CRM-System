@@ -84,7 +84,8 @@ public sealed class GetStudentLessonHistoryHandler(
                 lesson.Agreement.AgreementTitle.Value,
                 lesson.CancellationReason != null
                     ? lesson.CancellationReason.Text
-                    : null))
+                    : null,
+                lesson.Note != null ? lesson.Note.Topic : null))
             .ToListAsync(cancellationToken);
 
         logger.LogInformation(

@@ -9,5 +9,6 @@ public sealed record RescheduleLessonCommand(
     Guid LessonId,
     DateTimeOffset StartsAt,
     int DurationMinutes,
-    RequestMetadata RequestMetadata)
+    RequestMetadata RequestMetadata,
+    string? Topic = null)
     : IRequest;

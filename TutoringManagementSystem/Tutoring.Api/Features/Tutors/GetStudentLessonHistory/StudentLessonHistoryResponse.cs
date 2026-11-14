@@ -8,4 +8,5 @@ public sealed record StudentLessonHistoryResponse(
     string Status,
     string Subject,
     string AgreementTitle,
-    string? CancellationReason);
+    string? CancellationReason,
+    string? Topic);

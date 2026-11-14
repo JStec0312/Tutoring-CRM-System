@@ -106,7 +106,8 @@ public sealed class ScheduleLessonHandler(
         var lesson = new Lesson(
             agreement.Id,
             timeSlot,
-            now);
+            now,
+            plannedTopic: request.Topic);
 
         dbContext.Lessons.Add(lesson);
 

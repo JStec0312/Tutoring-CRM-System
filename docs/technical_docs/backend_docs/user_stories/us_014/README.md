@@ -37,7 +37,8 @@ The request has no body. `studentId` is supplied in the route. The authenticated
     "status": "Completed",
     "subject": "Physics",
     "agreementTitle": "Weekly physics tutoring",
-    "cancellationReason": null
+    "cancellationReason": null,
+    "topic": "Newton's laws"
   }
 ]
 ```
@@ -54,6 +55,7 @@ Each item is a `StudentLessonHistoryResponse` containing:
 | `subject` | `string` | Subject from the agreement. |
 | `agreementTitle` | `string` | Title from the agreement. |
 | `cancellationReason` | `string?` | Cancellation reason, or `null` when absent. |
+| `topic` | `string?` | Topic from the lesson note, or `null` when absent. The agreement screen uses the subject when no topic is available. |
 
 ## Implementation
 
@@ -63,7 +65,7 @@ Each item is a `StudentLessonHistoryResponse` containing:
 - Ownership is checked with `TutorId + StudentId` against `TutoringAgreement`. Missing ownership or a student without a matching agreement raises `TutoringAgreementNotFoundException`, which is exposed as `404 Not Found`.
 - The handler uses `AsNoTracking()` for tutor, agreement, and lesson reads. It does not introduce a Repository, Service, or UnitOfWork abstraction; EF Core is used directly through `TutoringDbContext`.
 - `TimeProvider.GetUtcNow()` defines the current time. Lessons are included when `lesson.TimeSlot.StartsAtUtc < nowUtc`; therefore future-starting lessons are excluded, while the filter is based on start time rather than end time.
-- Lessons are filtered through their agreement, sorted by descending `StartsAtUtc`, and projected directly with `Select` into `StudentLessonHistoryResponse`. The projection includes the lesson status, agreement subject and title, and optional cancellation reason.
+- Lessons are filtered through their agreement, sorted by descending `StartsAtUtc`, and projected directly with `Select` into `StudentLessonHistoryResponse`. The projection includes the lesson status, agreement subject and title, optional cancellation reason, and lesson note topic.
 - The query spans every matching agreement for the tutor and student. Agreement status is not filtered, so lessons remain visible after an agreement has ended.
 - Database operations use the request `CancellationToken`. Successful reads return `Ok(IReadOnlyCollection<StudentLessonHistoryResponse>)`, including an empty collection when no lesson matches.
 
@@ -86,11 +88,7 @@ Each item is a `StudentLessonHistoryResponse` containing:
 
 ![Review student lesson history](diagrams/get_student_lesson_history_sequence.svg)
 
-Source:
-
-```text
-diagrams/get_student_lesson_history_sequence.puml
-```
+[Lesson history PlantUML source](diagrams/get_student_lesson_history_sequence.puml)
 
 ## Tests
 

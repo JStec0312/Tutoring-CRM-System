@@ -25,7 +25,8 @@ Request body:
 {
   "tutoringAgreementId": "73c2ea16-63b2-4bc3-b97b-57bf58fc15bb",
   "startsAt": "2026-10-10T18:00:00+02:00",
-  "durationMinutes": 60
+  "durationMinutes": 60,
+  "topic": "Quadratic equations"
 }
 ```
 
@@ -45,6 +46,7 @@ Response body:
 - `TimeProvider` supplies the current UTC time. `StartsAt` is converted to UTC, must be in the future, and `EndsAtUtc` is calculated from `DurationMinutes`; invalid durations or past starts return `400` with `Request.Invalid`.
 - Conflicts are checked only against `LessonStatus.Scheduled` lessons of the same tutor using `existing.Start < new.End` and `existing.End > new.Start`. Touching boundaries do not conflict; conflicts return `409` with `Lessons.TimeConflict`.
 - A `Lesson` is created with `LessonStatus.Scheduled`, no `LessonSeriesId`, and persisted with `SaveChangesAsync`.
+- The optional `topic` is trimmed and limited to 200 characters. It is stored as the planned topic on the lesson and appears in the tutor lesson details.
 
 ## Diagram
 

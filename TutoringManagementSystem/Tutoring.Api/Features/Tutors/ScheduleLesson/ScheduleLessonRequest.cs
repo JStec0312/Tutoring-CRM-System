@@ -3,4 +3,5 @@ namespace Tutoring.Api.Features.Tutors.ScheduleLesson;
 public sealed record ScheduleLessonRequest(
     Guid TutoringAgreementId,
     DateTimeOffset StartsAt,
-    int DurationMinutes);
+    int DurationMinutes,
+    string? Topic = null);

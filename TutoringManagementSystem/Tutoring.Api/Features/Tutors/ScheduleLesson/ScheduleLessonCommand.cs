@@ -9,5 +9,6 @@ public sealed record ScheduleLessonCommand(
     Guid TutoringAgreementId,
     DateTimeOffset StartsAt,
     int DurationMinutes,
-    RequestMetadata RequestMetadata)
+    RequestMetadata RequestMetadata,
+    string? Topic = null)
     : IRequest<ScheduleLessonResponse>;

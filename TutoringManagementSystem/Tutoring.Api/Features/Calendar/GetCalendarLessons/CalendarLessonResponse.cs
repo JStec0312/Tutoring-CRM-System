@@ -13,4 +13,6 @@ public sealed record CalendarLessonResponse(
     string StudentDisplayName,
     Guid TutorId,
     string? TutorFirstName,
-    string? TutorLastName);
+    string? TutorLastName,
+    decimal? EstimatedAmount = null,
+    string? Currency = null);

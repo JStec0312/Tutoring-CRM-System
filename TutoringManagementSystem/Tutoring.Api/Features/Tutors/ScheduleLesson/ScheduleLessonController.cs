@@ -44,7 +44,8 @@ public sealed class ScheduleLessonController(
                 request.TutoringAgreementId,
                 request.StartsAt,
                 request.DurationMinutes,
-                metadata),
+                metadata,
+                request.Topic),
             cancellationToken);
 
         return StatusCode(

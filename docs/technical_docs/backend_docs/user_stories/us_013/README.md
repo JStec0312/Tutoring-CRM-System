@@ -33,6 +33,7 @@ A lesson is included when its time slot overlaps the requested range.
 ## FILES
 
 - Implementation: [GetCalendarLessons](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Calendar/GetCalendarLessons/)
+- Tutor lesson details: [GetTutorLesson](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Tutors/GetTutorLesson/)
 - Domain: [Lessons](../../../../../TutoringManagementSystem/Tutoring.Domain/Lessons/)
 - Tests: [GetCalendarLessons](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Calendar/GetCalendarLessons/)
 
@@ -41,6 +42,9 @@ A lesson is included when its time slot overlaps the requested range.
 | Method | Endpoint | Auth | Result |
 | --- | --- | --- | --- |
 | GET | `/api/calendar?from={from}&to={to}` | `Tutor` or `Student` role | Returns lessons belonging to the authenticated user that overlap the requested range. |
+| GET | `/api/tutors/me/lessons/{lessonId}` | `Tutor` role | Returns an owned lesson with its note, optional planned topic and optional cancellation reason. |
+
+The optional `agreementId` calendar query parameter limits results to one agreement within the caller's existing access scope.
 
 Example:
 
@@ -55,6 +59,10 @@ Query parameters:
 | --- | --- | --- |
 | `from` | `DateTimeOffset` | Start of the requested calendar range. |
 | `to` | `DateTimeOffset` | Exclusive end of the requested calendar range. |
+| `tutorOnly` | `bool`, optional | Scopes results to agreements the caller tutors. Scheduled lessons with a rate include `estimatedAmount` and `currency`. |
+| `awaitingOutcome` | `bool`, optional | Implies `tutorOnly` and returns only scheduled lessons whose end time has passed. |
+
+Both filters default to false. With either filter enabled, a caller without the Tutor role receives `403 Forbidden`. Both endpoints require an authenticated caller with a parseable JWT subject.
 
 The range follows `[from, to)` semantics.
 
@@ -77,20 +85,28 @@ Example response:
     "studentDisplayName": "student",
     "tutorId": "db45b95d-da9b-45b2-a969-cad202dc88da",
     "tutorFirstName": "Tutor",
-    "tutorLastName": "Test"
+    "tutorLastName": "Test",
+    "estimatedAmount": null,
+    "currency": null
   }
 ]
 ```
+
+For tutor-only reads, a scheduled lesson with an hourly rate includes an estimate based on the current agreement rate and lesson duration, rounded to two decimal places. Other calendar rows have null estimates. The estimate is calculated for display. See [US-016](../us_016/README.md) for charge creation when a lesson is completed.
+
+### Tutor lesson details
+
+The response contains `lesson` with the calendar lesson fields and `note` with `topic`, `coveredTopics`, and `studentProgress`. The note is null when no note exists. The lesson uses the same estimate rule as tutor-only calendar results. Its tutor name fields are null. A missing or foreign lesson returns `404 Lessons.LessonNotFound`. Editing the note uses the [US-027 endpoint](../us_027/README.md).
 
 ## Implementation
 
 - `GetCalendarLessonsController` accepts authenticated users with either the `Tutor` or `Student` role.
 - The authenticated `UserAccountId` is obtained from the JWT `sub` claim.
-- `GetCalendarLessonsRequest` contains the `From` and `To` values received through the query string.
+- `GetCalendarLessonsRequest` contains the `From` and `To` values and optional tutor filters received through the query string.
 - The controller validates that `From < To`.
 - Both timestamps are converted to UTC before creating `GetCalendarLessonsQuery`.
 - One endpoint is used for daily, weekly, and monthly calendar views.
-- `GetCalendarLessonsHandler` filters lessons by the authenticated user's relationship with the lesson's `TutoringAgreement`.
+- `GetCalendarLessonsHandler` scopes default reads to agreement participants. Tutor-only reads scope to the owning tutor. The outcome filter additionally checks `Scheduled` status and `EndsAtUtc <= TimeProvider.GetUtcNow()`.
 - A tutor can see lessons from agreements assigned to that tutor.
 - A registered student can see lessons from agreements assigned to that student.
 - Managed students without a linked `UserAccount` cannot directly authenticate and therefore do not request their own calendar.
@@ -173,8 +189,8 @@ to   = first day of next week at 00:00
 ### Month
 
 ```text
-from = first day of displayed month at 00:00
-to   = first day of next month at 00:00
+from = first day shown in the calendar grid at 00:00
+to   = day after the last cell at 00:00
 ```
 
 This keeps calendar presentation rules outside the domain and allows the same API to support additional calendar views in the future.
@@ -183,11 +199,11 @@ This keeps calendar presentation rules outside the domain and allows the same AP
 
 ![Get calendar lessons](diagrams/get_calendar_lessons.svg)
 
-Source:
+[Calendar PlantUML source](diagrams/get_calendar_lessons.puml)
 
-```text
-diagrams/get_calendar_lessons.puml
-```
+![Tutor lesson details sequence](diagrams/get_tutor_lesson.svg)
+
+[Tutor lesson details PlantUML source](diagrams/get_tutor_lesson.puml)
 
 ## Tests
 
@@ -205,4 +221,6 @@ diagrams/get_calendar_lessons.puml
 - daily ranges,
 - weekly ranges,
 - monthly ranges,
-- lesson data returned by the calendar API.
+- lesson data returned by the calendar API,
+- tutor outcome filtering, lesson cost estimates, and rejection of student callers for that filter,
+- the tutor lesson detail note payload and access checks for unauthenticated, student, and foreign tutor callers.
