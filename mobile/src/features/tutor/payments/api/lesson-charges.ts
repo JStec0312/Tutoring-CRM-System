@@ -30,6 +30,11 @@ export function markChargeUnpaid(api: ApiClient, chargeId: string) {
   return api.post(`${endpoint}/${encodeURIComponent(chargeId)}/mark-unpaid`);
 }
 
+export function lessonChargeStatus(charge?: LessonCharge) {
+  if (!charge) return 'No charge';
+  return charge.paidAtUtc ? 'Paid' : 'Unpaid';
+}
+
 export function chargeTotals(charges: LessonCharge[]) {
   const totals = new Map<string, number>();
   for (const { currency, amount } of charges) totals.set(currency, (totals.get(currency) ?? 0) + amount);

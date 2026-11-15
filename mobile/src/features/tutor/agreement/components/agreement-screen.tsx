@@ -5,6 +5,7 @@ import { useApi } from '@/shared/api/api-context';
 import { WorkspaceButton, WorkspaceCard, WorkspaceColumns, WorkspaceField, workspaceStyles as ui } from '@/shared/components/ui/workspace-controls';
 import { getAgreementOverview, getStudentHistory, updateAgreement, type AgreementOverview } from '../api/agreement';
 import { getOverdueAgreements } from '../../payments/api/get-overdue-agreements';
+import { getLessonCharges, lessonChargeStatus } from '../../payments/api/lesson-charges';
 import { estimateLabel, lessonMinutes, money, parseRate, quantity, shortDate, timeLabel, unpaidLabel } from '../../workspace/models/workspace-format';
 import { errorMessage, useTutorQuery } from '../../workspace/models/use-tutor-query';
 import { lessonRoute, studentRoute } from '../../workspace/models/tutor-routes';
@@ -29,6 +30,9 @@ export function AgreementScreen() {
     };
   }, [agreementId]);
   const query = useTutorQuery(load);
+  const loadCharges = useCallback((api: ApiClient, signal: AbortSignal) =>
+    getLessonCharges(api, signal, { agreementId }), [agreementId]);
+  const charges = useTutorQuery(loadCharges);
   const data = query.data;
   if (!data) return <TutorPage title="Tutoring agreement">
     <QueryFeedback {...query} />
@@ -41,6 +45,18 @@ export function AgreementScreen() {
   const rate = agreement.hourlyRate != null && agreement.currency
     ? `${money(agreement.hourlyRate, agreement.currency)}/hour` : 'No hourly rate';
   const unpaid = unpaidLabel(overdue);
+  const chargesByLesson = new Map(charges.data?.map(charge => [charge.lessonId, charge]));
+
+  function lessonCard(lesson: (typeof history)[number]) {
+    const details = [lesson.status, `${lessonMinutes(lesson)} minutes`];
+    if (lesson.status === 'Completed' && charges.data) {
+      details.push(lessonChargeStatus(chargesByLesson.get(lesson.lessonId)));
+    }
+    return <WorkspaceCard key={lesson.lessonId}
+      title={`${shortDate(lesson.startsAtUtc)} · ${lesson.topic || lesson.subject}`}
+      detail={details.join(' · ')} onPress={() => router.push(lessonRoute(lesson))} />;
+  }
+
   return <TutorPage title={`${agreement.subject} · ${agreement.studentDisplayName}`} subtitle={`${agreement.status} agreement · ${rate}`}>
     <WorkspaceColumns compact={compact}>
       <View style={compact ? ui.stack : ui.main}>
@@ -52,16 +68,13 @@ export function AgreementScreen() {
         <WorkspaceButton primary disabled={agreement.status !== 'Active'} label="Schedule lesson"
           onPress={() => router.push({ pathname: '/tutor/schedule', params: { agreementId } })} />
         <Text accessibilityRole="header" style={ui.sectionHeading}>Recent lessons</Text>
-        {recent
-          ? <WorkspaceCard title={`${shortDate(recent.startsAtUtc)} · ${recent.topic || recent.subject}`}
-              detail={`${recent.status} · ${lessonMinutes(recent)} minutes`} onPress={() => router.push(lessonRoute(recent))} />
-          : <Text style={ui.body}>No past lessons yet.</Text>}
+        {charges.error && history.some(lesson => lesson.status === 'Completed') &&
+          <QueryFeedback loading={false} error="Payment status unavailable." reload={charges.reload} />}
+        {recent ? lessonCard(recent) : <Text style={ui.body}>No past lessons yet.</Text>}
         <WorkspaceButton label="Lesson history" onPress={() => setPanel(panel === 'history' ? undefined : 'history')} />
         {panel === 'history' && <View style={ui.stack}>
           {history.length === 0 && <Text style={ui.body}>No lessons in this agreement yet.</Text>}
-          {history.map(lesson => <WorkspaceCard key={lesson.lessonId}
-            title={`${shortDate(lesson.startsAtUtc)} · ${lesson.topic || lesson.subject}`}
-            detail={`${lesson.status} · ${lessonMinutes(lesson)} minutes`} onPress={() => router.push(lessonRoute(lesson))} />)}
+          {history.map(lessonCard)}
         </View>}
       </View>
       <View style={compact ? ui.stack : ui.aside}>

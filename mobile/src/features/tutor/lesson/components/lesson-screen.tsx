@@ -7,7 +7,7 @@ import { WorkspaceButton, WorkspaceCard, WorkspaceField, workspaceStyles as ui }
 import { getLesson, updateLesson } from '../api/lesson';
 import { lessonSummary, lessonTime, shortDate } from '../../workspace/models/workspace-format';
 import { MaterialList } from '../../materials/components/materials-screen';
-import { getLessonCharges } from '../../payments/api/lesson-charges';
+import { getLessonCharges, lessonChargeStatus } from '../../payments/api/lesson-charges';
 import { errorMessage, useTutorQuery } from '../../workspace/models/use-tutor-query';
 import { agreementRoute } from '../../workspace/models/tutor-routes';
 import { QueryFeedback, TutorPage } from '../../workspace/components/tutor-workspace';
@@ -115,6 +115,6 @@ function LessonPaymentStatus({ lessonId }: { lessonId: string }) {
   </View>;
 
   const [charge] = query.data ?? [];
-  const status = query.loading ? 'Loading…' : !charge ? 'No charge' : charge.paidAtUtc ? 'Paid' : 'Unpaid';
+  const status = query.loading ? 'Loading…' : lessonChargeStatus(charge);
   return <Text accessibilityLiveRegion="polite" style={ui.body}>Payment · {status}</Text>;
 }
