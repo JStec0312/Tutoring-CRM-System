@@ -72,6 +72,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasColumnName("LessonId");
 
                     b.Property<Guid?>("PaymentId")
+                        .IsConcurrencyToken()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("PaymentId");
 
@@ -598,6 +599,25 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_EmailVerificationTokens_UserAccountId");
 
                     b.ToTable("EmailVerificationTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.GoogleSignInChallenge", b =>
+                {
+                    b.Property<string>("Nonce")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.Property<Guid?>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Nonce");
+
+                    b.ToTable("GoogleSignInChallenges", (string)null);
                 });
 
             modelBuilder.Entity("Tutoring.Infrastructure.Authentication.PasswordResetToken", b =>

@@ -68,7 +68,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<EmailEventDispatcher>();
 
         services.AddSingleton<IPublisher, RabbitMqPublisher>();
-
+        services.AddSingleton<GoogleIdTokenVerifier>();
 
         return services;
     }
