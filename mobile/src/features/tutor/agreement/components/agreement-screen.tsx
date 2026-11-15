@@ -56,11 +56,9 @@ export function AgreementScreen() {
           ? <WorkspaceCard title={`${shortDate(recent.startsAtUtc)} · ${recent.topic || recent.subject}`}
               detail={`${recent.status} · ${lessonMinutes(recent)} minutes`} onPress={() => router.push(lessonRoute(recent))} />
           : <Text style={ui.body}>No past lessons yet.</Text>}
-        <WorkspaceButton label="Lesson history & statistics" onPress={() => setPanel(panel === 'history' ? undefined : 'history')} />
+        <WorkspaceButton label="Lesson history" onPress={() => setPanel(panel === 'history' ? undefined : 'history')} />
         {panel === 'history' && <View style={ui.stack}>
-          <WorkspaceCard title="Agreement statistics"
-            detail={`${quantity(history.filter(lesson => lesson.status === 'Completed').length, 'completed lesson')} · ${quantity(
-              history.filter(lesson => lesson.status === 'Missed').length, 'missed lesson')}`} />
+          {history.length === 0 && <Text style={ui.body}>No lessons in this agreement yet.</Text>}
           {history.map(lesson => <WorkspaceCard key={lesson.lessonId}
             title={`${shortDate(lesson.startsAtUtc)} · ${lesson.topic || lesson.subject}`}
             detail={`${lesson.status} · ${lessonMinutes(lesson)} minutes`} onPress={() => router.push(lessonRoute(lesson))} />)}

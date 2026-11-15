@@ -7,6 +7,7 @@ import { WorkspaceButton, WorkspaceCard, WorkspaceField, workspaceStyles as ui }
 import { getLesson, updateLesson } from '../api/lesson';
 import { lessonSummary, lessonTime, shortDate } from '../../workspace/models/workspace-format';
 import { MaterialList } from '../../materials/components/materials-screen';
+import { getLessonCharges } from '../../payments/api/lesson-charges';
 import { errorMessage, useTutorQuery } from '../../workspace/models/use-tutor-query';
 import { agreementRoute } from '../../workspace/models/tutor-routes';
 import { QueryFeedback, TutorPage } from '../../workspace/components/tutor-workspace';
@@ -52,6 +53,7 @@ export function LessonScreen() {
     {lesson && <>
       <WorkspaceCard title={`${shortDate(lesson.startsAtUtc)} · ${lessonTime(lesson)} · ${lesson.studentDisplayName}`}
         detail={lessonSummary(lesson)} />
+      {lesson.status === 'Completed' && <LessonPaymentStatus key={lessonId} lessonId={lessonId} />}
       {lesson.plannedTopic && <WorkspaceCard title="Planned topic" detail={lesson.plannedTopic} />}
       {lesson.cancellationReason && <Text style={ui.body}>Reason · {lesson.cancellationReason}</Text>}
       {lesson.status === 'Scheduled' && <View style={ui.row}>
@@ -101,4 +103,18 @@ export function LessonScreen() {
       else router.replace('/tutor/calendar');
     }} />
   </TutorPage>;
+}
+
+function LessonPaymentStatus({ lessonId }: { lessonId: string }) {
+  const load = useCallback((api: ApiClient, signal: AbortSignal) =>
+    getLessonCharges(api, signal, { lessonId }), [lessonId]);
+  const query = useTutorQuery(load);
+  if (query.error) return <View style={ui.row}>
+    <Text accessibilityRole="alert" style={ui.error}>Payment status unavailable.</Text>
+    <WorkspaceButton label="Retry payment status" onPress={query.reload} />
+  </View>;
+
+  const [charge] = query.data ?? [];
+  const status = query.loading ? 'Loading…' : !charge ? 'No charge' : charge.paidAtUtc ? 'Paid' : 'Unpaid';
+  return <Text accessibilityLiveRegion="polite" style={ui.body}>Payment · {status}</Text>;
 }
