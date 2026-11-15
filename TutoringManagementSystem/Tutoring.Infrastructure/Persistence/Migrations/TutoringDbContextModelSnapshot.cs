@@ -601,6 +601,26 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.ToTable("EmailVerificationTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.GoogleAccountLink", b =>
+                {
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("GoogleSubject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)")
+                        .UseCollation("Latin1_General_100_BIN2");
+
+                    b.HasKey("AccountId");
+
+                    b.HasIndex("GoogleSubject")
+                        .IsUnique();
+
+                    b.ToTable("GoogleAccountLinks", (string)null);
+                });
+
             modelBuilder.Entity("Tutoring.Infrastructure.Authentication.GoogleSignInChallenge", b =>
                 {
                     b.Property<string>("Nonce")
@@ -1224,6 +1244,15 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
                         .WithMany()
                         .HasForeignKey("UserAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.GoogleAccountLink", b =>
+                {
+                    b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
+                        .WithOne()
+                        .HasForeignKey("Tutoring.Infrastructure.Authentication.GoogleAccountLink", "AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

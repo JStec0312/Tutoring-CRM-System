@@ -53,6 +53,7 @@ public sealed class TutoringDbContext
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<LessonSeries> LessonSeries => Set<LessonSeries>();
     public DbSet<GoogleSignInChallenge> GoogleSignInChallenges => Set<GoogleSignInChallenge>();
+    public DbSet<GoogleAccountLink> GoogleAccountLinks => Set<GoogleAccountLink>();
     protected override void OnModelCreating(
         ModelBuilder modelBuilder)
     {
