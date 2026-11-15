@@ -8,6 +8,8 @@ An active user logs in with email/password and receives a JWT access token plus 
 
 Native clients use separate JSON endpoints below; their refresh tokens are stored in the device secure store. Both transports reuse the same handlers and token-family rules.
 
+See [US-073](../us_073/README.md) for Google account linking and the Google sign-in scope.
+
 ## FILES
 
 - Implementation: [Login](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login/), [RefreshToken](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RefreshToken/), [SignOut](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOut/), [SignOutAll](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOutAll/)

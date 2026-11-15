@@ -17,6 +17,10 @@
 
 See [US-001](../../technical_docs/backend_docs/user_stories/us_001/README.md) for optional profile fields and the verification email flow.
 
+## Google account linking
+
+On Expo Web and Android, a signed-in student can open **Connect Google account** from the student portal and a tutor can open it from **Profile & security**. The protected `/connect-google` route uses the authenticated API client for both linking requests. See [US-073](../../technical_docs/backend_docs/user_stories/us_073/README.md) for the full contract and setup.
+
 ## Password recovery
 
 From `/sign-in`, open `/forgot-password` and submit the account email. The app sends `POST /api/auth/password-reset/request` with `{ email }` and shows the same confirmation for any `204 No Content` response. The emailed link opens `/reset-password?token=...`, where the app sends `POST /api/auth/password-reset` with `{ token, newPassword }`. Both requests are anonymous. An invalid or expired link offers a new request.
@@ -25,7 +29,7 @@ The backend reads the frontend reset URL from `PasswordReset:ResetUrl` in `appse
 
 ## HTTP contract
 
-All operations use `POST` with `auth: false` to skip bearer injection.
+The session operations below use `POST` with `auth: false` to skip bearer injection.
 
 | Operation | Web | Android and iOS |
 | --- | --- | --- |
