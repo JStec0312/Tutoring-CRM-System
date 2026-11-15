@@ -125,6 +125,58 @@ public sealed class MarkLessonChargesPaidTests(
     }
 
     [Fact]
+    public async Task RecordSelectedAcrossAccounts_AndMarkOneUnpaid_ShouldRecalculatePayments()
+    {
+        var tutor = await CreateTutorAsync("record-selected@test.pl", "record-selected");
+        var outsider = await CreateTutorAsync("record-other@test.pl", "record-other");
+        var first = await CreateChargeSetAsync(tutor.TutorId, 25m, 50m);
+        var second = await CreateChargeSetAsync(tutor.TutorId, 100m);
+        var foreign = await CreateChargeSetAsync(outsider.TutorId, 70m);
+        var selected = first.ChargeIds.Concat(second.ChargeIds).ToArray();
+
+        using var foreignSelection = CreateAuthorizedRequest(HttpMethod.Post, $"{Endpoint}/mark-paid", tutor.AccessToken,
+            new { LessonChargeIds = selected.Append(foreign.ChargeIds[0]), GroupByAgreementAndCurrency = true });
+        using var rejected = await Client.SendAsync(foreignSelection);
+        Assert.Equal(HttpStatusCode.NotFound, rejected.StatusCode);
+        Assert.False(await ExecuteDbAsync(db => db.Payments.AnyAsync()));
+
+        using var record = CreateAuthorizedRequest(HttpMethod.Post, $"{Endpoint}/mark-paid", tutor.AccessToken,
+            new { LessonChargeIds = selected, GroupByAgreementAndCurrency = true });
+        using var recorded = await Client.SendAsync(record);
+        Assert.Equal(HttpStatusCode.NoContent, recorded.StatusCode);
+        Assert.Equal(new[] { 75m, 100m }, await ReadPaymentAmounts());
+
+        var firstUndoUrl = $"{Endpoint}/{first.ChargeIds[0]}/mark-unpaid";
+        using var unauthorized = await Client.PostAsync(firstUndoUrl, null);
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthorized.StatusCode);
+        using var foreignUndo = CreateAuthorizedRequest(HttpMethod.Post, firstUndoUrl, outsider.AccessToken);
+        using var forbidden = await Client.SendAsync(foreignUndo);
+        Assert.Equal(HttpStatusCode.NotFound, forbidden.StatusCode);
+        Assert.Equal(new[] { 75m, 100m }, await ReadPaymentAmounts());
+
+        await MarkUnpaid(first.ChargeIds[0]);
+        var chargeId = new LessonChargeId(first.ChargeIds[0]);
+        Assert.Null(await ExecuteDbAsync(db => db.LessonCharges.Where(charge => charge.Id == chargeId)
+            .Select(charge => charge.PaymentId).SingleAsync()));
+        Assert.Equal(new[] { 50m, 100m }, await ReadPaymentAmounts());
+        await MarkUnpaid(first.ChargeIds[0]);
+        Assert.Equal(new[] { 50m, 100m }, await ReadPaymentAmounts());
+
+        await MarkUnpaid(first.ChargeIds[1]);
+        Assert.Equal(new[] { 100m }, await ReadPaymentAmounts());
+
+        async Task<List<decimal>> ReadPaymentAmounts() => await ExecuteDbAsync(db =>
+            db.Payments.AsNoTracking().Select(payment => payment.Amount.Amount).OrderBy(amount => amount).ToListAsync());
+
+        async Task MarkUnpaid(Guid id)
+        {
+            using var request = CreateAuthorizedRequest(HttpMethod.Post, $"{Endpoint}/{id}/mark-unpaid", tutor.AccessToken);
+            using var response = await Client.SendAsync(request);
+            Assert.True(response.StatusCode == HttpStatusCode.NoContent, await response.Content.ReadAsStringAsync());
+        }
+    }
+
+    [Fact]
     public async Task MarkMultipleChargesFromDifferentAccounts_ShouldRejectWithoutChangingCharges()
     {
         var tutor = await CreateTutorAsync("different-accounts@test.pl", "different-accounts");

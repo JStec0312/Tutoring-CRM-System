@@ -3,14 +3,16 @@ skinparam backgroundColor white
 skinparam sequenceMessageAlign center
 skinparam responseMessageBelowArrow true
 
-title US-017 - Mark lesson charges as paid
+title US-017 - Record and correct lesson payments
 
 actor Tutor
 participant MarkLessonChargePaidController as SingleController
 participant MarkLessonChargesPaidController as BulkController
+participant MarkLessonChargeUnpaidController as UndoController
 participant MediatR
 participant MarkLessonChargePaidHandler as SingleHandler
 participant MarkLessonChargesPaidHandler as BulkHandler
+participant MarkLessonChargeUnpaidHandler as UndoHandler
 database TutoringDbContext as Db
 participant BillingAccount as Aggregate
 
@@ -33,8 +35,7 @@ alt single charge
         else charge found
             SingleHandler -> Aggregate: MarkChargeAsPaid(chargeId, paidAt, reference)
             Aggregate -> Aggregate: Validate active and unpaid
-            Aggregate -> Aggregate: Set IsPaid and PaidAtUtc
-            Aggregate -> Aggregate: Create Payment from charge amount
+            Aggregate -> Aggregate: Create Payment and link charge
             Aggregate --> SingleHandler: Payment
             SingleHandler -> Db: SaveChangesAsync()
             Db --> SingleHandler: Saved
@@ -51,20 +52,27 @@ else bulk charges
     BulkHandler -> Db: Find owned BillingAccounts containing selected charges
     Db --> BulkHandler: Accounts and selected charges
 
-    alt missing, foreign, or different accounts
+    alt missing, foreign, or different accounts without grouping enabled
         BulkHandler --> Tutor: 404 or 409 error
-    else one account and all charges found
-        BulkHandler -> Aggregate: MarkChargesAsPaid(chargeIds, paidAt, reference)
-        Aggregate -> Aggregate: Validate all charges before mutation
-        Aggregate -> Aggregate: Sum selected charge amounts
-        Aggregate -> Aggregate: Mark all charges paid
-        Aggregate -> Aggregate: Create one Payment for total
-        Aggregate --> BulkHandler: Payment
+    else all selected charges are owned
+        loop For each billing account and currency
+            BulkHandler -> Aggregate: MarkChargesAsPaid(chargeIds, paidAt, reference)
+            Aggregate -> Aggregate: Validate active and unpaid, create Payment, link charges
+        end
         BulkHandler -> Db: SaveChangesAsync()
         Db --> BulkHandler: Saved atomically
         BulkHandler --> Tutor: 204 No Content
     end
     deactivate BulkHandler
+else correct a paid charge
+    Tutor -> UndoController: POST /api/tutors/me/lesson-charges/{id}/mark-unpaid
+    UndoController -> MediatR: MarkLessonChargeUnpaidCommand
+    MediatR -> UndoHandler: Handle(command)
+    UndoHandler -> Db: Load owned billing account, charges and payments within transaction
+    UndoHandler -> Aggregate: MarkChargeAsUnpaid(chargeId)
+    Aggregate -> Aggregate: Clear payment link and recalculate remaining amount
+    UndoHandler -> Db: Save changes and remove payment if no linked charges remain
+    UndoHandler --> Tutor: 204 No Content
 end
 
 @enduml

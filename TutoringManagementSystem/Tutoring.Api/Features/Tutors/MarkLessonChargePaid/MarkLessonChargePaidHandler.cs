@@ -72,8 +72,14 @@ public sealed class MarkLessonChargePaidHandler(
             paidAtUtc,
             reference);
 
-        await dbContext.SaveChangesAsync(
-            cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new LessonChargePaymentChangedException();
+        }
 
         logger.LogInformation(
             "Lesson charge marked as paid. TutorId: {TutorId}, BillingAccountId: {BillingAccountId}, LessonChargeId: {LessonChargeId}, PaymentId: {PaymentId}, PaidAtUtc: {PaidAtUtc}, RequestMetadata: {RequestMetadata}",

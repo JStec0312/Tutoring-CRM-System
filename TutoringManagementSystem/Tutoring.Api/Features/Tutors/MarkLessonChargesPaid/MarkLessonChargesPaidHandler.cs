@@ -8,6 +8,7 @@ namespace Tutoring.Api.Features.Tutors.MarkLessonChargesPaid;
 
 public sealed class MarkLessonChargesPaidHandler(
     TutoringDbContext dbContext,
+    TimeProvider timeProvider,
     ILogger<MarkLessonChargesPaidHandler> logger) : IRequestHandler<MarkLessonChargesPaidCommand>
 {
     public async Task Handle(MarkLessonChargesPaidCommand request, CancellationToken cancellationToken)
@@ -42,7 +43,7 @@ public sealed class MarkLessonChargesPaidHandler(
             .Where(charge => chargeIds.Contains(charge.Id))
             .ToArray();
 
-       if (selectedCharges.Length != chargeIds.Length)
+        if (selectedCharges.Length != chargeIds.Length)
         {
             logger.LogWarning(
                 "One or more lesson charges were not found or are not owned by tutor. TutorId: {TutorId}, ChargeCount: {ChargeCount}, RequestMetadata: {RequestMetadata}",
@@ -55,7 +56,7 @@ public sealed class MarkLessonChargesPaidHandler(
                 request.LessonChargeIds.First());
         }
 
-        if (accounts.Count != 1)
+        if (!request.GroupByAgreementAndCurrency && accounts.Count != 1)
         {
             logger.LogWarning(
                 "Lesson charges belong to different billing accounts. TutorId: {TutorId}, ChargeCount: {ChargeCount}, BillingAccountCount: {BillingAccountCount}, RequestMetadata: {RequestMetadata}",
@@ -66,13 +67,28 @@ public sealed class MarkLessonChargesPaidHandler(
 
             throw new LessonChargesFromDifferentBillingAccountsException();
         }
-        var paidAtUtc = request.PaidAtUtc ?? DateTimeOffset.UtcNow;
-        accounts[0].MarkChargesAsPaid(
-            chargeIds,
-            paidAtUtc,
-            request.Reference is null ? null : new PaymentReference(request.Reference));
+        var paidAtUtc = request.PaidAtUtc ?? timeProvider.GetUtcNow();
+        var reference = request.Reference is null ? null : new PaymentReference(request.Reference);
+        if (request.GroupByAgreementAndCurrency)
+        {
+            var byId = accounts.ToDictionary(account => account.Id);
+            foreach (var group in selectedCharges.GroupBy(charge => (charge.BillingAccountId, charge.Amount.Currency.Code)))
+                byId[group.Key.BillingAccountId].MarkChargesAsPaid(
+                    group.Select(charge => charge.Id).ToArray(), paidAtUtc, reference);
+        }
+        else
+        {
+            accounts[0].MarkChargesAsPaid(chargeIds, paidAtUtc, reference);
+        }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new LessonChargePaymentChangedException();
+        }
 
         logger.LogInformation(
             "Lesson charges marked as paid. TutorId: {TutorId}, ChargeCount: {ChargeCount}, RequestMetadata: {RequestMetadata}",

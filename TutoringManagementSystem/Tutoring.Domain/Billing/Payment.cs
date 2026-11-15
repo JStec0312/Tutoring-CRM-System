@@ -16,7 +16,8 @@ public sealed class Payment
         PaymentReference? reference)
     {
         BillingAccountId = billingAccountId;
-        Amount = amount ?? throw new ArgumentNullException(nameof(amount));
+        ArgumentNullException.ThrowIfNull(amount);
+        Amount = new Money(amount.Amount, amount.Currency);
         PaidAtUtc = paidAtUtc;
         Reference = reference;
     }
@@ -28,4 +29,9 @@ public sealed class Payment
     public DateTimeOffset PaidAtUtc { get; private set; }
 
     public PaymentReference? Reference { get; private set; }
+
+    internal void SetAllocatedAmount(decimal amount)
+    {
+        Amount.SetAmount(amount);
+    }
 }

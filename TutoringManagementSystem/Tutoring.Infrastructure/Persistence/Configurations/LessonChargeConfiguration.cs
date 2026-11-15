@@ -27,7 +27,8 @@ internal sealed class LessonChargeConfiguration
         builder.Property(charge => charge.Status).HasConversion<string>().HasColumnType("nvarchar(50)").HasMaxLength(50).IsRequired();
         builder.Property(charge => charge.Description).HasColumnType("nvarchar(500)").HasMaxLength(500).IsRequired();
         builder.Property(charge => charge.PaymentId)
-            .HasNullableStronglyTypedId(value => new PaymentId(value), "PaymentId");
+            .HasNullableStronglyTypedId(value => new PaymentId(value), "PaymentId")
+            .IsConcurrencyToken();
         builder.HasOne(charge => charge.Payment)
             .WithMany()
             .HasForeignKey(charge => charge.PaymentId)

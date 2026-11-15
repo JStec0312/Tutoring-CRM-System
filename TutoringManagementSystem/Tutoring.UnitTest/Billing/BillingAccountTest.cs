@@ -183,6 +183,26 @@ public sealed class BillingAccountTest
         Assert.False(eurCharge.IsPaid);
         Assert.Empty(account.Payments);
     }
+    [Fact]
+    public void MarkChargeAsUnpaid_AdjustsSharedPaymentAndRemovesItAfterLastCharge()
+    {
+        var account = CreateAccount();
+        var first = AddCharge(account, 25m);
+        var second = AddCharge(account, 50m);
+        var payment = account.MarkChargesAsPaid([first.Id, second.Id], DateTimeOffset.UtcNow, null);
+
+        Assert.Null(account.MarkChargeAsUnpaid(first.Id));
+        Assert.False(first.IsPaid);
+        Assert.Equal(payment.Id, second.PaymentId);
+        Assert.Equal(50m, Assert.Single(account.Payments).Amount.Amount);
+
+        Assert.Null(account.MarkChargeAsUnpaid(first.Id));
+        Assert.Equal(50m, payment.Amount.Amount);
+        Assert.Same(payment, account.MarkChargeAsUnpaid(second.Id));
+        Assert.False(second.IsPaid);
+        Assert.Empty(account.Payments);
+    }
+
     private static BillingAccount CreateAccount() => new(
         new TutoringAgreementId(Guid.NewGuid()),
         DateTimeOffset.UtcNow);

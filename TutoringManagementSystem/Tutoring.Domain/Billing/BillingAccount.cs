@@ -131,6 +131,28 @@ public sealed class BillingAccount
         return payment;
     }
 
+    public Payment? MarkChargeAsUnpaid(LessonChargeId chargeId)
+    {
+        var charge = FindCharges([chargeId])[0];
+        if (charge.Status != ChargeStatus.Active)
+            throw new ChargeCannotBeMarkedUnpaidException(chargeId.Value);
+        if (charge.PaymentId is not { } paymentId)
+            return null;
+
+        var payment = _payments.Single(item => item.Id == paymentId);
+        var remainingCharges = _charges.Where(item => item.PaymentId == paymentId && item.Id != chargeId).ToArray();
+        if (remainingCharges.Length > 0)
+        {
+            payment.SetAllocatedAmount(remainingCharges.Sum(item => item.Amount.Amount));
+            charge.ClearPayment();
+            return null;
+        }
+
+        charge.ClearPayment();
+        _payments.Remove(payment);
+        return payment;
+    }
+
     private LessonCharge[] FindCharges(
         IReadOnlyCollection<LessonChargeId> chargeIds)
     {

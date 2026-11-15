@@ -61,6 +61,12 @@ public sealed class LessonCharge
         PaymentId = payment.Id;
     }
 
+    internal void ClearPayment()
+    {
+        Payment = null;
+        PaymentId = null;
+    }
+
     internal void EnsureCanBeMarkedAsPaid()
     {
         if (Status != ChargeStatus.Active)

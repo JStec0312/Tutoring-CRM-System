@@ -41,7 +41,8 @@ public sealed class MarkLessonChargesPaidController(
                 request.LessonChargeIds,
                 request.PaidAtUtc,
                 request.Reference,
-                metadata),
+                metadata,
+                request.GroupByAgreementAndCurrency),
             cancellationToken);
 
         return NoContent();

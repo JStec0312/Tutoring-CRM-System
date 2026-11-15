@@ -9,4 +9,5 @@ public sealed record MarkLessonChargesPaidCommand(
     IReadOnlyCollection<Guid> LessonChargeIds,
     DateTimeOffset? PaidAtUtc,
     string? Reference,
-    RequestMetadata RequestMetadata) : IRequest;
+    RequestMetadata RequestMetadata,
+    bool GroupByAgreementAndCurrency = false) : IRequest;
