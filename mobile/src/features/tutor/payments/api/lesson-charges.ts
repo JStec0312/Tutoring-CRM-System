@@ -22,8 +22,12 @@ export function getLessonCharges(api: ApiClient, signal: AbortSignal, filters: {
   return api.get<LessonCharge[]>(`${endpoint}?${query}`, { signal });
 }
 
-export function markChargePaid(api: ApiClient, chargeId: string, paidAtUtc: Date) {
-  return api.post(`${endpoint}/${encodeURIComponent(chargeId)}/mark-paid`, { paidAtUtc: paidAtUtc.toISOString() });
+export function recordPayments(api: ApiClient, lessonChargeIds: string[]) {
+  return api.post(`${endpoint}/mark-paid`, { lessonChargeIds, groupByAgreementAndCurrency: true });
+}
+
+export function markChargeUnpaid(api: ApiClient, chargeId: string) {
+  return api.post(`${endpoint}/${encodeURIComponent(chargeId)}/mark-unpaid`);
 }
 
 export function chargeTotals(charges: LessonCharge[]) {
