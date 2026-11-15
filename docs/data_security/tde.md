@@ -6,7 +6,7 @@ SQL Server TDE encrypts database files and backups at rest. It does not encrypt 
 
 [init.sql](../../database/security/init.sql) creates a database encryption key (DEK) for `TutoringDb` using AES-256 and protects it with the server certificate `TutoringTdeCert` in `master`. The database master key (DMK) in `master` protects the certificate's private key.
 
-In [Docker Compose](../../docker-compose.yml), `sqlserver` starts first. Once its health check succeeds, the one-shot `sql-security-init` service runs [init.sh](../../database/security/init.sh), prepares audit-volume permissions and invokes `init.sql` with `sqlcmd`. The script creates missing objects, imports the existing certificate and private key, creates `TutoringDb` if absent, enables TDE and configures auditing and SQL accounts. The optional `api` waits for the migrations service, which waits for successful security initialization.
+In [Docker Compose](../../docker-compose.yml), `sqlserver` starts first. Its health check connects to `tempdb` and also checks that it can open `TutoringDb` if that database already exists. Once the check succeeds, the one-shot `sql-security-init` service runs [init.sh](../../database/security/init.sh), prepares audit-volume permissions and invokes `init.sql` with `sqlcmd`. The script creates missing objects, imports the existing certificate and private key, creates `TutoringDb` if absent, enables TDE and configures auditing and SQL accounts. The optional `api` waits for the migrations service, which waits for successful security initialization.
 
 The initializer requires the following existing files under the repository's `.secrets/` directory, mounted read-only into both containers:
 

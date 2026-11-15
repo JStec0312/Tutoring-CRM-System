@@ -6,6 +6,17 @@
     "expo-sharing"
   ],
   "android": {
-    "package": "com.anonymous.mobile"
-  }
+    "package": "com.turotingcrm.mobile"
+  },
+  "extra": {
+    "router": {
+      "asyncRoutes": {
+        "web": true
+      }
+    },
+    "eas": {
+      "projectId": "c3471b60-96d2-4a8c-8475-62241f8fbc3a"
+    }
+  },
+  "owner": "szteniu"
 }
