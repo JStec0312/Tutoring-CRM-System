@@ -77,7 +77,7 @@ export function AgreementScreen() {
         {panel === 'settings' && <AgreementSettings agreement={agreement} agreementId={agreementId} reload={query.reload} />}
         {agreement.status === 'Suspended' && panel !== 'settings' &&
           <WorkspaceButton label="Reactivate agreement" onPress={() => setPanel('settings')} />}
-        <WorkspaceButton label="Back to student profile" onPress={() => router.navigate(studentRoute(agreement.studentId))} />
+        <WorkspaceButton label="Open student profile" onPress={() => router.navigate(studentRoute(agreement.studentId))} />
       </View>
     </WorkspaceColumns>
   </TutorPage>;

@@ -6,7 +6,7 @@ import { WorkspaceButton, WorkspaceCard, WorkspaceColumns, WorkspaceField, works
 import { getPendingInvitations, getStudents } from '../api/get-students';
 import { getOverdueAgreements } from '../../payments/api/get-overdue-agreements';
 import { quantity, unpaidLabel } from '../../workspace/models/workspace-format';
-import { studentRoute } from '../../workspace/models/tutor-routes';
+import { agreementRoute, studentRoute } from '../../workspace/models/tutor-routes';
 import { useTutorQuery } from '../../workspace/models/use-tutor-query';
 import { QueryFeedback, TutorPage } from '../../workspace/components/tutor-workspace';
 
@@ -52,6 +52,9 @@ export function StudentsScreen() {
         </View>
         {students?.length === 0 && <Text style={ui.body}>No students match this view.</Text>}
         {students?.map(student => {
+          const destination = student.agreements.length === 1
+            ? agreementRoute(student.agreements[0].tutoringAgreementId)
+            : studentRoute(student.studentId);
           const active = student.agreements.filter(agreement => agreement.status === 'Active').length;
           const inactive = student.agreements.length - active;
           const subjects = [...new Set(student.agreements.map(agreement => agreement.subject))].join(', ');
@@ -59,7 +62,7 @@ export function StudentsScreen() {
           const unpaid = unpaidLabel(query.data?.overdue.filter(agreement => agreement.studentId === student.studentId) ?? []);
           return <WorkspaceCard key={student.studentId} title={student.displayName}
             detail={[`${subjects} · ${statuses.join(' · ')}`, unpaid && `${unpaid} unpaid`].filter(Boolean).join('\n')}
-            onPress={() => router.push(studentRoute(student.studentId))} />;
+            onPress={() => router.push(destination)} />;
         })}
       </View>
       <View style={compact ? ui.stack : ui.aside}>
