@@ -115,6 +115,7 @@ services:
       RabbitMq__Password: "${RABBITMQ_PASSWORD}"
 
       Jwt__SecretKey: "${JWT_SECRET}"
+      GoogleSignIn__ClientId: "${GOOGLE_WEB_CLIENT_ID:-}"
 
       Smtp__Host: mailpit
       Smtp__Port: 1025

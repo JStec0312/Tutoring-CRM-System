@@ -17,8 +17,7 @@ export async function createGoogleLinkChallenge(
 export async function linkGoogleAccount(
   api: Pick<ApiClient, "post">,
   idToken: string,
-  currentPassword: string,
   signal: AbortSignal,
 ): Promise<void> {
-  await api.post("/api/users/me/google", { idToken, currentPassword }, { signal });
+  await api.post("/api/users/me/google", { idToken }, { signal });
 }

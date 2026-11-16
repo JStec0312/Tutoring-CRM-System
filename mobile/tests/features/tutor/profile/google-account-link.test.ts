@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createGoogleLinkChallenge, linkGoogleAccount } from "@/features/auth/link-google-account/api/google-account-link";
-import { getGoogleLinkError } from "@/features/auth/link-google-account/models/google-link-error";
+import { createGoogleLinkChallenge, linkGoogleAccount } from "@/features/tutor/profile/api/google-account-link";
+import { getGoogleLinkError } from "@/features/tutor/profile/models/google-link-error";
 import { createApiClient } from "@/shared/api/api-client";
 import { ApiError } from "@/shared/api/api-error";
 import { SessionChangedError } from "@/shared/session/session-manager";
@@ -26,7 +26,7 @@ describe("Google account linking", () => {
     });
 
     await expect(createGoogleLinkChallenge(api, signal)).resolves.toBe(nonce);
-    await linkGoogleAccount(api, "google-id-token", " CRMPassword123! ", signal);
+    await linkGoogleAccount(api, "google-id-token", signal);
 
     const [challenge, link] = send.mock.calls;
     expect(challenge[0]).toBe("https://crm.test/api/users/me/google/challenge");
@@ -36,10 +36,7 @@ describe("Google account linking", () => {
     expect(link[0]).toBe("https://crm.test/api/users/me/google");
     expect(link[1]).toMatchObject({ method: "POST", signal });
     expect(new Headers(link[1]?.headers).get("Authorization")).toBe("Bearer crm-access-token");
-    expect(JSON.parse(String(link[1]?.body))).toEqual({
-      idToken: "google-id-token",
-      currentPassword: " CRMPassword123! ",
-    });
+    expect(JSON.parse(String(link[1]?.body))).toEqual({ idToken: "google-id-token" });
   });
 
   it.each([null, {}, { nonce: "not-a-challenge" }])("rejects an invalid challenge response %j", async (response) => {

@@ -2,24 +2,28 @@
 title US-073 — Connect a Google account
 hide footbox
 actor "Student or tutor" as User
-participant "Expo Web / Android" as Client
+participant "Profile module\nExpo Web / Android" as Client
 participant "CRM API" as API
 participant "Google" as Google
 database "SQL Server" as DB
 
-User -> Client : Enter current CRM password and continue
+alt Tutor
+  User -> Client : Open /tutor/profile (Profile & security)
+else Student
+  User -> Client : Open /connect-google from student portal
+end
 Client -> API : POST /api/users/me/google/challenge\nCRM bearer token
-API -> DB : Check active CRM account and save nonce with expiry
+API -> DB : Check active CRM account and save nonce for five minutes
 API --> Client : 200 with nonce
-User -> Client : Continue with Google
+Client --> User : Display official Google button
+User -> Client : Select Continue with Google
 Client -> Google : Google Identity Services or Credential Manager\nWeb Client ID and nonce
 Google --> Client : Signed Google ID token with sub and nonce
-Client -> API : POST /api/users/me/google\nCRM bearer token, ID token and current password
+Client -> API : POST /api/users/me/google\nCRM bearer token and Google ID token
 API -> API : Verify Google token and read its sub and nonce
 API -> DB : Consume matching unexpired nonce for CRM account
-API -> DB : Read active account and password hash
-API -> API : Check current CRM password
-API -> DB : Save unique link between CRM account ID and Google sub
+API -> DB : Check the CRM account is active
+API -> DB : Store AccountId and verified GoogleSubject\nUnique constraint for each identifier
 API --> Client : 204 No Content
-Client --> User : Show successful link
+Client --> User : Show confirmation on the current screen
 @enduml

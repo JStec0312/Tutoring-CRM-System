@@ -8,8 +8,6 @@ export function getGoogleLinkError(error: unknown): string {
 
   if (error instanceof ApiError) {
     switch (error.code) {
-      case "Auth.IncorrectCurrentPassword":
-        return "Your current CRM password is incorrect.";
       case "Auth.InvalidGoogleCredential":
         return "This Google attempt expired or was already used. Start a new attempt.";
       case "Auth.GoogleLinkConflict":

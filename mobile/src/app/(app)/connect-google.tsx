@@ -1,1 +1,1 @@
-export { ConnectGoogleAccountScreen as default } from "@/features/auth/link-google-account";
+export { ConnectGoogleAccountScreen as default } from "@/features/tutor/profile";

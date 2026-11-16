@@ -1,7 +1,7 @@
 import { Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ConnectGoogleAccountLink } from "@/features/auth/link-google-account";
+import { ConnectGoogleAccountLink } from "@/features/tutor/profile";
 import { SignOutButton } from "@/shared/components/ui/SignOutButton";
 
 export function StudentDashboard() {

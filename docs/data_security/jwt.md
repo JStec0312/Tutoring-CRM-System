@@ -14,7 +14,7 @@ A JSON Web Token (JWT) is a signed set of claims that a recipient can validate. 
 ## Implementation
 
 - [Authentication configuration](../../TutoringManagementSystem/Tutoring.Api/Configuration/AuthenticationExtensions.cs) and [settings](../../TutoringManagementSystem/Tutoring.Api/appsettings.json).
-- [JWT generator](../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/JwtTokenGenerator.cs), [refresh-token generator](../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/RefreshTokenGenerator.cs) and [database mapping](../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Configurations/RefreshTokenConfigurations.cs).
+- [JWT generator](../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/Jwt/JwtTokenGenerator.cs), [refresh-token generator](../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/RefreshTokens/RefreshTokenGenerator.cs) and [database mapping](../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Configurations/RefreshTokenConfigurations.cs).
 - [Login](../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login), [refresh](../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RefreshToken), [sign out](../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOut), [sign out all](../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignOutAll) and [password reset](../../TutoringManagementSystem/Tutoring.Api/Features/Auth/ResetPassword).
 
 ## Verification

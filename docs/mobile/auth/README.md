@@ -19,7 +19,7 @@ See [US-001](../../technical_docs/backend_docs/user_stories/us_001/README.md) fo
 
 ## Google account linking
 
-On Expo Web and Android, a signed-in student can open **Connect Google account** from the student portal and a tutor can open it from **Profile & security**. The protected `/connect-google` route uses the authenticated API client for both linking requests. See [US-073](../../technical_docs/backend_docs/user_stories/us_073/README.md) for the full contract and setup.
+On Expo Web and Android, tutors use the official Google button in **Połącz konto Google** on `/tutor/profile`. Students open **Connect Google account** from the student portal, which uses the protected `/connect-google` route. Both entry points use the [tutor profile module](../../../mobile/src/features/tutor/profile/) and authorize linking with the active CRM session. See [US-073](../../technical_docs/backend_docs/user_stories/us_073/README.md) for the API contract, configuration and sequence diagram.
 
 ## Password recovery
 

@@ -15,6 +15,7 @@ type GoogleIdentity = {
     theme: "outline";
     size: "large";
     text: "continue_with";
+    locale?: string;
   }): void;
 };
 
@@ -50,7 +51,7 @@ function loadGoogleIdentity() {
   return scriptLoad;
 }
 
-export function GoogleCredentialButton({ nonce, onCredential, onFailure }: GoogleCredentialButtonProps) {
+export function GoogleCredentialButton({ nonce, locale, onCredential, onFailure }: GoogleCredentialButtonProps) {
   const container = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -72,7 +73,7 @@ export function GoogleCredentialButton({ nonce, onCredential, onFailure }: Googl
           else onFailure(nonce);
         },
       });
-      identity.renderButton(element, { theme: "outline", size: "large", text: "continue_with" });
+      identity.renderButton(element, { theme: "outline", size: "large", text: "continue_with", locale });
       setReady(true);
     }).catch(() => {
       if (active) onFailure(nonce);
@@ -82,7 +83,7 @@ export function GoogleCredentialButton({ nonce, onCredential, onFailure }: Googl
       active = false;
       element.replaceChildren();
     };
-  }, [nonce, onCredential, onFailure]);
+  }, [nonce, locale, onCredential, onFailure]);
 
   return (
     <>
