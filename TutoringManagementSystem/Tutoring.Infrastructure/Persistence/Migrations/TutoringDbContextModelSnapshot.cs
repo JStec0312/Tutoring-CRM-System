@@ -601,29 +601,46 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.ToTable("EmailVerificationTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleAccountLink", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleAuthenticationChallenge", b =>
                 {
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Nonce")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)")
+                        .UseCollation("Latin1_General_100_BIN2");
 
+                    b.Property<DateTimeOffset>("ExpiresAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Nonce");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.ToTable("GoogleAuthenticationChallenges", (string)null);
+                });
+
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleSignInAccountLink", b =>
+                {
                     b.Property<string>("GoogleSubject")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .IsUnicode(false)
                         .HasColumnType("varchar(255)")
                         .UseCollation("Latin1_General_100_BIN2");
 
-                    b.HasKey("AccountId");
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.HasIndex("GoogleSubject")
+                    b.HasKey("GoogleSubject");
+
+                    b.HasIndex("AccountId")
                         .IsUnique();
 
-                    b.ToTable("GoogleAccountLinks", (string)null);
+                    b.ToTable("GoogleSignInAccountLinks", (string)null);
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleSignInChallenge", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleSignInContinuation", b =>
                 {
-                    b.Property<string>("Nonce")
+                    b.Property<string>("TokenHash")
                         .HasMaxLength(64)
                         .IsUnicode(false)
                         .HasColumnType("varchar(64)")
@@ -632,12 +649,30 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("AccountId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("nvarchar(320)");
+
                     b.Property<DateTimeOffset>("ExpiresAtUtc")
                         .HasColumnType("datetimeoffset");
 
-                    b.HasKey("Nonce");
+                    b.Property<string>("GoogleSubject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(255)");
 
-                    b.ToTable("GoogleSignInChallenges", (string)null);
+                    b.Property<bool>("IsEmailAuthoritative")
+                        .HasColumnType("bit");
+
+                    b.HasKey("TokenHash");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.ToTable("GoogleSignInContinuations", (string)null);
                 });
 
             modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Passwords.PasswordResetToken", b =>
@@ -1248,13 +1283,21 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleAccountLink", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleSignInAccountLink", b =>
                 {
                     b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
                         .WithOne()
-                        .HasForeignKey("Tutoring.Infrastructure.Authentication.Google.GoogleAccountLink", "AccountId")
+                        .HasForeignKey("Tutoring.Infrastructure.Authentication.Google.GoogleSignInAccountLink", "AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleSignInContinuation", b =>
+                {
+                    b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Tutoring.Infrastructure.Authentication.RefreshTokens.RefreshToken", b =>

@@ -9,6 +9,8 @@ participant LoginController
 participant GlobalExceptionHandler
 participant "ISender / MediatR" as MediatR
 participant LoginHandler
+participant LoginSessionIssuer
+participant LoginRefreshTokenCookie
 participant TutoringDbContext
 participant "SQL Server" as Database
 participant IPasswordHasher as PasswordHasher
@@ -42,17 +44,20 @@ else account found
         LoginController --> GlobalExceptionHandler : exception propagates
         GlobalExceptionHandler --> Client : 403 ProblemDetails
     else valid credentials and active account
-        LoginHandler -> JwtTokenGenerator : Generate(account)
-        JwtTokenGenerator --> LoginHandler : JWT access token
-        LoginHandler -> RefreshTokenGenerator : Generate(account, new FamilyId, metadata)
-        RefreshTokenGenerator --> LoginHandler : Raw token + hashed token record
-        LoginHandler -> TutoringDbContext : Add refresh token and SaveChangesAsync()
+        LoginHandler -> LoginSessionIssuer : Issue(account, metadata)
+        LoginSessionIssuer -> JwtTokenGenerator : Generate(account)
+        JwtTokenGenerator --> LoginSessionIssuer : JWT access token
+        LoginSessionIssuer -> RefreshTokenGenerator : Generate(account, new family ID, metadata)
+        RefreshTokenGenerator --> LoginSessionIssuer : Raw token + hashed token record
+        LoginSessionIssuer -> TutoringDbContext : Add hashed refresh-token record
+        LoginSessionIssuer --> LoginHandler : LoginHandlerResult
+        LoginHandler -> TutoringDbContext : SaveChangesAsync()
         TutoringDbContext -> Database : INSERT refresh token and commit
         Database --> TutoringDbContext : Commit result
         TutoringDbContext --> LoginHandler : Saved
         LoginHandler --> MediatR : Access token + raw refresh token
         MediatR --> LoginController : LoginHandlerResult
-        LoginController -> LoginController : Append configured HttpOnly cookie
+        LoginController -> LoginRefreshTokenCookie : Append configured HttpOnly cookie
         LoginController --> Client : 200 body: access token + expiry\nSet-Cookie: refresh token
     end
 end

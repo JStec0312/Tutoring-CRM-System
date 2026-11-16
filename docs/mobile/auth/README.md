@@ -17,10 +17,6 @@
 
 See [US-001](../../technical_docs/backend_docs/user_stories/us_001/README.md) for optional profile fields and the verification email flow.
 
-## Google account linking
-
-On Expo Web and Android, tutors use the official Google button in **Połącz konto Google** on `/tutor/profile`. Students open **Connect Google account** from the student portal, which uses the protected `/connect-google` route. Both entry points use the [tutor profile module](../../../mobile/src/features/tutor/profile/) and authorize linking with the active CRM session. See [US-073](../../technical_docs/backend_docs/user_stories/us_073/README.md) for the API contract, configuration and sequence diagram.
-
 ## Password recovery
 
 From `/sign-in`, open `/forgot-password` and submit the account email. The app sends `POST /api/auth/password-reset/request` with `{ email }` and shows the same confirmation for any `204 No Content` response. The emailed link opens `/reset-password?token=...`, where the app sends `POST /api/auth/password-reset` with `{ token, newPassword }`. Both requests are anonymous. An invalid or expired link offers a new request.

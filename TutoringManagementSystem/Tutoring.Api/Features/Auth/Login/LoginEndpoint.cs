@@ -35,23 +35,7 @@ public sealed class LoginController(
         LoginHandlerResult response = await sender.Send(
             command,
             cancellationToken);
-        Response.Cookies.Append(
-            refreshTokenOptions.Value.RefreshTokenCookieName,
-            response.RefreshToken,
-            new CookieOptions
-            {
-                HttpOnly = refreshTokenOptions.Value.HttpOnlyRefreshTokenCookie,
-                SameSite = refreshTokenOptions.Value.SameSiteRefreshTokenCookie switch
-                {
-                    "Strict" => SameSiteMode.Strict,
-                    "Lax" => SameSiteMode.Lax,
-                    "None" => SameSiteMode.None,
-                    _ => throw new InvalidOperationException($"Invalid SameSite value: {refreshTokenOptions.Value.SameSiteRefreshTokenCookie}")
-                },
-                Secure = refreshTokenOptions.Value.SecureRefreshTokenCookie,
-                Expires = new DateTimeOffset(response.RefreshTokenExpiresAt, TimeSpan.Zero),
-                Path = refreshTokenOptions.Value.RefreshTokenPath
-            });
+        LoginRefreshTokenCookie.Append(Response, refreshTokenOptions.Value, response);
         logger.LogInformation("Login successful for email: {Email}, IP: {IpAddress}, TraceId: {TraceId}",
             request.Email,
             HttpContext.Connection.RemoteIpAddress?.ToString(),

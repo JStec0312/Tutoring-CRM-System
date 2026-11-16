@@ -1,9 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Auth.Exceptions;
-using Tutoring.Infrastructure.Authentication.Jwt;
 using Tutoring.Infrastructure.Authentication.Passwords;
-using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.Login;
@@ -11,8 +9,7 @@ namespace Tutoring.Api.Features.Auth.Login;
 public sealed class LoginHandler(
     TutoringDbContext dbContext,
     IPasswordHasher passwordHasher,
-    IJwtTokenGenerator jwtTokenGenerator,
-    IRefreshTokenGenerator refreshTokenGenerator,
+    LoginSessionIssuer sessionIssuer,
     ILogger<LoginHandler> logger)
     : IRequestHandler<LoginCommand, LoginHandlerResult>
 {
@@ -49,19 +46,8 @@ public sealed class LoginHandler(
             logger.LogWarning("Login failed for email: {Email} - account is disabled", email);
             throw new InactiveAccountException();
         }
-        var accessToken = jwtTokenGenerator.Generate(userAccount);
-
-        var familyId = Guid.NewGuid();
-        var CreatedByIp = request.Metadata.IpAddress;
-        var CreatedByUserAgent = request.Metadata.UserAgent;
-        var generatedRefreshToken = refreshTokenGenerator.Generate(userAccount, familyId, CreatedByIp, CreatedByUserAgent);
-        dbContext.RefreshTokens.Add(generatedRefreshToken.Token);
+        var session = sessionIssuer.Issue(userAccount, request.Metadata);
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        return new LoginHandlerResult(
-            AccessToken: accessToken.Value,
-            ExpiresAt: accessToken.ExpiresAtUtc,
-            RefreshToken: generatedRefreshToken.Value,
-            RefreshTokenExpiresAt: generatedRefreshToken.Token.ExpiresAtUtc);
+        return session;
     }
 }

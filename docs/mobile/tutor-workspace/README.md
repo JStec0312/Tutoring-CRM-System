@@ -23,7 +23,7 @@ The workspace implements the revised Tutor flows on web and mobile. It uses the 
 | `/tutor/materials`, `/tutor/materials/upload`, `/tutor/materials/[materialId]/attach`, `/tutor/materials/[materialId]/delete` | Lists, downloads, uploads, attaches and removes materials within a selected agreement. Upload accepts PDF, JPG and PNG files up to 20 MB. |
 | `/tutor/statistics`, `/tutor/students/[studentId]/statistics` | Shows weekly, monthly and yearly statistics, with attendance, agreement receivables and lesson history. Periods follow the UTC reporting API. |
 | `/tutor/notifications` | Shows lesson reminders for the next day, recent cancelled lessons and past scheduled lessons awaiting an outcome. The app derives these entries from calendar data. |
-| `/tutor/profile` | Edits profile details and changes the CRM password. On Expo Web and Android, tutors can link Google through **Połącz konto Google** and receive confirmation on the profile. [US-073](../../technical_docs/backend_docs/user_stories/us_073/README.md) |
+| `/tutor/profile` | Edits profile details and changes the CRM password. |
 | `/tutor/more` | Links to materials, statistics, notifications and profile on narrow screens. |
 
 ## Code structure

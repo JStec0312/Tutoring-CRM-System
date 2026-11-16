@@ -126,4 +126,3 @@ Source: original project PDF brief.
 | US-070 | P1 | Administration | As an administrator, I want to manage access rules, backups, and data deletion so that user data protection assumptions are met. |
 | US-071 | P2 | Business Model | As a beginner tutor, I want to use a free app plan so that I can start working without fixed subscription costs. |
 | US-072 | P3 | Business Model | As a user, I want to upgrade to a paid plan without ads and with additional features so that the app matches larger needs. |
-| US-073 | P2 | Authentication | As a student or tutor, I want to link a Google account to my existing CRM account and use Google to sign in to that account. |

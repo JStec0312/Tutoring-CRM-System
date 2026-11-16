@@ -1,70 +1,58 @@
-# US-073 — Integrate Google with CRM authentication
-
-> As a student or tutor, I want to link a Google account to my existing CRM account and use Google to sign in to that account.
-
-Related [issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167).
+# US-073 — Sign in with Google
 
 ## Scope
 
-Signed-in tutors link Google directly on `/tutor/profile` under **Połącz konto Google**. Signed-in students open **Connect Google account** from the student portal. Linking is supported on Expo Web and Android. Each CRM account can link one Google account. Google sign-in remains planned in issue #167.
+The backend issues a Google sign-in challenge, verifies the returned Google ID token, and issues a CRM session for an active linked account. For an unlinked Google identity, the sign-in endpoint returns a token for the next step. An authenticated CRM account can complete linking. Completing registration remains planned. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
 
 ## FILES
 
-- [CreateGoogleChallenge](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CreateGoogleChallenge/), [LinkGoogleAccount](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/LinkGoogleAccount/) and [Google ID token verifier](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/Google/GoogleIdTokenVerifier.cs).
-- [Tutor profile screen](../../../../../mobile/src/features/tutor/profile/components/profile-screen.tsx), [Google controls](../../../../../mobile/src/features/tutor/profile/components/ConnectGoogleAccountButton.tsx), [linking hook](../../../../../mobile/src/features/tutor/profile/hooks/use-google-account-link.ts) and [API calls](../../../../../mobile/src/features/tutor/profile/api/google-account-link.ts).
-- The [student linking route](../../../../../mobile/src/app/%28app%29/connect-google.tsx) uses the linking flow from the same profile module.
-- [SQL Server integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/LinkGoogleAccount/GoogleAccountLinkTests.cs) and [mobile API tests](../../../../../mobile/tests/features/tutor/profile/google-account-link.test.ts).
+- [Challenge slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CreateGoogleSignInChallenge/)
+- [Google sign-in slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignInWithGoogle/)
+- [Challenge integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/CreateGoogleSignInChallenge/)
+- [Sign-in integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/SignInWithGoogle/)
+- [Account linking slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CompleteGoogleAccountLink/)
+- [Account linking integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/CompleteGoogleAccountLink/)
+- [Account linking sequence source](diagrams/complete-google-account-link.puml)
+- [Challenge sequence source](diagrams/create-google-sign-in-challenge.puml) and [sign-in sequence source](diagrams/sign-in-with-google.puml)
+
+![Challenge issuance sequence](diagrams/create-google-sign-in-challenge.svg)
+
+![Google sign-in sequence](diagrams/sign-in-with-google.svg)
+
+![Google account linking sequence](diagrams/complete-google-account-link.svg)
 
 ## API
 
-| Method | Endpoint | Authorization | Request | Success |
-| --- | --- | --- | --- | --- |
-| POST | `/api/users/me/google/challenge` | CRM bearer token | Empty body | `200 OK` with `{ "nonce": "..." }` |
-| POST | `/api/users/me/google` | CRM bearer token | `{ "idToken": "..." }` | `204 No Content` |
+### Issue a challenge
 
-Both endpoints require a CRM access token and derive the account ID from its `sub`. The link request body contains only the Google `idToken`, which is required and limited to 8,192 characters. Both endpoints use `Cache-Control: no-store` on success.
+`POST /api/auth/google/challenge` is anonymous. An empty request returns `200 OK` with a 64-character hexadecimal `nonce` and a UTC timestamp in `expiresAtUtc`. The response includes `Cache-Control: no-store`. Malformed JSON returns `400 Bad Request`.
 
-| Status | ProblemDetails code | Condition |
-| --- | --- | --- |
-| `401` | — | Missing or invalid CRM authentication |
-| `403` | `Auth.InactiveAccount.` | CRM account is missing or inactive |
-| `400` | — | Invalid request body, including a missing `idToken` |
-| `400` | `Auth.InvalidGoogleCredential` | Invalid Google token or expired, used or unmatched nonce |
-| `409` | `Auth.GoogleLinkConflict` | CRM account or Google subject is already linked |
-| `503` | `Auth.GoogleUnavailable` | Google Web Client ID is missing or verification keys cannot be fetched |
+### Sign in with Google
+
+`POST /api/auth/google/sign-in` is anonymous. The client sends the signed Google ID token as `idToken` in a JSON body. Successful responses use `200 OK` and `Cache-Control: no-store`.
+
+| `status` | Response |
+| --- | --- |
+| `signedIn` | `accessToken` and `expiresAt`. The refresh token uses the existing HTTP-only cookie. Native apps may send `useNativeSession: true` to receive `refreshToken` and `refreshTokenExpiresAt` in JSON. |
+| `linkRequired` | `continuationToken` and `continuationExpiresAtUtc` for the existing CRM account matching the verified email. |
+| `registrationRequired` | `continuationToken` and `continuationExpiresAtUtc` for a verified email with no CRM account. |
+
+An unusable ID token or challenge returns `401` with `Auth.InvalidGoogleSignIn`. An unlinked Google identity without a valid verified email returns `401` with `Auth.GoogleVerifiedEmailRequired`. An inactive CRM account returns `403` with the existing `Auth.InactiveAccount.` code. Missing configuration or unavailable Google verification returns `503` with `Auth.GoogleSignInUnavailable`.
+
+### Confirm linking to an existing account
+
+After `linkRequired`, the user signs into the corresponding CRM account and confirms linking. The client sends `POST /api/auth/google/link` with the CRM bearer access token and `{ "continuationToken": "..." }`. On success the endpoint returns `204 No Content`. The client can keep using its current CRM session, and subsequent Google sign-ins resolve to the linked account.
+
+A missing or invalid CRM session returns `401`. An unknown, expired, consumed, registration-only, or mismatched continuation returns `401` with `Auth.InvalidGoogleLinkContinuation`. An inactive CRM account returns `403` with `Auth.InactiveAccount.`. An existing link for either account returns `409` with `Auth.GoogleAccountLinkConflict`. An invalid request body returns `400`.
 
 ## Implementation
 
-1. On screen entry, the profile module requests a challenge using the current CRM session. The API checks that the account is active and stores a random, 64-character nonce for that account for five minutes.
-2. The frontend renders the official Google button. Expo Web passes the nonce to Google Identity Services and Android passes it to Credential Manager. After account selection, the frontend sends the returned Google ID token to the API using the same CRM session, without asking for the CRM password.
-3. The API verifies the Google token's signature, issuer, audience and expiry, then reads the Google `sub` and `nonce`. A conditional SQL delete consumes the matching, unexpired challenge for the CRM account. The API checks that the account is still active and saves the link from `AccountId` to `GoogleSubject`. SQL Server enforces uniqueness on both identifiers.
-4. After `204 No Content`, the app shows confirmation on the current screen. **Try again** requests a fresh challenge after an expired attempt. The frontend discards results from an outdated CRM session.
+Configure the expected Google OAuth client ID using `GoogleSignIn__ClientId`. Google verification checks the signature, issuer, audience and expiry. The handler atomically consumes the signed nonce and persists either the CRM refresh token or a continuation. The challenge expires five minutes after issuance.
 
-The `AddGoogleSignInChallenges` and `AddGoogleAccountLinks` migrations create the challenge and link tables.
-
-### Local setup
-
-1. Set `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` in `mobile/.env.local` to the OAuth **Web application** client ID. Use the same ID as `GOOGLE_WEB_CLIENT_ID` for the Compose API, or `GoogleSignIn__ClientId` when running the API directly.
-2. For web development, register the exact Expo web origin in **Authorized JavaScript origins** on the Web client. For the default local port, add `http://localhost` and `http://localhost:8081` as separate entries. For a Google `401 invalid_client` reporting `no registered origin`, check the Web client's exact ID against Expo's configuration and compare the scheme, host and port with the browser address.
-3. For Android, register the package set in [app.json](../../../../../mobile/app.json) and the SHA-1 fingerprint of the certificate used to sign the development APK. Rebuild the development client after installing the native dependencies.
-
-From `mobile`:
-
-```sh
-npx expo start --web
-npx eas-cli@latest build --platform android --profile development
-```
-
-After installing the development APK, run `npx expo start --dev-client` to serve the JavaScript. Sign in to CRM and use the Google button on `/tutor/profile` or open **Connect Google account** from the student portal. Select a Google account and check for confirmation on the current screen. [Google web setup](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid) · [Expo Android setup](https://docs.expo.dev/guides/google-authentication/)
-
-## Diagram
-
-![Sequence for linking a Google account](diagrams/google_account_linking.svg)
-
-[PlantUML source](diagrams/google_account_linking.puml)
+A linked account is resolved using the case-sensitive Google subject. The database enforces one link per Google subject and one link per CRM account. An unlinked subject can only receive a continuation. The continuation is valid for five minutes and is stored by its SHA-256 hash together with the verified Google identity, information about whether Google is authoritative for the email, and, for linking, the target CRM account ID. The linking handler reads the CRM account from the access token, checks the current account status and email, and consumes the continuation in the same transaction that inserts the link. The database uniqueness constraints resolve conflicts between concurrent requests.
 
 ## Tests
 
-- Backend HTTP integration tests use the SQL Server fixture and a substitute Google verifier. They cover authorization, challenge expiry and ownership, missing ID token, account status, concurrent replay, persisted links and conflicts.
-- Mobile Vitest tests check bearer authentication, both request contracts, malformed challenge responses and messages after credential or link conflicts.
-- Real Google OAuth verification requires a configured Web client and a Google account. Android verification also requires the signed development APK.
+The SQL Server integration tests cover challenge issuance and cleanup, linked-account sign-in over web and native transports, both continuation paths, concurrent replay, expired challenges, invalid tokens, unavailable verification, missing verified email and inactive accounts. Sign-in integration tests substitute the Google verifier to exercise the CRM transaction without calling Google.
+
+Account linking tests cover the flow from Google continuation through later Google sign-in, anonymous and wrong-account access, unusable continuations, both uniqueness constraints, and concurrent consumption.

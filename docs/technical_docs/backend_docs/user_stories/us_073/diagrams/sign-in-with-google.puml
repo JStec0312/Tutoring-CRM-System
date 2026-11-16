@@ -1,0 +1,21 @@
+@startuml
+actor Client
+participant "Google sign-in controller" as Controller
+participant "Google sign-in handler" as Handler
+participant "Google token verifier" as Verifier
+database "SQL Server" as Database
+
+Client -> Controller: POST /api/auth/google/sign-in with ID token
+Controller -> Handler: SignInWithGoogleCommand
+Handler -> Verifier: Verify signed claims
+Verifier --> Handler: Google subject, nonce and verified email
+Handler -> Database: Begin transaction and delete valid nonce
+alt Active account linked to subject
+    Handler -> Database: Save CRM refresh token
+else Unlinked subject with verified email
+    Handler -> Database: Save continuation token hash and next step
+end
+Handler -> Database: Commit
+Handler --> Controller: Session or continuation
+Controller --> Client: 200 OK with status
+@enduml

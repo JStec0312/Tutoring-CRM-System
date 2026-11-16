@@ -1,0 +1,15 @@
+@startuml
+actor Client
+participant CreateGoogleSignInChallengeController as Controller
+participant CreateGoogleSignInChallengeHandler as Handler
+database SQLServer as Database
+
+Client -> Controller: POST /api/auth/google/challenge
+Controller -> Handler: CreateGoogleSignInChallengeCommand
+Handler -> Handler: Generate random nonce and UTC expiry
+Handler -> Database: Delete expired challenges
+Handler -> Database: Insert nonce and expiry
+Database --> Handler: Challenge saved
+Handler --> Controller: Nonce and expiry
+Controller --> Client: 200 OK with nonce and expiresAtUtc
+@enduml

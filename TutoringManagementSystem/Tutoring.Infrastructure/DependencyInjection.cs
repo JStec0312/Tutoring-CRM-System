@@ -53,6 +53,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddSingleton<IMailer, SmtpMailer>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IGoogleSignInTokenVerifier, GoogleSignInTokenVerifier>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<IPasswordPolicyValidator, PasswordPolicyValidator>();
@@ -72,7 +73,6 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<EmailEventDispatcher>();
 
         services.AddSingleton<IPublisher, RabbitMqPublisher>();
-        services.AddSingleton<IGoogleIdTokenVerifier, GoogleIdTokenVerifier>();
 
         return services;
     }

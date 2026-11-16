@@ -10,7 +10,6 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="connect-google" />
       <Stack.Protected guard={portal === "/tutor"} redirectTo={portal ?? "/"}>
         <Stack.Screen name="(tutor)" />
       </Stack.Protected>

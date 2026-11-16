@@ -1,0 +1,19 @@
+@startuml
+actor User
+participant "CRM client" as Client
+participant "Password login" as Login
+participant "Google account link" as Link
+database "SQL Server" as Database
+
+note over Client: Google sign-in returned linkRequired
+User -> Client: Sign in with existing CRM credentials
+Client -> Login: POST /api/auth/login
+Login --> Client: CRM access token
+User -> Client: Confirm account linking
+Client -> Link: POST /api/auth/google/link\nCRM bearer token and continuation token
+Link -> Database: Find valid continuation for JWT subject
+Link -> Database: Verify active account and matching email
+Link -> Database: Delete continuation and insert account link
+Database --> Link: Transaction committed
+Link --> Client: 204 No Content
+@enduml

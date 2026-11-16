@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Text } from 'react-native';
-import { ConnectGoogleAccountButton } from './ConnectGoogleAccountButton';
 import { useApi } from '@/shared/api/api-context';
 import type { ApiClient } from '@/shared/api/api-client';
 import { WorkspaceButton, WorkspaceField, workspaceStyles as ui } from '@/shared/components/ui/workspace-controls';
@@ -21,7 +20,6 @@ export function TutorProfileScreen() {
     <QueryFeedback {...query} />
     {query.data && <ProfileForm profile={query.data} />}
     <PasswordForm />
-    <ConnectGoogleAccountButton />
   </TutorPage>;
 }
 
