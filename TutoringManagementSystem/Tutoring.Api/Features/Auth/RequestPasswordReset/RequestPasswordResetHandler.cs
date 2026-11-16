@@ -2,7 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Domain.Common;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Passwords;
 using Tutoring.Infrastructure.Mailing;
 using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.Infrastructure.Persistence;

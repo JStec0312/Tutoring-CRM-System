@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Google;
 
 namespace Tutoring.Infrastructure.Persistence.Configurations;
 

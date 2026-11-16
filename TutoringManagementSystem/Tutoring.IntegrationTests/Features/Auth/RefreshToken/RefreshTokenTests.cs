@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Tutoring.Api.Features.Auth.RefreshToken;
 using Tutoring.Domain.Identity;
-using Tutoring.Infrastructure.Authentication;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.RefreshToken;

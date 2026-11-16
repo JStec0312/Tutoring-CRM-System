@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Domain.Common.Exceptions;
 using Tutoring.Domain.Identity;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Passwords;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.ChangePassword;

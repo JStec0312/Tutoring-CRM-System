@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.SignOut;

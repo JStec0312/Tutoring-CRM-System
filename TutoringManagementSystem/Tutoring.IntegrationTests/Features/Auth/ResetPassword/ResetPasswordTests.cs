@@ -217,7 +217,7 @@ public sealed class ResetPasswordTests(
         const string otherTokenHash = "some-other-active-token-hash";
         await ExecuteDbAsync(async dbContext =>
         {
-            var extraToken = new Tutoring.Infrastructure.Authentication.PasswordResetToken(
+            var extraToken = new Tutoring.Infrastructure.Authentication.Passwords.PasswordResetToken(
                 account.Id,
                 otherTokenHash,
                 DateTimeOffset.UtcNow.AddHours(1));

@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Tutoring.Api.Features.Common.Http;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 
 namespace Tutoring.Api.Features.Auth.Login;
 

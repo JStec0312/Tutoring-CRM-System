@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 using Tutoring.Domain.Common.Exceptions;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Passwords;
 
 namespace Tutoring.UnitTest.Auth;
 

@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.EmailVerification;
+using Tutoring.Infrastructure.Authentication.Google;
+using Tutoring.Infrastructure.Authentication.Jwt;
+using Tutoring.Infrastructure.Authentication.Passwords;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Tutoring.Infrastructure.FileStorage;
 using Tutoring.Infrastructure.Mailing;
 using Tutoring.Infrastructure.Mailing.Handlers;
@@ -68,7 +72,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<EmailEventDispatcher>();
 
         services.AddSingleton<IPublisher, RabbitMqPublisher>();
-        services.AddSingleton<GoogleIdTokenVerifier>();
+        services.AddSingleton<IGoogleIdTokenVerifier, GoogleIdTokenVerifier>();
 
         return services;
     }

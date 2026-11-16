@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Api.Features.Auth.Exceptions;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Jwt;
+using Tutoring.Infrastructure.Authentication.Passwords;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.Login;

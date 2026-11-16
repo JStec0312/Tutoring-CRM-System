@@ -6,7 +6,7 @@ using Tutoring.Domain.Lessons;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Domain.Tutors;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Passwords;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Dev;

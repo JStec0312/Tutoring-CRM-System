@@ -9,6 +9,7 @@ using Respawn;
 using Respawn.Graph;
 using Testcontainers.MsSql;
 using Tutoring.Infrastructure.Persistence;
+using Tutoring.Infrastructure.Authentication.Google;
 using Tutoring.Infrastructure.FileStorage;
 using System.Text.RegularExpressions;
 namespace Tutoring.IntegrationTests.Infrastructure;
@@ -35,6 +36,10 @@ public sealed class IntegrationTestFixture : IAsyncLifetime
     public WebApplicationFactory<Program> WithTimeProvider(TimeProvider timeProvider) =>
         _factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.Replace(ServiceDescriptor.Singleton(timeProvider))));
+
+    public WebApplicationFactory<Program> WithGoogleIdTokenVerifier(IGoogleIdTokenVerifier verifier) =>
+        _factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.Replace(ServiceDescriptor.Singleton(verifier))));
 
     public async Task InitializeAsync()
     {

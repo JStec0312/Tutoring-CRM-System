@@ -8,6 +8,7 @@ namespace Tutoring.Api.Features.Auth.CreateGoogleChallenge;
 [ApiController]
 [Authorize]
 [Route("api/users/me/google/challenge")]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class CreateGoogleChallengeController(ISender sender) : ControllerBase
 {
     [HttpPost]

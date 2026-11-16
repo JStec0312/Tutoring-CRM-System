@@ -4,7 +4,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Passwords;
 using Tutoring.Infrastructure.Mailing;
 using Tutoring.Infrastructure.Mailing.Handlers;
 using Tutoring.IntegrationTests.Infrastructure;

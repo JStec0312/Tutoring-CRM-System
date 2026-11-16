@@ -569,7 +569,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.ToTable("Tutors", (string)null);
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.EmailVerificationToken", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.EmailVerification.EmailVerificationToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -601,7 +601,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.ToTable("EmailVerificationTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.GoogleAccountLink", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleAccountLink", b =>
                 {
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uniqueidentifier");
@@ -621,7 +621,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.ToTable("GoogleAccountLinks", (string)null);
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.GoogleSignInChallenge", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleSignInChallenge", b =>
                 {
                     b.Property<string>("Nonce")
                         .HasMaxLength(64)
@@ -640,7 +640,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.ToTable("GoogleSignInChallenges", (string)null);
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.PasswordResetToken", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Passwords.PasswordResetToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -672,7 +672,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.ToTable("PasswordResetTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.RefreshToken", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.RefreshTokens.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -1239,7 +1239,7 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                     b.Navigation("Account");
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.EmailVerificationToken", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.EmailVerification.EmailVerificationToken", b =>
                 {
                     b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
                         .WithMany()
@@ -1248,16 +1248,16 @@ namespace Tutoring.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.GoogleAccountLink", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.Google.GoogleAccountLink", b =>
                 {
                     b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
                         .WithOne()
-                        .HasForeignKey("Tutoring.Infrastructure.Authentication.GoogleAccountLink", "AccountId")
+                        .HasForeignKey("Tutoring.Infrastructure.Authentication.Google.GoogleAccountLink", "AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.RefreshToken", b =>
+            modelBuilder.Entity("Tutoring.Infrastructure.Authentication.RefreshTokens.RefreshToken", b =>
                 {
                     b.HasOne("Tutoring.Domain.Identity.UserAccount", null)
                         .WithMany()

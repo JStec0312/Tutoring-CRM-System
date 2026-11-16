@@ -1,5 +1,6 @@
 
 using Tutoring.Domain.Common.Exceptions;
+using Tutoring.Infrastructure.Authentication.Google;
 
 namespace Tutoring.Api;
 using Features.Common.Exceptions;
@@ -30,6 +31,9 @@ public sealed class GlobalExceptionHandler(
                 uploadFailed.Message),
             Tutoring.Infrastructure.FileStorage.UploadTooLargeException tooLarge => new ErrorDetails(
                 StatusCodes.Status413PayloadTooLarge, "File too large", tooLarge.Code, tooLarge.Message),
+            GoogleIdTokenVerificationUnavailableException unavailable => new ErrorDetails(
+                StatusCodes.Status503ServiceUnavailable, "Google verification unavailable",
+                "Auth.GoogleUnavailable", unavailable.Message),
             BadHttpRequestException badRequest => new ErrorDetails(
                 badRequest.StatusCode, "Invalid request", "Request.Invalid", badRequest.Message),
             NotFoundException notFoundException => new ErrorDetails(

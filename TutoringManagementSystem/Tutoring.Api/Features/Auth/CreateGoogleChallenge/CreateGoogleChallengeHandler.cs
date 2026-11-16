@@ -1,6 +1,9 @@
 using System.Security.Cryptography;
 using MediatR;
-using Tutoring.Infrastructure.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Tutoring.Api.Features.Auth.Exceptions;
+using Tutoring.Domain.Identity;
+using Tutoring.Infrastructure.Authentication.Google;
 using Tutoring.Infrastructure.Persistence;
 
 namespace Tutoring.Api.Features.Auth.CreateGoogleChallenge;
@@ -14,8 +17,21 @@ public sealed class CreateGoogleChallengeHandler(
         CreateGoogleChallengeCommand request,
         CancellationToken cancellationToken)
     {
+        var activeAccount = await db.UserAccounts.AnyAsync(account =>
+            account.Id == request.AccountId && account.Status == AccountStatus.Active,
+            cancellationToken);
+        if (!activeAccount)
+        {
+            throw new InactiveAccountException();
+        }
+
+        var now = clock.GetUtcNow();
+        await db.GoogleSignInChallenges
+            .Where(challenge => challenge.ExpiresAtUtc <= now)
+            .ExecuteDeleteAsync(cancellationToken);
+
         var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        var expiresAt = clock.GetUtcNow().AddMinutes(5);
+        var expiresAt = now.AddMinutes(5);
 
         db.GoogleSignInChallenges.Add(
             new GoogleSignInChallenge(nonce, request.AccountId.Value, expiresAt));
