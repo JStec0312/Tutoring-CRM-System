@@ -142,7 +142,7 @@ public sealed class CompleteGoogleAccountLinkTests(IntegrationTestFixture fixtur
     private Task SeedContinuationAsync(UserAccountId? accountId, bool expired = false) => ExecuteDbAsync(async db =>
     {
         db.GoogleSignInContinuations.Add(new GoogleSignInContinuation(
-            GoogleSignInContinuation.HashToken(Token), Subject, Email, false,
+            GoogleSignInContinuation.HashToken(Token), Subject, Email,
             accountId, DateTimeOffset.UtcNow.AddMinutes(expired ? -1 : 5)));
         await db.SaveChangesAsync();
     });
@@ -170,6 +170,6 @@ public sealed class CompleteGoogleAccountLinkTests(IntegrationTestFixture fixtur
     private sealed class StubGoogleVerifier : IGoogleSignInTokenVerifier
     {
         public Task<VerifiedGoogleSignInIdentity> VerifyAsync(string idToken, CancellationToken cancellationToken) =>
-            Task.FromResult(new VerifiedGoogleSignInIdentity(Subject, idToken, Email, false));
+            Task.FromResult(new VerifiedGoogleSignInIdentity(Subject, idToken, Email));
     }
 }

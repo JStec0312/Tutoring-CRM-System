@@ -29,11 +29,7 @@ public sealed class GoogleSignInTokenVerifier(IConfiguration configuration) : IG
             }
 
             var email = payload.EmailVerified ? payload.Email?.Trim() : null;
-            var isEmailAuthoritative = email is not null &&
-                (email.EndsWith("@gmail.com", StringComparison.OrdinalIgnoreCase) ||
-                 !string.IsNullOrWhiteSpace(payload.HostedDomain));
-
-            return new VerifiedGoogleSignInIdentity(payload.Subject, nonce, email, isEmailAuthoritative);
+            return new VerifiedGoogleSignInIdentity(payload.Subject, nonce, email);
         }
         catch (Exception exception) when (exception is HttpRequestException ||
             (exception is OperationCanceledException && !cancellationToken.IsCancellationRequested))

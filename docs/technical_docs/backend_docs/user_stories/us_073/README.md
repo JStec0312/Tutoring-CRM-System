@@ -2,7 +2,7 @@
 
 ## Scope
 
-The backend issues a Google sign-in challenge, verifies the returned Google ID token, and issues a CRM session for an active linked account. For an unlinked Google identity, the sign-in endpoint returns a token for the next step. An authenticated CRM account can complete linking. Completing registration remains planned. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
+The backend issues a Google sign-in challenge, verifies the returned Google ID token, and issues a CRM session for an active linked account. For an unlinked Google identity, the sign-in endpoint returns a token for the next step. An authenticated CRM account can complete linking. A new user can complete Google registration as a Tutor or Student. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
 
 ## FILES
 
@@ -13,6 +13,9 @@ The backend issues a Google sign-in challenge, verifies the returned Google ID t
 - [Account linking slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CompleteGoogleAccountLink/)
 - [Account linking integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/CompleteGoogleAccountLink/)
 - [Account linking sequence source](diagrams/complete-google-account-link.puml)
+- [Google registration slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RegisterWithGoogle/)
+- [Google registration integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/RegisterWithGoogle/)
+- [Google registration sequence source](diagrams/register-with-google.puml)
 - [Challenge sequence source](diagrams/create-google-sign-in-challenge.puml) and [sign-in sequence source](diagrams/sign-in-with-google.puml)
 
 ![Challenge issuance sequence](diagrams/create-google-sign-in-challenge.svg)
@@ -20,6 +23,8 @@ The backend issues a Google sign-in challenge, verifies the returned Google ID t
 ![Google sign-in sequence](diagrams/sign-in-with-google.svg)
 
 ![Google account linking sequence](diagrams/complete-google-account-link.svg)
+
+![Google registration sequence](diagrams/register-with-google.svg)
 
 ## API
 
@@ -45,14 +50,31 @@ After `linkRequired`, the user signs into the corresponding CRM account and conf
 
 A missing or invalid CRM session returns `401`. An unknown, expired, consumed, registration-only, or mismatched continuation returns `401` with `Auth.InvalidGoogleLinkContinuation`. An inactive CRM account returns `403` with `Auth.InactiveAccount.`. An existing link for either account returns `409` with `Auth.GoogleAccountLinkConflict`. An invalid request body returns `400`.
 
+### Complete registration
+
+After `registrationRequired`, send `POST /api/auth/google/register` with `continuationToken`, `role` (`Tutor` or `Student`), and `userName`. The client can also send `firstName`, `lastName`, `phoneNumber`, and `useNativeSession`. The server takes the email and Google subject from the continuation.
+
+| HTTP status | Response |
+| --- | --- |
+| `201 Created` | `signedIn` with the CRM session in the same web or native format as Google sign-in. |
+| `401 Unauthorized` | `Auth.InvalidGoogleRegistrationContinuation` for an invalid, expired, consumed, or link-only token. |
+| `409 Conflict` | `Auth.GoogleRegistrationConflict` if the email or Google subject is already registered. Existing username and phone number conflict codes apply to profile fields. |
+| `400 Bad Request` | The form is invalid or specifies a role outside the public registration flow. |
+
 ## Implementation
 
 Configure the expected Google OAuth client ID using `GoogleSignIn__ClientId`. Google verification checks the signature, issuer, audience and expiry. The handler atomically consumes the signed nonce and persists either the CRM refresh token or a continuation. The challenge expires five minutes after issuance.
 
-A linked account is resolved using the case-sensitive Google subject. The database enforces one link per Google subject and one link per CRM account. An unlinked subject can only receive a continuation. The continuation is valid for five minutes and is stored by its SHA-256 hash together with the verified Google identity, information about whether Google is authoritative for the email, and, for linking, the target CRM account ID. The linking handler reads the CRM account from the access token, checks the current account status and email, and consumes the continuation in the same transaction that inserts the link. The database uniqueness constraints resolve conflicts between concurrent requests.
+A linked account is resolved using the case-sensitive Google subject. The database enforces one link per Google subject and one link per CRM account. An unlinked subject can only receive a continuation. The continuation is valid for five minutes and is stored by its SHA-256 hash together with the verified Google identity, and, for linking, the target CRM account ID. The linking handler reads the CRM account from the access token, checks the current account status and email, and consumes the continuation in the same transaction that inserts the link. The database uniqueness constraints resolve conflicts between concurrent requests.
+
+Google registration creates a Tutor or Student CRM account without a password. The email verified by Google is sufficient to complete registration and issue a CRM session. A new account, the role-specific profile, Google link, refresh token, and continuation consumption commit atomically.
+
+An active account created through Google can set its first password through the existing password reset flow. A deployment must apply the migration that makes `UserAccounts.PasswordHash` nullable and removes the unused email authority flag from Google sign-in continuations. Rolling back that migration requires assigning a password to every passwordless account first.
 
 ## Tests
 
 The SQL Server integration tests cover challenge issuance and cleanup, linked-account sign-in over web and native transports, both continuation paths, concurrent replay, expired challenges, invalid tokens, unavailable verification, missing verified email and inactive accounts. Sign-in integration tests substitute the Google verifier to exercise the CRM transaction without calling Google.
 
 Account linking tests cover the flow from Google continuation through later Google sign-in, anonymous and wrong-account access, unusable continuations, both uniqueness constraints, and concurrent consumption.
+
+Registration integration tests cover Tutor and Student creation, native and web responses, registration with an external email domain, duplicate email, invalid or replayed continuations, concurrent registration, role validation, and setting a first password through password reset.

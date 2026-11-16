@@ -42,7 +42,7 @@ internal sealed class UserAccountConfiguration
         builder.Navigation(account => account.Email)
             .IsRequired();
         builder.Navigation(account => account.PasswordHash)
-            .IsRequired();  
+            .IsRequired(false);
         
 
         builder.OwnsOne(account => account.Profile, profile =>

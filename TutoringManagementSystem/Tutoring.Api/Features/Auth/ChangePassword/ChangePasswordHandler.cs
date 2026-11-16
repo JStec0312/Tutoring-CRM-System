@@ -20,7 +20,8 @@ public sealed class ChangePasswordHandler(
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
         var user = await db.UserAccounts.SingleOrDefaultAsync(
             user => user.Id == request.AccountId, cancellationToken);
-        if (user is null || !user.IsActive || !hasher.Verify(request.CurrentPassword, user.PasswordHash.Value))
+        if (user is null || !user.IsActive || user.PasswordHash is null ||
+            !hasher.Verify(request.CurrentPassword, user.PasswordHash.Value))
             throw new IncorrectCurrentPasswordException();
 
         policy.Validate(request.NewPassword);

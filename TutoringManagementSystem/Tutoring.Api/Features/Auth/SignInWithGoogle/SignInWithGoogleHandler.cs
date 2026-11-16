@@ -88,7 +88,7 @@ public sealed class SignInWithGoogleHandler(
         // Create a new Google sign-in continuation with a short expiration time.
         dbContext.GoogleSignInContinuations.Add(new GoogleSignInContinuation(
             GoogleSignInContinuation.HashToken(token), identity.Subject, email,
-            identity.IsEmailAuthoritative, account?.Id, expiresAtUtc));
+            account?.Id, expiresAtUtc));
         // Return the continuation result to the caller. (requires link if account exists)
         return new SignInWithGoogleResult.Continue(account is not null, token, expiresAtUtc);
     }

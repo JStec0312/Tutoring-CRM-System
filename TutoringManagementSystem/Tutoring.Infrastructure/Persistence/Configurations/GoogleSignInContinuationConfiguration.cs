@@ -18,7 +18,6 @@ internal sealed class GoogleSignInContinuationConfiguration : IEntityTypeConfigu
             .ValueGeneratedNever();
         builder.Property(continuation => continuation.GoogleSubject).IsRequired().HasMaxLength(255).IsUnicode(false);
         builder.Property(continuation => continuation.Email).IsRequired().HasMaxLength(320);
-        builder.Property(continuation => continuation.IsEmailAuthoritative).IsRequired();
         builder.Property(continuation => continuation.AccountId)
             .HasConversion(id => id!.Value.Value, value => new UserAccountId(value));
         builder.Property(continuation => continuation.ExpiresAtUtc).IsRequired();

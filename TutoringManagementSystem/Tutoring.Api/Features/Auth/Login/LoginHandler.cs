@@ -32,7 +32,7 @@ public sealed class LoginHandler(
             throw new InvalidCredentialsException();
         }
 
-        var passwordIsValid = passwordHasher.Verify(
+        var passwordIsValid = userAccount.PasswordHash is not null && passwordHasher.Verify(
             request.Password,
             userAccount.PasswordHash.Value);
 

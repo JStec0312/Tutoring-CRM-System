@@ -8,14 +8,12 @@ public sealed class GoogleSignInContinuation(
     string tokenHash,
     string googleSubject,
     string email,
-    bool isEmailAuthoritative,
     UserAccountId? accountId,
     DateTimeOffset expiresAtUtc)
 {
     public string TokenHash { get; } = tokenHash;
     public string GoogleSubject { get; } = googleSubject;
     public string Email { get; } = email;
-    public bool IsEmailAuthoritative { get; } = isEmailAuthoritative;
     public UserAccountId? AccountId { get; } = accountId;
     public DateTimeOffset ExpiresAtUtc { get; } = expiresAtUtc;
 

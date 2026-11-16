@@ -31,7 +31,7 @@ public sealed class SignInWithGoogleTests(IntegrationTestFixture fixture) : Inte
         using var factory = Fixture.WithTimeProvider(new FixedTimeProvider());
         using var verifierFactory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.Replace(ServiceDescriptor.Singleton<IGoogleSignInTokenVerifier>(
-                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, "changed@gmail.com", true))))));
+                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, "changed@gmail.com"))))));
         using var client = verifierFactory.CreateClient();
 
         using var response = await client.PostAsJsonAsync(Endpoint, new SignInWithGoogleRequest("valid", useNativeSession));
@@ -72,7 +72,7 @@ public sealed class SignInWithGoogleTests(IntegrationTestFixture fixture) : Inte
         using var factory = Fixture.WithTimeProvider(new FixedTimeProvider());
         using var verifierFactory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.Replace(ServiceDescriptor.Singleton<IGoogleSignInTokenVerifier>(
-                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, Email, false))))));
+                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, Email))))));
         using var client = verifierFactory.CreateClient();
 
         using var response = await client.PostAsJsonAsync(Endpoint, new SignInWithGoogleRequest("valid"));
@@ -90,7 +90,6 @@ public sealed class SignInWithGoogleTests(IntegrationTestFixture fixture) : Inte
         Assert.Equal(accountId, continuation.AccountId);
         Assert.Equal(Subject, continuation.GoogleSubject);
         Assert.Equal(Email, continuation.Email);
-        Assert.False(continuation.IsEmailAuthoritative);
         Assert.False(await ExecuteDbAsync(db => db.GoogleAuthenticationChallenges.AnyAsync()));
         Assert.False(await ExecuteDbAsync(db => db.GoogleSignInAccountLinks.AnyAsync()));
         Assert.False(await ExecuteDbAsync(db => db.RefreshTokens.AnyAsync()));
@@ -104,7 +103,7 @@ public sealed class SignInWithGoogleTests(IntegrationTestFixture fixture) : Inte
         using var factory = Fixture.WithTimeProvider(new FixedTimeProvider());
         using var verifierFactory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.Replace(ServiceDescriptor.Singleton<IGoogleSignInTokenVerifier>(
-                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, Email, false))))));
+                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, Email))))));
         using var client = verifierFactory.CreateClient();
 
         var request = new SignInWithGoogleRequest("valid");
@@ -130,7 +129,7 @@ public sealed class SignInWithGoogleTests(IntegrationTestFixture fixture) : Inte
         using var factory = Fixture.WithTimeProvider(new FixedTimeProvider());
         using var verifierFactory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.Replace(ServiceDescriptor.Singleton<IGoogleSignInTokenVerifier>(
-                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, emailVerified ? Email : null, false))))));
+                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, emailVerified ? Email : null))))));
         using var client = verifierFactory.CreateClient();
 
         using var response = await client.PostAsJsonAsync(Endpoint, new SignInWithGoogleRequest(token));
@@ -150,7 +149,7 @@ public sealed class SignInWithGoogleTests(IntegrationTestFixture fixture) : Inte
         using var factory = Fixture.WithTimeProvider(new FixedTimeProvider());
         using var verifierFactory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.Replace(ServiceDescriptor.Singleton<IGoogleSignInTokenVerifier>(
-                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, Email, false))))));
+                new StubVerifier(new VerifiedGoogleSignInIdentity(Subject, Nonce, Email))))));
         using var client = verifierFactory.CreateClient();
 
         using var response = await client.PostAsJsonAsync(Endpoint, new SignInWithGoogleRequest("valid"));

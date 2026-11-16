@@ -1,0 +1,14 @@
+@startuml
+actor User
+participant "CRM client" as Client
+participant "Google registration" as Registration
+database "SQL Server" as Database
+
+note over Client: Google sign-in returned registrationRequired
+User -> Client: Submit registration form
+Client -> Registration: POST /api/auth/google/register
+Registration -> Database: Load valid registration continuation
+Registration -> Database: Consume continuation and save account, link and session
+Database --> Registration: Transaction committed
+Registration --> Client: 201 signedIn
+@enduml

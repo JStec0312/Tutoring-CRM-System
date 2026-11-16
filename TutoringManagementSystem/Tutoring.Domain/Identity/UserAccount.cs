@@ -13,7 +13,7 @@ public sealed class UserAccount
 
     public EmailAddress Email { get; private set; } = null!;
 
-    public PasswordHash PasswordHash { get; private set; } = null!;
+    public PasswordHash? PasswordHash { get; private set; }
 
     public PersonalProfile Profile { get; private set; } = null!;
 
@@ -31,7 +31,7 @@ public sealed class UserAccount
     
     public UserAccount(
         EmailAddress email,
-        PasswordHash passwordHash,
+        PasswordHash? passwordHash,
         PersonalProfile profile,
         DateTimeOffset createdAtUtc
         )

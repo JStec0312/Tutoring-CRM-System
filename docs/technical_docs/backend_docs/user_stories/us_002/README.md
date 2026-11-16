@@ -29,7 +29,7 @@ Google sign-in uses the same CRM session issuance after verifying the Google ide
 
 ## Implementation
 
-- `LoginHandler` verifies the password and account status. An unknown email or wrong password returns `401` with `Auth.InvalidCredentials`. Valid credentials for an inactive account return `403` with `Auth.InactiveAccount.`.
+- `LoginHandler` verifies the password and account status. An unknown email, wrong password, or an account without a password returns `401` with `Auth.InvalidCredentials`. Valid credentials for an inactive account return `403` with `Auth.InactiveAccount.`.
 - After those checks, `LoginSessionIssuer` generates the signed CRM JWT (`sub`, `email`, `jti`, and `role` claims) and stages a refresh token with a new family ID. The login handler saves the refresh token's SHA-256 hash before returning the session. [LoginSessionIssuer](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login/LoginSessionIssuer.cs)
 - Web login uses `LoginRefreshTokenCookie` to apply the configured cookie name, security attributes, expiry, and path. Web Google sign-in uses the same helper. Native password login returns the token pair in JSON. [LoginRefreshTokenCookie](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login/LoginRefreshTokenCookie.cs)
 - Refresh tokens form a rotation family: a valid refresh call revokes the old token (`ReplacedByTokenId`) and issues a new one in the same family; a revoked/expired token being reused revokes the rest of the family (reuse detection) before rejecting with `401`.

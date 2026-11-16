@@ -47,11 +47,6 @@ public sealed class SignInWithGoogleController(ISender sender, IOptions<RefreshT
         if (!request.UseNativeSession)
             LoginRefreshTokenCookie.Append(Response, refreshTokenOptions.Value, session);
 
-        return Ok(new SignInWithGoogleResponse(
-            Status: "signedIn",
-            AccessToken: session.AccessToken,
-            ExpiresAt: session.ExpiresAt,
-            RefreshToken: request.UseNativeSession ? session.RefreshToken : null,
-            RefreshTokenExpiresAt: request.UseNativeSession ? session.RefreshTokenExpiresAt : null));
+        return Ok(SignInWithGoogleResponse.FromSession(session, request.UseNativeSession));
     }
 }
