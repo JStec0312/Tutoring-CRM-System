@@ -1,12 +1,14 @@
 import { Link } from "expo-router";
 import { useRef, useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 
 import { useAuth } from "@/shared/session/AuthProvider";
-import { FormField, FormScreen, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
-import { getSignInError } from "./sign-in-error";
+import { FormField, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
+import { FormError } from "@/shared/ui/FormError";
+import { getSignInError } from "../models/sign-in-error";
+import { GoogleSignInButton } from "./GoogleSignInButton";
 
-export function SignInScreen() {
+export function SignInForm() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +20,7 @@ export function SignInScreen() {
     if (submitting.current) return;
 
     if (!email.trim() || !password) {
-      setError("Podaj adres e-mail i hasło.");
+      setError("Enter your email address and password.");
       return;
     }
 
@@ -36,9 +38,9 @@ export function SignInScreen() {
   }
 
   return (
-    <FormScreen title="Zaloguj się">
+    <>
       <FormField
-        label="Adres e-mail"
+        label="Email address"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
@@ -48,7 +50,7 @@ export function SignInScreen() {
         editable={!pending}
       />
       <FormField
-        label="Hasło"
+        label="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -57,16 +59,15 @@ export function SignInScreen() {
         onSubmitEditing={handleSignIn}
         editable={!pending}
       />
-      {error && (
-        <Text accessibilityRole="alert" style={formStyles.error}>{error}</Text>
-      )}
-      <FormSubmit label="Zaloguj się" pending={pending} onPress={handleSignIn} />
+      <FormError message={error} />
+      <FormSubmit label="Sign in" pending={pending} onPress={handleSignIn} />
+      <GoogleSignInButton />
       {!pending && (
         <View>
-          <Link href="/forgot-password" style={formStyles.link}>Nie pamiętam hasła</Link>
-          <Link href="/register" style={formStyles.link}>Utwórz konto</Link>
+          <Link href="/forgot-password" style={formStyles.link}>Forgot password?</Link>
+          <Link href="/register" style={formStyles.link}>Create an account</Link>
         </View>
       )}
-    </FormScreen>
+    </>
   );
 }

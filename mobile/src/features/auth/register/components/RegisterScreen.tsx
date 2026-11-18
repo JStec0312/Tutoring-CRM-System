@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useApi } from "@/shared/api/api-context";
+import { FormError } from "@/shared/ui/FormError";
 import { FormField, FormScreen, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
 import { registerAccount, type RegistrationRole } from "../api/register-account";
 import { getRegistrationError } from "../models/registration-error";
@@ -117,9 +118,7 @@ export function RegisterScreen() {
           Od 8 do 128 znaków, w tym mała i wielka litera, cyfra oraz znak specjalny.
         </Text>
       </View>
-      {error && (
-        <Text accessibilityRole="alert" style={formStyles.error}>{error}</Text>
-      )}
+      <FormError message={error} />
       <FormSubmit label="Utwórz konto" pending={pending} onPress={handleRegister} />
       {!pending && (
         <Link href="/sign-in" dismissTo style={formStyles.link}>Masz konto? Zaloguj się</Link>

@@ -2,79 +2,148 @@
 
 ## Scope
 
-The backend issues a Google sign-in challenge, verifies the returned Google ID token, and issues a CRM session for an active linked account. For an unlinked Google identity, the sign-in endpoint returns a token for the next step. An authenticated CRM account can complete linking. A new user can complete Google registration as a Tutor or Student. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
+The client obtains a Google ID token and exchanges it for a CRM session or a short-lived continuation. An active account linked to the Google subject can sign in. An existing CRM account with a matching email can be linked after the user authenticates to that account. A new user can register as a Tutor or Student using the email verified by Google. This document describes the implemented backend and the client calls it expects. Integration into the Expo sign-in screen remains pending. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
 
-## FILES
+## Sequence diagrams
 
-- [Challenge slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CreateGoogleSignInChallenge/)
-- [Google sign-in slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignInWithGoogle/)
-- [Challenge integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/CreateGoogleSignInChallenge/)
-- [Sign-in integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/SignInWithGoogle/)
-- [Account linking slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CompleteGoogleAccountLink/)
-- [Account linking integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/CompleteGoogleAccountLink/)
-- [Account linking sequence source](diagrams/complete-google-account-link.puml)
-- [Google registration slice](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RegisterWithGoogle/)
-- [Google registration integration tests](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/RegisterWithGoogle/)
-- [Google registration sequence source](diagrams/register-with-google.puml)
-- [Challenge sequence source](diagrams/create-google-sign-in-challenge.puml) and [sign-in sequence source](diagrams/sign-in-with-google.puml)
+### End-to-end client flow
+
+The Google ID token returns to the client. Each continuation response ends the current HTTP request. The client prompts the user and sends the next request after confirmation or form submission.
+
+![End-to-end Google sign-in sequence](diagrams/google-auth-flow.svg)
+
+[PlantUML source](diagrams/google-auth-flow.puml)
+
+### Issue the challenge
 
 ![Challenge issuance sequence](diagrams/create-google-sign-in-challenge.svg)
 
+[PlantUML source](diagrams/create-google-sign-in-challenge.puml) · [Controller](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CreateGoogleSignInChallenge/CreateGoogleSignInChallengeController.cs) · [Handler](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CreateGoogleSignInChallenge/CreateGoogleSignInChallengeHandler.cs)
+
+### Verify the Google credential and choose the next step
+
 ![Google sign-in sequence](diagrams/sign-in-with-google.svg)
+
+[PlantUML source](diagrams/sign-in-with-google.puml) · [Controller](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignInWithGoogle/SignInWithGoogleController.cs) · [Handler](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignInWithGoogle/SignInWithGoogleHandler.cs) · [Google token verifier](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/Google/GoogleSignInTokenVerifier.cs)
+
+### Link an existing CRM account
 
 ![Google account linking sequence](diagrams/complete-google-account-link.svg)
 
+[PlantUML source](diagrams/complete-google-account-link.puml) · [Controller](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CompleteGoogleAccountLink/CompleteGoogleAccountLinkController.cs) · [Handler](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CompleteGoogleAccountLink/CompleteGoogleAccountLinkHandler.cs)
+
+### Register a new CRM account
+
 ![Google registration sequence](diagrams/register-with-google.svg)
+
+[PlantUML source](diagrams/register-with-google.puml) · [Controller](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RegisterWithGoogle/RegisterWithGoogleController.cs) · [Handler](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RegisterWithGoogle/RegisterWithGoogleHandler.cs)
+
+## FILES
+
+| Concern | Implementation |
+| --- | --- |
+| Google authentication | [Challenge](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CreateGoogleSignInChallenge/), [sign-in](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignInWithGoogle/), [account linking](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/CompleteGoogleAccountLink/), [registration](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/RegisterWithGoogle/) |
+| Google identity and persistence models | [Infrastructure authentication](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Authentication/Google/), [challenge mapping](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Configurations/GoogleAuthenticationChallengeConfiguration.cs), [link mapping](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Configurations/GoogleSignInAccountLinkConfiguration.cs), [continuation mapping](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Configurations/GoogleSignInContinuationConfiguration.cs) |
+| Shared CRM session | [LoginSessionIssuer](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login/LoginSessionIssuer.cs), [LoginRefreshTokenCookie](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/Login/LoginRefreshTokenCookie.cs), [SignInWithGoogleResponse](../../../../../TutoringManagementSystem/Tutoring.Api/Features/Auth/SignInWithGoogle/SignInWithGoogleResponse.cs), [US-002](../us_002/README.md) |
 
 ## API
 
-### Issue a challenge
+All four endpoints use POST. JSON field names below match the HTTP contract.
 
-`POST /api/auth/google/challenge` is anonymous. An empty request returns `200 OK` with a 64-character hexadecimal `nonce` and a UTC timestamp in `expiresAtUtc`. The response includes `Cache-Control: no-store`. Malformed JSON returns `400 Bad Request`.
+### `/api/auth/google/challenge`
 
-### Sign in with Google
+Anonymous. Send an empty body or `{}`. The `200 OK` response contains `nonce` (64 hexadecimal characters) and `expiresAtUtc` (ISO 8601 UTC). Pass the nonce to Google when starting the identity request. The response uses `Cache-Control: no-store`. Malformed JSON returns `400`.
 
-`POST /api/auth/google/sign-in` is anonymous. The client sends the signed Google ID token as `idToken` in a JSON body. Successful responses use `200 OK` and `Cache-Control: no-store`.
+### `/api/auth/google/sign-in`
 
-| `status` | Response |
-| --- | --- |
-| `signedIn` | `accessToken` and `expiresAt`. The refresh token uses the existing HTTP-only cookie. Native apps may send `useNativeSession: true` to receive `refreshToken` and `refreshTokenExpiresAt` in JSON. |
-| `linkRequired` | `continuationToken` and `continuationExpiresAtUtc` for the existing CRM account matching the verified email. |
-| `registrationRequired` | `continuationToken` and `continuationExpiresAtUtc` for a verified email with no CRM account. |
+Anonymous. Send `{"idToken":"<Google ID token>"}` as application/json. The token has an 8,192-character limit and the request has a 16,384-byte limit. Native clients can include `"useNativeSession":true`. The endpoint returns `200 OK` for each of these outcomes, with `Cache-Control: no-store`.
 
-An unusable ID token or challenge returns `401` with `Auth.InvalidGoogleSignIn`. An unlinked Google identity without a valid verified email returns `401` with `Auth.GoogleVerifiedEmailRequired`. An inactive CRM account returns `403` with the existing `Auth.InactiveAccount.` code. Missing configuration or unavailable Google verification returns `503` with `Auth.GoogleSignInUnavailable`.
+| `status` | Response | Next client action |
+| --- | --- | --- |
+| `signedIn` | `accessToken` and `expiresAt`, with refresh credentials delivered using the selected transport | Store the CRM session and open the portal for the account's role. |
+| `linkRequired` | `continuationToken` and `continuationExpiresAtUtc` | Authenticate to the matching CRM account, prompt for confirmation, and submit the link request. |
+| `registrationRequired` | `continuationToken` and `continuationExpiresAtUtc` | Collect the user's role and profile details, then submit registration. |
 
-### Confirm linking to an existing account
+### `/api/auth/google/link`
 
-After `linkRequired`, the user signs into the corresponding CRM account and confirms linking. The client sends `POST /api/auth/google/link` with the CRM bearer access token and `{ "continuationToken": "..." }`. On success the endpoint returns `204 No Content`. The client can keep using its current CRM session, and subsequent Google sign-ins resolve to the linked account.
+Requires a CRM bearer access token. Send `{"continuationToken":"<token from linkRequired>"}`. The controller reads the CRM account ID from the authenticated JWT `sub`. The body carries a 64-character continuation token. The endpoint returns `204 No Content`. The session used to confirm the link stays usable. A subsequent Google sign-in can issue a session for the same account.
 
-A missing or invalid CRM session returns `401`. An unknown, expired, consumed, registration-only, or mismatched continuation returns `401` with `Auth.InvalidGoogleLinkContinuation`. An inactive CRM account returns `403` with `Auth.InactiveAccount.`. An existing link for either account returns `409` with `Auth.GoogleAccountLinkConflict`. An invalid request body returns `400`.
+### `/api/auth/google/register`
 
-### Complete registration
+Anonymous. Send a 64-character `continuationToken` from `registrationRequired`, `role` set to `Tutor` or `Student`, and `userName` of at most 100 characters. Optional fields are `firstName` and `lastName` (100 characters each), `phoneNumber` (30 characters), and `useNativeSession` (defaults to false). The server reads email and Google subject from the continuation. A successful response is `201 Created` with `status: "signedIn"`, the CRM session, and `Cache-Control: no-store`.
 
-After `registrationRequired`, send `POST /api/auth/google/register` with `continuationToken`, `role` (`Tutor` or `Student`), and `userName`. The client can also send `firstName`, `lastName`, `phoneNumber`, and `useNativeSession`. The server takes the email and Google subject from the continuation.
+### Error responses
 
-| HTTP status | Response |
-| --- | --- |
-| `201 Created` | `signedIn` with the CRM session in the same web or native format as Google sign-in. |
-| `401 Unauthorized` | `Auth.InvalidGoogleRegistrationContinuation` for an invalid, expired, consumed, or link-only token. |
-| `409 Conflict` | `Auth.GoogleRegistrationConflict` if the email or Google subject is already registered. Existing username and phone number conflict codes apply to profile fields. |
-| `400 Bad Request` | The form is invalid or specifies a role outside the public registration flow. |
+| Endpoint | HTTP status | Condition or ProblemDetails code |
+| --- | --- | --- |
+| Sign-in | `400` | Missing or invalid JSON fields |
+| Sign-in | `401` | `Auth.InvalidGoogleSignIn` for an invalid Google ID token or an unusable nonce. `Auth.GoogleVerifiedEmailRequired` for an unlinked identity without a valid verified email. |
+| Sign-in | `403` | `Auth.InactiveAccount.` when the linked or email-matched CRM account is inactive |
+| Sign-in | `503` | `Auth.GoogleSignInUnavailable` when the Google client ID is missing or verification is unavailable |
+| Link | `400` | Invalid JSON or continuation token length |
+| Link | `401` | Missing or invalid CRM identity. `Auth.InvalidGoogleLinkContinuation` when the continuation is unknown, expired, consumed, for registration, or for another account, or when the account's email no longer matches. |
+| Link | `403` | `Auth.InactiveAccount.` when the matching CRM account is inactive |
+| Link | `409` | `Auth.GoogleAccountLinkConflict` when the Google subject or the CRM account already has a link |
+| Register | `400` | Invalid form fields or a role outside the public registration flow |
+| Register | `401` | `Auth.InvalidGoogleRegistrationContinuation` when the continuation is unknown, expired, consumed, or for linking |
+| Register | `409` | `Auth.GoogleRegistrationConflict` if the email or Google subject already exists. `Username.AlreadyTaken` or `PhoneNumber.AlreadyTaken` for conflicting profile fields. |
+
+Authentication and domain exceptions are translated by the API's [global exception handler](../../../../../TutoringManagementSystem/Tutoring.Api/GlobalExceptionHandler.cs).
 
 ## Implementation
 
-Configure the expected Google OAuth client ID using `GoogleSignIn__ClientId`. Google verification checks the signature, issuer, audience and expiry. The handler atomically consumes the signed nonce and persists either the CRM refresh token or a continuation. The challenge expires five minutes after issuance.
+### Challenge and Google token verification
 
-A linked account is resolved using the case-sensitive Google subject. The database enforces one link per Google subject and one link per CRM account. An unlinked subject can only receive a continuation. The continuation is valid for five minutes and is stored by its SHA-256 hash together with the verified Google identity, and, for linking, the target CRM account ID. The linking handler reads the CRM account from the access token, checks the current account status and email, and consumes the continuation in the same transaction that inserts the link. The database uniqueness constraints resolve conflicts between concurrent requests.
+`CreateGoogleSignInChallengeHandler` generates 32 random bytes and encodes them as hexadecimal. It uses `TimeProvider` to set a five-minute UTC expiry, deletes expired rows from `GoogleAuthenticationChallenges`, and saves the new nonce. The client sends that nonce to Google, which includes it in the signed ID token. The sign-in request carries the ID token containing the nonce claim.
 
-Google registration creates a Tutor or Student CRM account without a password. The email verified by Google is sufficient to complete registration and issue a CRM session. A new account, the role-specific profile, Google link, refresh token, and continuation consumption commit atomically.
+`GoogleSignInTokenVerifier` validates the Google signature, issuer, expected audience, and expiry before extracting the claims. It requires a nonblank Google `sub` of at most 255 characters and a 64-character hexadecimal `nonce`. It exposes a verified email only when Google marks `email_verified` as true. The CRM uses Google `sub` to identify the external account. The `sub` in the access token issued by the CRM contains the CRM account GUID.
 
-An active account created through Google can set its first password through the existing password reset flow. A deployment must apply the migration that makes `UserAccounts.PasswordHash` nullable and removes the unused email authority flag from Google sign-in continuations. Rolling back that migration requires assigning a password to every passwordless account first.
+### Sign-in decision and transaction
+
+After verification, `SignInWithGoogleHandler` opens a SQL transaction and deletes the challenge using the signed nonce and the condition `ExpiresAtUtc > now`. A deletion count of zero stops the flow. The handler loads the linked CRM account and its roles by Google subject. An active match goes straight to session issuance, including when the Google email has changed. An inactive match returns `403`.
+
+With an unlinked Google subject, the handler validates the verified email using the domain email type and looks for a CRM account by email. An active match sets `RequiresLink` and stores its CRM account ID in the continuation. With no account match, it stores a null account ID and returns `registrationRequired`. An inactive email match returns `403`. Before storing a fresh continuation the handler removes expired ones. It generates a 32-byte random token, stores its SHA-256 hash with a five-minute UTC expiry, and returns the original token to the client. Consuming the nonce and saving the refresh token or continuation commit together.
+
+### Completion rules
+
+`CompleteGoogleAccountLinkHandler` hashes the continuation token and looks for a valid row assigned to the JWT's CRM account ID. It checks the account's current email and active status. It deletes the continuation by its hash and requires one affected row, then inserts the Google subject and CRM account ID into `GoogleSignInAccountLinks`. Both changes commit together. SQL Server's uniqueness constraints determine the winner of competing link requests.
+
+`RegisterWithGoogleHandler` reads a valid continuation whose account ID is null and claims it by deleting the row by hash. It checks for an existing CRM email or Google link, then validates the username and optional phone number against existing profiles. It creates an active `UserAccount` with no password, assigns the selected role, and creates the corresponding Tutor or Student record. A Google-verified email is sufficient for registration regardless of domain. The account, role, profile, Google link, refresh token, and continuation deletion commit together. An active account created through Google can set its first password through the existing password-reset flow.
+
+The link and register handlers both require one row to be deleted. That lets only one concurrent request claim the same continuation. If a later check or save fails, disposal of the transaction rolls the deletion back. Expired and successfully consumed continuations require a new Google sign-in attempt.
+
+### Session transport
+
+`LoginSessionIssuer` issues a CRM JWT from the account and its roles, creates a refresh token in a new family, and stages the hashed refresh token for saving. The surrounding handler saves it in the transaction. `SignInWithGoogleResponse` omits optional fields whose values are null.
+
+| Client | Access token delivery | Refresh token delivery | Next refresh |
+| --- | --- | --- | --- |
+| Browser, including a mobile browser | `accessToken` and `expiresAt` in JSON | `Set-Cookie` using `LoginRefreshTokenCookie` | `POST /api/auth/refresh` with the refresh cookie |
+| Native app sending `useNativeSession: true` | `accessToken` and `expiresAt` in JSON | `refreshToken` and `refreshTokenExpiresAt` in JSON for device secure storage | `POST /api/auth/mobile/refresh` with the refresh token in JSON |
+
+The default cookie is `refresh_token` with `HttpOnly`, `Secure`, `SameSite=Strict`, and path `/api/auth/`. Development configuration disables `Secure` for local HTTP. Refresh rotation and sign-out use the same CRM APIs for password and Google sessions. [Session lifecycle in US-002](../us_002/README.md)
+
+### Persistence
+
+| Table | Stored data and constraints |
+| --- | --- |
+| `GoogleAuthenticationChallenges` | Nonce as a case-sensitive primary key and indexed UTC expiry. Issued and consumed by the challenge and sign-in handlers. |
+| `GoogleSignInContinuations` | Token hash as a case-sensitive primary key, Google subject, verified email, nullable CRM account ID, and indexed UTC expiry. A nonnull account ID identifies a link attempt. |
+| `GoogleSignInAccountLinks` | Case-sensitive Google subject as primary key and a unique CRM account foreign key. Each side can be linked once. |
+| `UserAccounts`, `UserAccountRoles`, `Tutors`, `Students` | The CRM identity and its role. Accounts created through Google start with a null `PasswordHash`. |
+| `RefreshTokens` | CRM refresh-token hash, family ID, expiry, and request metadata. |
+
+### Configuration and migrations
+
+Set `GoogleSignIn__ClientId` on the API to the OAuth client ID that the client's Google ID tokens use as their audience. The verifier reads `GoogleSignIn:ClientId` from configuration. Compose forwards the setting from the environment. Apply the challenge, sign-in persistence, and registration migrations in order. Registration makes `UserAccounts.PasswordHash` nullable and removes the retired `IsEmailAuthoritative` column from Google continuations. Its rollback requires setting passwords for all passwordless accounts first. [Environment example](../../../../../.env.example) · [Compose configuration](../../../../../docker-compose.yml) · [Challenge migration](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Migrations/20261116211900_AddGoogleAuthenticationChallenges.cs) · [Sign-in migration](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Migrations/20261116212000_AddGoogleSignInSessions.cs) · [Registration migration](../../../../../TutoringManagementSystem/Tutoring.Infrastructure/Persistence/Migrations/20261116214009_EnableGoogleAccountRegistration.cs)
 
 ## Tests
 
-The SQL Server integration tests cover challenge issuance and cleanup, linked-account sign-in over web and native transports, both continuation paths, concurrent replay, expired challenges, invalid tokens, unavailable verification, missing verified email and inactive accounts. Sign-in integration tests substitute the Google verifier to exercise the CRM transaction without calling Google.
+| Suite | Coverage |
+| --- | --- |
+| [Challenge](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/CreateGoogleSignInChallenge/) | Anonymous issuance, response cache control, nonce uniqueness and expiry cleanup |
+| [Sign-in](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/SignInWithGoogle/) | Linked sign-in over both transports, both continuation results, concurrent nonce replay, expired nonce, invalid token, missing verified email, unavailable verifier, inactive account |
+| [Linking](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/CompleteGoogleAccountLink/) | Linking and subsequent Google sign-in, wrong-account access, expired and registration-only continuations, concurrent consumption, uniqueness conflicts |
+| [Registration](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Features/Auth/RegisterWithGoogle/) | Tutor and Student registration, external email domain, both session transports, passwordless account and reset, duplicate email, invalid continuations, concurrent registration, rejected administrator role |
 
-Account linking tests cover the flow from Google continuation through later Google sign-in, anonymous and wrong-account access, unusable continuations, both uniqueness constraints, and concurrent consumption.
-
-Registration integration tests cover Tutor and Student creation, native and web responses, registration with an external email domain, duplicate email, invalid or replayed continuations, concurrent registration, role validation, and setting a first password through password reset.
+The integration fixture uses SQL Server with migrations applied. Tests covering Google sign-in replace the Google verifier to exercise the CRM flow deterministically. [Integration fixture](../../../../../TutoringManagementSystem/Tutoring.IntegrationTests/Infrastructure/IntegrationTestFixture.cs)

@@ -4,18 +4,18 @@ export function getSignInError(error: unknown): string {
   if (error instanceof ApiError) {
     switch (error.code) {
       case "Auth.InvalidCredentials":
-        return "Nieprawidłowy adres e-mail lub hasło.";
+        return "Invalid email address or password.";
       case "Auth.InactiveAccount.":
       case "Auth.InactiveAccount":
-        return "Konto jest nieaktywne. Jeśli dopiero je utworzyłeś, potwierdź adres e-mail.";
+        return "Your account is inactive. If you just created it, confirm your email address.";
       case "Network.Unavailable":
-        return "Nie można połączyć się z serwerem.";
+        return "Unable to connect to the server.";
     }
 
     if (error.status === 429) {
-      return "Zbyt wiele prób logowania. Spróbuj ponownie za chwilę.";
+      return "Too many sign-in attempts. Please try again shortly.";
     }
   }
 
-  return "Nie udało się zalogować. Spróbuj ponownie.";
+  return "Unable to sign in. Please try again.";
 }

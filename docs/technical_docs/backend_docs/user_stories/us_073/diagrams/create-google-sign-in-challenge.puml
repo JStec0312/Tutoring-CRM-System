@@ -1,15 +1,21 @@
-@startuml
-actor Client
+@startuml create-google-sign-in-challenge
+title Issue a Google sign-in challenge
+hide footbox
+
+participant "CRM client" as Client
 participant CreateGoogleSignInChallengeController as Controller
+participant "ISender / MediatR" as Mediator
 participant CreateGoogleSignInChallengeHandler as Handler
-database SQLServer as Database
+database "SQL Server" as Database
 
 Client -> Controller: POST /api/auth/google/challenge
-Controller -> Handler: CreateGoogleSignInChallengeCommand
-Handler -> Handler: Generate random nonce and UTC expiry
-Handler -> Database: Delete expired challenges
-Handler -> Database: Insert nonce and expiry
+Controller -> Mediator: Send(CreateGoogleSignInChallengeCommand)
+Mediator -> Handler: Handle(command)
+Handler -> Handler: Get UTC time from TimeProvider\nGenerate 32 random bytes and encode as hex\nSet expiry to now + 5 minutes
+Handler -> Database: ExecuteDeleteAsync on expired\nGoogleAuthenticationChallenges rows
+Handler -> Database: SaveChangesAsync with nonce and expiry
 Database --> Handler: Challenge saved
-Handler --> Controller: Nonce and expiry
-Controller --> Client: 200 OK with nonce and expiresAtUtc
+Handler --> Mediator: CreateGoogleSignInChallengeResponse
+Mediator --> Controller: nonce, expiresAtUtc
+Controller --> Client: 200 OK with nonce and expiresAtUtc\nCache-Control: no-store
 @enduml
