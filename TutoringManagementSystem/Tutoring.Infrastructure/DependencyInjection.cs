@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.EmailVerification;
+using Tutoring.Infrastructure.Authentication.Google;
+using Tutoring.Infrastructure.Authentication.Jwt;
+using Tutoring.Infrastructure.Authentication.Passwords;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Tutoring.Infrastructure.FileStorage;
 using Tutoring.Infrastructure.Mailing;
 using Tutoring.Infrastructure.Mailing.Handlers;
@@ -49,6 +53,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddSingleton<IMailer, SmtpMailer>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IGoogleSignInTokenVerifier, GoogleSignInTokenVerifier>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         services.AddScoped<IPasswordPolicyValidator, PasswordPolicyValidator>();
@@ -68,7 +73,6 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<EmailEventDispatcher>();
 
         services.AddSingleton<IPublisher, RabbitMqPublisher>();
-
 
         return services;
     }

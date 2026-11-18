@@ -1,0 +1,62 @@
+@startuml sign-in-with-google
+title Verify the Google credential and resolve the CRM account
+hide footbox
+
+participant "CRM client" as Client
+participant SignInWithGoogleController as Controller
+participant SignInWithGoogleHandler as Handler
+participant GoogleSignInTokenVerifier as Verifier
+participant LoginSessionIssuer as Session
+database "SQL Server" as Database
+
+Client -> Controller: POST /api/auth/google/sign-in\n{idToken, useNativeSession?}
+Controller -> Handler: Send SignInWithGoogleCommand with request metadata\nvia MediatR
+Handler -> Verifier: VerifyAsync(idToken)
+Verifier -> Verifier: Read configured ClientId\nVerify signature, audience, issuer and expiry\nExtract sub, nonce and verified email
+break Token is invalid or verification is unavailable
+    Verifier --> Handler: Verification exception
+    Controller --> Client: 401 or 503 ProblemDetails
+end
+Verifier --> Handler: VerifiedGoogleSignInIdentity
+Handler -> Database: Begin transaction\nDelete challenge with signed nonce and valid expiry
+Database --> Handler: Affected row count
+break No matching unexpired challenge
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 401 Auth.InvalidGoogleSignIn
+end
+Handler -> Database: Read link by Google subject\nLoad CRM account with roles
+Database --> Handler: Linked CRM account or no match
+alt A CRM account is linked
+    break Linked account is inactive
+        Handler -> Database: Transaction rolls back
+        Controller --> Client: 403 Auth.InactiveAccount.
+    end
+    Handler -> Session: Issue(account, request metadata)
+    Session --> Handler: CRM JWT and refresh token\nRefresh token hash staged for save
+else Google subject is unlinked
+    break Verified email is missing or invalid
+        Handler -> Database: Transaction rolls back
+        Controller --> Client: 401 Auth.GoogleVerifiedEmailRequired
+    end
+    Handler -> Database: Look up CRM account by verified email
+    Database --> Handler: CRM account ID and status, or no match
+    break Email belongs to an inactive CRM account
+        Handler -> Database: Transaction rolls back
+        Controller --> Client: 403 Auth.InactiveAccount.
+    end
+    Handler -> Database: Delete expired continuations
+    Handler -> Handler: Generate continuation token and SHA-256 hash\nSet expiry to now + 5 minutes
+    Handler -> Handler: Stage hash, subject, email and expiry\nStore CRM account ID for linking, null for registration
+end
+Handler -> Database: SaveChangesAsync and commit
+Database --> Handler: Transaction committed
+Handler --> Controller: SignedIn(session) or Continue(RequiresLink, token, expiry)
+alt SignedIn
+    opt Browser session
+        Controller -> Controller: Append refresh cookie with LoginRefreshTokenCookie
+    end
+    Controller --> Client: 200 signedIn, access token and expiry\nNative mode also includes refresh fields in JSON
+else Continue
+    Controller --> Client: 200 linkRequired or registrationRequired\ncontinuationToken and continuationExpiresAtUtc\nverified email for linkRequired
+end
+@enduml

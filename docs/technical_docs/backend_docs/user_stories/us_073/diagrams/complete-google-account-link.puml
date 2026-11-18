@@ -1,0 +1,49 @@
+@startuml complete-google-account-link
+title Confirm a link with an existing CRM account
+hide footbox
+
+actor User
+participant "CRM client" as Client
+participant "ASP.NET bearer auth" as Auth
+participant CompleteGoogleAccountLinkController as Controller
+participant CompleteGoogleAccountLinkHandler as Handler
+database "SQL Server" as Database
+
+note over User,Client: The user has authenticated to CRM after linkRequired
+User -> Client: Confirm linking
+Client -> Auth: POST /api/auth/google/link\nCRM bearer token and {continuationToken}
+break Missing or invalid CRM access token
+    Auth --> Client: 401 Unauthorized
+end
+Auth -> Controller: Authenticated principal
+Controller -> Controller: Read CRM account GUID from JWT sub
+break Missing or invalid CRM account GUID
+    Controller --> Client: 401 Unauthorized
+end
+Controller -> Handler: Send CompleteGoogleAccountLinkCommand\nwith account ID and token via MediatR
+Handler -> Handler: Hash the continuation token and read UTC time
+Handler -> Database: Begin transaction\nRead active continuation by hash, account ID and expiry
+break No matching unexpired continuation
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 401 Auth.InvalidGoogleLinkContinuation
+end
+Handler -> Database: Check CRM account's current email and status
+break Email mismatch or inactive account
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 401 invalid continuation or 403 inactive account
+end
+Handler -> Database: ExecuteDeleteAsync by token hash
+Database --> Handler: Affected row count
+break Another request consumed the continuation
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 401 Auth.InvalidGoogleLinkContinuation
+end
+Handler -> Database: SaveChangesAsync with GoogleSubject and AccountId
+break Unique constraint conflict on Google subject or CRM account
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 409 Auth.GoogleAccountLinkConflict
+end
+Handler -> Database: Commit account link and continuation deletion
+Handler --> Controller: Command completed
+Controller --> Client: 204 No Content
+@enduml

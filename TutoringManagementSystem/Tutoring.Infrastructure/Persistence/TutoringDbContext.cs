@@ -8,7 +8,10 @@ using Tutoring.Domain.StudentInvitations;
 using Tutoring.Domain.Students;
 using Tutoring.Domain.TutoringAgreements;
 using Tutoring.Domain.Tutors;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.EmailVerification;
+using Tutoring.Infrastructure.Authentication.Google;
+using Tutoring.Infrastructure.Authentication.Passwords;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Tutoring.Infrastructure.Mailing;
 
 namespace Tutoring.Infrastructure.Persistence;
@@ -48,6 +51,9 @@ public sealed class TutoringDbContext
 
     public DbSet<MaterialAssignment> MaterialAssignments => Set<MaterialAssignment>();
     public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
+    public DbSet<GoogleAuthenticationChallenge> GoogleAuthenticationChallenges => Set<GoogleAuthenticationChallenge>();
+    public DbSet<GoogleSignInAccountLink> GoogleSignInAccountLinks => Set<GoogleSignInAccountLink>();
+    public DbSet<GoogleSignInContinuation> GoogleSignInContinuations => Set<GoogleSignInContinuation>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();

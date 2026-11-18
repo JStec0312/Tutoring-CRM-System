@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Microsoft.Extensions.Options;
 using Tutoring.Api.Features.Common.Http;
 

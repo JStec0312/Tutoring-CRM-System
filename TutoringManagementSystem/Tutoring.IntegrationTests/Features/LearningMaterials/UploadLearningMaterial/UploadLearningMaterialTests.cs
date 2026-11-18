@@ -16,7 +16,7 @@ using Tutoring.Api.Features.LearningMaterials.Exceptions;
 using Tutoring.Api.Features.LearningMaterials.UploadLearningMaterial;
 using Tutoring.Domain.Identity;
 using Tutoring.Domain.LearningMaterials;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Jwt;
 using Tutoring.Infrastructure.FileStorage;
 using Tutoring.Infrastructure.Persistence;
 using Tutoring.IntegrationTests.Infrastructure;

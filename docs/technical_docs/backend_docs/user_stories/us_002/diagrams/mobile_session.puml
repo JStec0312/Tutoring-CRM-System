@@ -4,11 +4,14 @@ hide footbox
 participant "Mobile auth controller" as Client
 database "Secure OS storage" as Store
 participant "Mobile API controller" as API
-participant "Existing auth handler" as Handler
+participant "Auth handlers" as Handler
+participant LoginSessionIssuer
 database "SQL Server" as DB
 Client -> API : POST /api/auth/mobile/login\nemail + password
 API -> Handler : LoginCommand + request metadata
-Handler -> DB : Save refresh token hash + family
+Handler -> LoginSessionIssuer : Issue session for the active account
+LoginSessionIssuer --> Handler : Token pair with refresh record staged
+Handler -> DB : Save refresh-token hash and family ID
 Handler --> API : Token pair + expiry
 API --> Client : JSON; no-store; no cookie
 Client -> Store : Persist refresh token

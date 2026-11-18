@@ -1,0 +1,39 @@
+@startuml google-auth-flow
+title Google authentication from the client
+hide footbox
+
+actor User
+participant "CRM client" as Client
+participant "Google identity service" as Google
+participant "CRM API" as Api
+
+User -> Client: Choose Sign in with Google
+Client -> Api: POST /api/auth/google/challenge
+Api --> Client: 200 nonce and expiresAtUtc
+Client -> Google: Start identity request with nonce
+User -> Google: Choose a Google account
+Google --> Client: Signed Google ID token with nonce
+Client -> Api: POST /api/auth/google/sign-in\n{idToken, useNativeSession?}
+
+alt Google subject linked to an active CRM account
+    Api --> Client: 200 signedIn + CRM session
+    Client --> User: Open CRM portal
+else Verified email belongs to an active CRM account
+    Api --> Client: 200 linkRequired + continuation token + verified email
+    Client -> User: Ask user to authenticate to the matching CRM account
+    User -> Client: Provide CRM password (email already provided)
+    Client -> Api: Authenticate through CRM login
+    Api --> Client: CRM session with access token
+    User -> Client: Confirm linking
+    Client -> Api: POST /api/auth/google/link\nCRM bearer token + continuation token
+    Api --> Client: 204 No Content
+    Client --> User: Continue with the current CRM session
+else Verified email is new to CRM
+    Api --> Client: 200 registrationRequired + continuation token
+    Client -> User: Show Tutor or Student registration form
+    User -> Client: Submit role and profile details
+    Client -> Api: POST /api/auth/google/register\ncontinuation token + role + profile
+    Api --> Client: 201 signedIn + CRM session
+    Client --> User: Open CRM portal
+end
+@enduml

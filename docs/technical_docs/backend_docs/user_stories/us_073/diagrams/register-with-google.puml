@@ -1,0 +1,53 @@
+@startuml register-with-google
+title Complete passwordless registration through Google
+hide footbox
+
+actor User
+participant "CRM client" as Client
+participant RegisterWithGoogleController as Controller
+participant RegisterWithGoogleHandler as Handler
+participant LoginSessionIssuer as Session
+database "SQL Server" as Database
+
+note over User,Client: Google sign-in returned registrationRequired
+User -> Client: Submit role and profile details
+Client -> Controller: POST /api/auth/google/register\n{continuationToken, role, userName, ...}
+Controller -> Handler: Send RegisterWithGoogleCommand with request metadata\nvia MediatR
+Handler -> Handler: Validate public role and hash continuation token
+Handler -> Database: Begin transaction\nLookup by token hash with null AccountId and valid expiry
+break No valid registration continuation
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 401 Auth.InvalidGoogleRegistrationContinuation
+end
+Handler -> Database: ExecuteDeleteAsync by token hash
+Database --> Handler: Affected row count
+break Another request consumed the continuation
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 401 Auth.InvalidGoogleRegistrationContinuation
+end
+Handler -> Database: Check email, Google subject, username\nand optional phone number for conflicts
+break Email or profile data conflicts
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 409 ProblemDetails
+end
+Handler -> Handler: Create active UserAccount without a password\nUse verified email from continuation
+alt Tutor selected
+    Handler -> Handler: Assign Tutor role and stage Tutor record
+else Student selected
+    Handler -> Handler: Assign Student role and stage Student record
+end
+Handler -> Handler: Stage Google subject to CRM account link
+Handler -> Session: Issue(account, request metadata)
+Session --> Handler: CRM JWT and refresh token\nRefresh token hash staged for save
+Handler -> Database: SaveChangesAsync for account, role, profile, link and session
+break Unique constraint conflict on email or Google subject
+    Handler -> Database: Transaction rolls back
+    Controller --> Client: 409 Auth.GoogleRegistrationConflict
+end
+Handler -> Database: Commit all writes and continuation deletion
+Handler --> Controller: LoginHandlerResult
+opt Browser session
+    Controller -> Controller: Append refresh cookie with LoginRefreshTokenCookie
+end
+Controller --> Client: 201 signedIn + CRM session\nNative mode includes refresh fields in JSON
+@enduml

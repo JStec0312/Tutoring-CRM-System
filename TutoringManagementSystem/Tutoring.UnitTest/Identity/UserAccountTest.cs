@@ -79,6 +79,21 @@ public class UserAccountTest
         userAccount.ChangePassword(newPasswordHash);
 
         Assert.Same(newPasswordHash, userAccount.PasswordHash);
-        Assert.Equal("new-hashed-value", userAccount.PasswordHash.Value);
+        Assert.Equal("new-hashed-value", userAccount.PasswordHash?.Value);
+    }
+
+    [Fact]
+    public void PasswordlessAccount_CanSetPasswordLater()
+    {
+        var account = new UserAccount(
+            new EmailAddress("google@example.com"), passwordHash: null,
+            new PersonalProfile("google-user", null, null, null), DateTimeOffset.UtcNow);
+
+        Assert.Null(account.PasswordHash);
+
+        var newPasswordHash = new PasswordHash("new-hashed-value");
+        account.ChangePassword(newPasswordHash);
+
+        Assert.Same(newPasswordHash, account.PasswordHash);
     }
 }

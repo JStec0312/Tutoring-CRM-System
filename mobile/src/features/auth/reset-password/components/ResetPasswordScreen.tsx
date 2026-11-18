@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Text } from "react-native";
 
 import { useApi } from "@/shared/api/api-context";
+import { FormError } from "@/shared/ui/FormError";
 import { FormField, FormScreen, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
 import { resetPassword } from "../api/reset-password";
 import { getResetPasswordError } from "../models/reset-password-error";
@@ -45,9 +46,7 @@ export function ResetPasswordScreen({ token }: { token: string }) {
   if (!token || error?.invalidLink) {
     return (
       <FormScreen title="Link jest niedostępny">
-        <Text accessibilityRole="alert" style={formStyles.error}>
-          {error?.message ?? "Otwórz pełny link z wiadomości e-mail."}
-        </Text>
+        <FormError message={error?.message ?? "Otwórz pełny link z wiadomości e-mail."} />
         <Link href="/forgot-password" replace style={formStyles.link}>Poproś o nowy link</Link>
       </FormScreen>
     );
@@ -84,9 +83,7 @@ export function ResetPasswordScreen({ token }: { token: string }) {
         onSubmitEditing={handleReset}
         editable={!pending}
       />
-      {error && (
-        <Text accessibilityRole="alert" style={formStyles.error}>{error.message}</Text>
-      )}
+      <FormError message={error?.message ?? null} />
       <FormSubmit label="Zapisz nowe hasło" pending={pending} onPress={handleReset} />
     </FormScreen>
   );

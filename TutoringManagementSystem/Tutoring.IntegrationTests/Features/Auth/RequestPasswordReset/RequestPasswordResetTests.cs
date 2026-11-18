@@ -4,7 +4,10 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Domain.Common;
+using Tutoring.Domain.Identity;
+using Tutoring.Infrastructure.Authentication.Google;
+using Tutoring.Infrastructure.Authentication.Passwords;
 using Tutoring.Infrastructure.Mailing;
 using Tutoring.Infrastructure.Mailing.Handlers;
 using Tutoring.IntegrationTests.Infrastructure;
@@ -183,6 +186,61 @@ public sealed class RequestPasswordResetTests(
 
         Assert.Equal(0, tokenCount);
         Assert.Equal(0, outboxCount);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RequestPasswordReset_WithGoogleAccountWithoutPassword_ShouldNotCreateReset(bool active)
+    {
+        const string email = "google-only@test.pl";
+        await ExecuteDbAsync(async db =>
+        {
+            var account = new UserAccount(
+                new EmailAddress(email), null,
+                new PersonalProfile("google-only", null, null, null), DateTimeOffset.UtcNow);
+            if (active)
+                account.Activate();
+
+            db.UserAccounts.Add(account);
+            db.GoogleSignInAccountLinks.Add(new GoogleSignInAccountLink("google-only-subject", account.Id));
+            await db.SaveChangesAsync();
+        });
+
+        using var response = await RequestPasswordResetAsync(email);
+
+        if (active)
+        {
+            Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+            await AssertProblemCodeAsync(response, "Auth.GoogleAccountHasNoPassword");
+        }
+        else
+        {
+            Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        }
+
+        Assert.False(await ExecuteDbAsync(db => db.PasswordResetTokens.AnyAsync()));
+        Assert.False(await ExecuteDbAsync(db => db.OutboxMessages.AnyAsync()));
+    }
+
+    [Fact]
+    public async Task RequestPasswordReset_WithGoogleLinkedAccountWithPassword_ShouldCreateReset()
+    {
+        const string email = "linked@test.pl";
+        await RegisterAndConfirmStudentAsync(email, "Password123!");
+        await ExecuteDbAsync(async db =>
+        {
+            var account = await db.UserAccounts.SingleAsync(user => user.Email.Value == email);
+            db.GoogleSignInAccountLinks.Add(new GoogleSignInAccountLink("linked-subject", account.Id));
+            await db.SaveChangesAsync();
+        });
+
+        using var response = await RequestPasswordResetAsync(email);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(1, await ExecuteDbAsync(db => db.PasswordResetTokens.CountAsync()));
+        var resetEvent = await GetPasswordResetEventAsync(email);
+        Assert.Equal(email, resetEvent.Email);
     }
 
     private sealed class CapturingMailer : IMailer

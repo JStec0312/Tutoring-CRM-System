@@ -17,10 +17,10 @@ export default function SessionStatusScreen() {
 
   return (
     <View style={container}>
-      <Text>Nie udało się przywrócić sesji.</Text>
+      <Text>Service unavailable. Try again later.</Text>
 
       <Button
-        title="Spróbuj ponownie"
+        title="Try again"
         onPress={() => void manager.restoreSession()}
       />
     </View>

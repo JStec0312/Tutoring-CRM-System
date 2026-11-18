@@ -8,6 +8,8 @@ import {
   useSessionManager,
 } from "@/shared/session/AuthProvider";
 
+import { GoogleContinuationProvider } from "@/features/auth/sign-in/models/GoogleContinuationProvider";
+
 import { createApiClient } from "@/shared/api/api-client";
 import { ApiProvider } from "@/shared/api/api-context";
 
@@ -79,6 +81,7 @@ function AppNavigator() {
       >
         <Stack.Screen name="(auth)/sign-in" />
         <Stack.Screen name="(auth)/register" />
+        <Stack.Screen name="(auth)/register-google" />
       </Stack.Protected>
 
       <Stack.Protected
@@ -88,6 +91,7 @@ function AppNavigator() {
         <Stack.Screen name="session-status" />
       </Stack.Protected>
 
+      <Stack.Screen name="(auth)/link-google" />
       <Stack.Screen name="(auth)/forgot-password" />
       <Stack.Screen name="(auth)/reset-password" />
     </Stack>
@@ -100,7 +104,9 @@ export default function RootLayout() {
   return (
     <AuthProvider manager={manager}>
       <ApiBridge>
-        <AppNavigator />
+        <GoogleContinuationProvider>
+          <AppNavigator />
+        </GoogleContinuationProvider>
       </ApiBridge>
     </AuthProvider>
   );

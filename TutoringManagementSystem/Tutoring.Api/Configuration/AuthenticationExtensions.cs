@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Api.Features.Auth.Login;
+using Tutoring.Infrastructure.Authentication.Jwt;
+using Tutoring.Infrastructure.Authentication.Passwords;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 
 namespace Tutoring.Api.Configuration;
 
@@ -62,6 +65,7 @@ public static class AuthenticationExtensions
         // Password policy options
         services.Configure<PasswordPolicyOptions>(
             configuration.GetSection(PasswordPolicyOptions.SectionName));
+        services.AddScoped<LoginSessionIssuer>();
         services.AddAuthorization();
 
         return services;

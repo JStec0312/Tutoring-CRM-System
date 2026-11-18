@@ -4,7 +4,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tutoring.Domain.Identity;
-using Tutoring.Infrastructure.Authentication;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.Auth.ConfirmEmail;

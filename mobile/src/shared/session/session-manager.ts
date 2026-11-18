@@ -194,7 +194,12 @@ export function createSessionManager({
     });
   }
 
-  async function signIn(credentials: LoginCredentials): Promise<void> {
+  function signIn(credentials: LoginCredentials): Promise<void> {
+    return signInWith(() => api.login(credentials));
+  }
+
+  // A null result means authentication needs another step before a session can be issued.
+  async function signInWith(requestSession: () => Promise<IssuedSession | null>): Promise<void> {
     synchronizeSession();
     if (loginRunning || snapshot.status !== "anonymous") {
       throw new Error("Session.SignInNotAllowed");
@@ -218,8 +223,13 @@ export function createSessionManager({
 
         assertCurrent(expected);
 
-        const issued = await api.login(credentials);
-        await commitIssued(issued, expected, true);
+        const issued = await requestSession();
+
+        if (issued) {
+          await commitIssued(issued, expected, true);
+        } else {
+          assertCurrent(expected);
+        }
       });
     } finally {
       loginRunning = false;
@@ -445,6 +455,7 @@ export function createSessionManager({
     },
 
     signIn,
+    signInWith,
     signOut,
     restoreSession,
     refreshSession,

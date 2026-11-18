@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Tutoring.Domain.Identity;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 
 namespace Tutoring.Infrastructure.Persistence.Configurations;
 

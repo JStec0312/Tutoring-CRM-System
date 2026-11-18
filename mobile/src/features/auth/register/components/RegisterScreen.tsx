@@ -1,16 +1,13 @@
 import { Link } from "expo-router";
 import { useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { useApi } from "@/shared/api/api-context";
+import { RegistrationRolePicker } from "@/shared/ui/RegistrationRolePicker";
+import { FormError } from "@/shared/ui/FormError";
 import { FormField, FormScreen, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
 import { registerAccount, type RegistrationRole } from "../api/register-account";
 import { getRegistrationError } from "../models/registration-error";
-
-const roles = [
-  { value: "student", label: "Uczeń" },
-  { value: "tutor", label: "Korepetytor" },
-] as const;
 
 export function RegisterScreen() {
   const api = useApi();
@@ -64,23 +61,10 @@ export function RegisterScreen() {
 
   return (
     <FormScreen title="Utwórz konto">
-      <View style={styles.roleGroup}>
-        <Text style={styles.label}>Typ konta</Text>
-        <View style={styles.roles} accessibilityRole="radiogroup" accessibilityLabel="Typ konta">
-          {roles.map(({ value, label }) => (
-            <Pressable
-              key={value}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: role === value, disabled: pending }}
-              disabled={pending}
-              onPress={() => setRole(value)}
-              style={[styles.role, role === value && styles.selectedRole]}
-            >
-              <Text style={styles.label}>{label}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
+      <RegistrationRolePicker
+        role={role} onChange={setRole} disabled={pending}
+        label="Typ konta" studentLabel="Uczeń" tutorLabel="Korepetytor"
+      />
       <FormField
         label="Adres e-mail"
         value={email}
@@ -117,9 +101,7 @@ export function RegisterScreen() {
           Od 8 do 128 znaków, w tym mała i wielka litera, cyfra oraz znak specjalny.
         </Text>
       </View>
-      {error && (
-        <Text accessibilityRole="alert" style={formStyles.error}>{error}</Text>
-      )}
+      <FormError message={error} />
       <FormSubmit label="Utwórz konto" pending={pending} onPress={handleRegister} />
       {!pending && (
         <Link href="/sign-in" dismissTo style={formStyles.link}>Masz konto? Zaloguj się</Link>
@@ -130,16 +112,4 @@ export function RegisterScreen() {
 
 const styles = StyleSheet.create({
   roleGroup: { gap: 6 },
-  roles: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  role: {
-    minHeight: 48,
-    justifyContent: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "#94a3b8",
-    borderRadius: 8,
-  },
-  selectedRole: { borderColor: "#1d4ed8", backgroundColor: "#eff6ff" },
-  label: { color: "#0f172a", fontSize: 15, fontWeight: "600" },
 });

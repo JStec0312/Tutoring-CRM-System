@@ -1,0 +1,31 @@
+namespace Tutoring.Infrastructure.Authentication.EmailVerification;
+
+using System.Security.Cryptography;
+using Microsoft.Extensions.Options;
+using Tutoring.Domain.Identity;
+
+public sealed class EmailVerificationTokenGenerator(
+    IOptions<EmailVerificationOptions> options)
+    : IEmailVerificationTokenGenerator
+{
+    public GeneratedEmailVerificationToken Generate(
+        UserAccountId userAccountId,
+        DateTimeOffset now)
+    {
+        var value = Convert.ToHexString(
+            RandomNumberGenerator.GetBytes(32));
+
+        var hash = Convert.ToHexString(
+            SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes(value)));
+
+        var token = new EmailVerificationToken(
+            userAccountId,
+            hash,
+            now.AddHours(options.Value.ConfirmationUrlActiveHours));
+
+        return new GeneratedEmailVerificationToken(
+            value,
+            token);
+    }
+}

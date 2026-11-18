@@ -17,7 +17,7 @@ An authenticated user can read their first name, last name and phone number, and
 | GET | `/api/users/me/profile` | JWT | Returns first name, last name and phone number for the authenticated account. |
 | PUT | `/api/users/me/profile` | JWT | Updates username/name/phone for the authenticated account, returns `204 No Content`. |
 | PUT | `/api/users/me/password` | JWT | Verifies `currentPassword`, applies the password policy to `newPassword` and returns `204 No Content`. An incorrect current password returns `400 Auth.IncorrectCurrentPassword`. |
-| POST | `/api/auth/password-reset/request` | Anonymous | Emails a reset link if the account exists and is active; always returns `204 No Content`. |
+| POST | `/api/auth/password-reset/request` | Anonymous | Returns `204 No Content` for password accounts, unknown emails, and inactive accounts. Active Google-linked accounts without a password return `409 Auth.GoogleAccountHasNoPassword` and receive no reset email. |
 | POST | `/api/auth/password-reset` | Anonymous (reset token) | Sets a new password for a valid, unused, unexpired token, returns `204 No Content`. |
 
 ## Implementation
@@ -25,6 +25,7 @@ An authenticated user can read their first name, last name and phone number, and
 - Profile updates preserve the username when omitted. Null first name, last name or phone number clears the field. The endpoint checks username and phone uniqueness against other accounts.
 - A signed-in password change saves the new hash and revokes active refresh and unused password reset tokens in the same transaction. Existing access tokens expire on their original schedule.
 - `RequestPasswordResetHandler` invalidates a user's other active reset tokens and creates a new one, saved with a `PasswordResetRequested` outbox event in the same transaction. It responds identically for unknown emails and inactive accounts to avoid leaking account existence.
+- Before invalidating or generating tokens, an active account with no password and an existing Google link raises `GoogleAccountHasNoPasswordException`. The frontend directs the user to Google sign-in. Google-linked accounts that already have a password retain normal reset behavior. This explicit response reveals Google-only account status for an active matching email; unknown and inactive accounts still return `204`.
 - The outbox/RabbitMQ/email pipeline mirrors registration: `OutboxProcessor` → RabbitMQ → `EmailConsumer` → `EmailEventDispatcher` → `SmtpMailer`.
 - The email handler reads the frontend page URL from `PasswordReset:ResetUrl` and appends the encoded token. The local default targets Expo Web at `http://localhost:8081/reset-password`. Override it with `PasswordReset__ResetUrl` when deploying.
 - `ResetPasswordHandler` validates the token hash, enforces the password policy, then changes the password, marks the token used, revokes all of the user's active refresh tokens (forces re-login everywhere), and invalidates the user's other active reset tokens.
@@ -38,4 +39,4 @@ An authenticated user can read their first name, last name and phone number, and
 
 ## Tests
 
-`Tutoring.IntegrationTests`: profile update requiring authentication, successful update, username/phone conflicts; password-reset request token/outbox creation, the configured URL in the rendered email, and inactive/unknown-account handling; password reset with valid/used/unknown/expired/invalidated tokens, policy violations, and refresh-token/reset-token invalidation side effects.
+`Tutoring.IntegrationTests`: profile update requiring authentication, successful update, username/phone conflicts; password-reset request token/outbox creation, the configured URL in the rendered email, inactive/unknown-account handling, rejection of Google-only accounts without token/outbox writes, and normal resets for Google-linked accounts with passwords; password reset with valid/used/unknown/expired/invalidated tokens, policy violations, and refresh-token/reset-token invalidation side effects.

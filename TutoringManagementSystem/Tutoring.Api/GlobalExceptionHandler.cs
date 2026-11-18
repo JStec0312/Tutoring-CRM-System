@@ -52,6 +52,10 @@ public sealed class GlobalExceptionHandler(
                 forbiddenException.Code,
                 forbiddenException.Message),
 
+            Tutoring.Infrastructure.Authentication.Google.InvalidGoogleSignInTokenException invalidGoogleToken => new ErrorDetails(
+                StatusCodes.Status401Unauthorized, "Unauthorized", "Auth.InvalidGoogleSignIn", invalidGoogleToken.Message),
+            Tutoring.Infrastructure.Authentication.Google.GoogleSignInVerificationUnavailableException googleUnavailable => new ErrorDetails(
+                StatusCodes.Status503ServiceUnavailable, "Service unavailable", "Auth.GoogleSignInUnavailable", googleUnavailable.Message),
             AuthException authException => new ErrorDetails(
                 StatusCodes.Status401Unauthorized,
                 "Unauthorized",

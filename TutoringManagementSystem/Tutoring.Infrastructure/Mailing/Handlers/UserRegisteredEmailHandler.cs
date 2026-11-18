@@ -1,6 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.EmailVerification;
 using Tutoring.Infrastructure.Mailing.Templates;
 using Tutoring.Infrastructure.Messaging.Contracts;
 

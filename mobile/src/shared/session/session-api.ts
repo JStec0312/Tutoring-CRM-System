@@ -83,7 +83,7 @@ export function createSessionApi(
   };
 }
 
-function parseSession(response: unknown, isNative: boolean): IssuedSession {
+export function parseSession(response: unknown, isNative: boolean): IssuedSession {
   if (
     typeof response !== "object" ||
     response === null ||
@@ -120,7 +120,7 @@ function parseSession(response: unknown, isNative: boolean): IssuedSession {
   };
 }
 
-function parseUtcDate(value: unknown): string {
+export function parseUtcDate(value: unknown): string {
   if (
     typeof value !== "string" ||
     !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/i.test(

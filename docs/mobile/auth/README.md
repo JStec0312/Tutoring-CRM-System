@@ -25,7 +25,7 @@ The backend reads the frontend reset URL from `PasswordReset:ResetUrl` in `appse
 
 ## HTTP contract
 
-All operations use `POST` with `auth: false` to skip bearer injection.
+The session operations below use `POST` with `auth: false` to skip bearer injection.
 
 | Operation | Web | Android and iOS |
 | --- | --- | --- |

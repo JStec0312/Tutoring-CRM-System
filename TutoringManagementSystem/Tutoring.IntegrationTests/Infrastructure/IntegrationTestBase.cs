@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Tutoring.Api.Features.Auth.Login;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.RefreshTokens;
 using Tutoring.Infrastructure.Mailing;
 using Tutoring.Infrastructure.Messaging.Contracts;
 using Tutoring.Infrastructure.Persistence;

@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Text } from "react-native";
 
 import { useApi } from "@/shared/api/api-context";
+import { FormError } from "@/shared/ui/FormError";
 import { FormField, FormScreen, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
 import { requestPasswordReset } from "../api/request-password-reset";
 import { getRequestPasswordResetError } from "../models/request-password-reset-error";
@@ -58,9 +59,7 @@ export function ForgotPasswordScreen() {
             onSubmitEditing={handleRequest}
             editable={!pending}
           />
-          {error && (
-            <Text accessibilityRole="alert" style={formStyles.error}>{error}</Text>
-          )}
+          <FormError message={error} />
           <FormSubmit label="Wyślij link" pending={pending} onPress={handleRequest} />
         </>
       )}

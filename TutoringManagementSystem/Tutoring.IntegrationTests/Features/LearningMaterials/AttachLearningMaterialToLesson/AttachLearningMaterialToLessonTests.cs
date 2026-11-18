@@ -11,7 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Tutoring.Domain.Identity;
 using Tutoring.Domain.LearningMaterials;
 using Tutoring.Domain.TutoringAgreements;
-using Tutoring.Infrastructure.Authentication;
+using Tutoring.Infrastructure.Authentication.Jwt;
 using Tutoring.IntegrationTests.Infrastructure;
 
 namespace Tutoring.IntegrationTests.Features.LearningMaterials.AttachLearningMaterialToLesson;
