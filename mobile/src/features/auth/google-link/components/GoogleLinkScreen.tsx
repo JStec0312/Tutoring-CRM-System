@@ -77,7 +77,7 @@ export function GoogleLinkScreen() {
       )}
       {isAuthenticated && (
         <>
-          <Text accessibilityRole="status" style={formStyles.description}>
+          <Text aria-live="polite" style={formStyles.description}>
             Connect the Google account you just selected to the CRM account you are signed in to?
           </Text>
           <FormSubmit label="Connect Google account" pending={pending} onPress={handleConfirm} />
