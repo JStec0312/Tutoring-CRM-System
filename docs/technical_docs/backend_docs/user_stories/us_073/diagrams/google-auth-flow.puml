@@ -19,9 +19,9 @@ alt Google subject linked to an active CRM account
     Api --> Client: 200 signedIn + CRM session
     Client --> User: Open CRM portal
 else Verified email belongs to an active CRM account
-    Api --> Client: 200 linkRequired + continuation token
+    Api --> Client: 200 linkRequired + continuation token + verified email
     Client -> User: Ask user to authenticate to the matching CRM account
-    User -> Client: Provide CRM credentials
+    User -> Client: Provide CRM password (email already provided)
     Client -> Api: Authenticate through CRM login
     Api --> Client: CRM session with access token
     User -> Client: Confirm linking

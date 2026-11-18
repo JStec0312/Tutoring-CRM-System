@@ -90,7 +90,10 @@ public sealed class SignInWithGoogleHandler(
             GoogleSignInContinuation.HashToken(token), identity.Subject, email,
             account?.Id, expiresAtUtc));
         // Return the continuation result to the caller. (requires link if account exists)
-        return new SignInWithGoogleResult.Continue(account is not null, token, expiresAtUtc);
+        if (account is not null)
+            return new SignInWithGoogleResult.Continue(true, token, expiresAtUtc, email);
+
+        return new SignInWithGoogleResult.Continue(false, token, expiresAtUtc, null);
     }
 
     private static string GetVerifiedEmail(string? email)

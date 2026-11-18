@@ -5,6 +5,7 @@ import {
   parseUtcDate,
 } from "@/shared/session/session-api";
 
+import type { GoogleContinuation } from "../models/google-continuation";
 import type { GoogleSignInResponse } from "../models/google-sign-in-response";
 
 export async function signInWithGoogle(
@@ -33,11 +34,20 @@ export async function signInWithGoogle(
       throw new InvalidSessionResponseError();
     }
 
-    return {
+    const continuation: GoogleContinuation = {
       status: data.status,
       continuationToken: data.continuationToken,
       continuationExpiresAtUtc: parseUtcDate(data.continuationExpiresAtUtc),
     };
+
+    if (data.status === "linkRequired") {
+      if (typeof data.email !== "string" || !data.email.trim() || data.email.length > 320) {
+        throw new InvalidSessionResponseError();
+      }
+      continuation.email = data.email.trim();
+    }
+
+    return continuation;
   }
 
   throw new InvalidSessionResponseError();

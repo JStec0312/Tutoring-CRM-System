@@ -53,7 +53,7 @@ async function setup({ initialPage = "/sign-in", linkResponse, googleStatus = "l
     const path = new URL(String(url)).pathname;
     if (path === "/api/auth/google/sign-in") {
       return Response.json({
-        status: googleStatus, continuationToken: "a".repeat(64),
+        email: "matching@example.com", status: googleStatus, continuationToken: "a".repeat(64),
         continuationExpiresAtUtc: new Date(Date.now() + 300_000).toISOString(),
       });
     }
@@ -127,8 +127,7 @@ async function startLinking() {
   await screen.findByRole("button", { name: "Sign in to continue" });
 }
 
-async function signIn(email = "matching@example.com", password = "correct-password") {
-  fireEvent.change(screen.getByLabelText("Email address"), { target: { value: email } });
+async function signIn(password = "correct-password") {
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: password } });
   fireEvent.click(screen.getByRole("button", { name: "Sign in to continue" }));
   if (password === "correct-password") {
@@ -138,12 +137,16 @@ async function signIn(email = "matching@example.com", password = "correct-passwo
 }
 
 it("authenticates before confirmation and links only after an explicit click", async () => {
-  const { manager, linkCalls } = await setup();
+  const { manager, linkCalls, fetcher } = await setup();
   await startLinking();
   expect(replace).toHaveBeenCalledWith("/link-google");
   expect(manager.getSnapshot().status).toBe("anonymous");
+  expect(screen.queryByLabelText("Email address")).toBeNull();
+  expect(screen.getByText(/matching@example.com/)).toBeTruthy();
   await signIn();
   expect(manager.getSnapshot().status).toBe("authenticated");
+  const loginRequest = fetcher.mock.calls.find(([url]) => String(url).endsWith("/api/auth/login"));
+  expect(JSON.parse(String(loginRequest?.[1]?.body)).email).toBe("matching@example.com");
   expect(linkCalls()).toHaveLength(0);
   expect(screen.queryByRole("button", { name: "Use a different CRM account" })).toBeNull();
   expect(screen.queryByText("Portal opened")).toBeNull();
@@ -156,7 +159,7 @@ it("authenticates before confirmation and links only after an explicit click", a
 it("keeps the continuation after a bad password and allows retrying", async () => {
   const { linkCalls } = await setup();
   await startLinking();
-  await signIn("matching@example.com", "wrong-password");
+  await signIn("wrong-password");
   await screen.findByText("Invalid email address or password.");
   expect(linkCalls()).toHaveLength(0);
   await signIn();
@@ -220,6 +223,7 @@ it("removes the in-memory continuation automatically at expiry", () => {
   const { result } = renderHook(useGoogleContinuation, { wrapper });
   act(() => result.current.setContinuation({
     status: "linkRequired",
+    email: "matching@example.com",
     continuationToken: "a".repeat(64),
     continuationExpiresAtUtc: new Date(Date.now() + 1000).toISOString(),
   }));
@@ -250,12 +254,14 @@ it("does not let an older expiry timer clear a newer continuation", () => {
   const { result } = renderHook(useGoogleContinuation, { wrapper });
   act(() => result.current.setContinuation({
     status: "linkRequired",
+    email: "matching@example.com",
     continuationToken: "a".repeat(64),
     continuationExpiresAtUtc: new Date(Date.now() + 1000).toISOString(),
   }));
   act(() => vi.advanceTimersByTime(500));
   act(() => result.current.setContinuation({
     status: "linkRequired",
+    email: "matching@example.com",
     continuationToken: "b".repeat(64),
     continuationExpiresAtUtc: new Date(Date.now() + 3000).toISOString(),
   }));

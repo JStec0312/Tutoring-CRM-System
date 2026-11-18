@@ -8,5 +8,5 @@ public abstract record SignInWithGoogleResult
     public sealed record SignedIn(LoginHandlerResult Session) : SignInWithGoogleResult;
 
     // Indicates that the user needs to continue the sign-in process, typically by linking their Google account.
-    public sealed record Continue(bool RequiresLink, string Token, DateTimeOffset ExpiresAtUtc) : SignInWithGoogleResult;
+    public sealed record Continue(bool RequiresLink, string Token, DateTimeOffset ExpiresAtUtc, string? Email) : SignInWithGoogleResult;
 }

@@ -33,8 +33,10 @@ use mocks; they do not establish that live Google consent or native builds work.
 ### Frontend account linking and registration
 
 [GoogleLinkScreen](../../../../../mobile/src/features/auth/google-link/components/GoogleLinkScreen.tsx)
-reuses the shared password form to authenticate to the matching CRM account. It
-remains available after authentication and requires explicit **Connect Google
+reuses the shared password form to authenticate to the matching CRM account. The
+backend returns the Google-verified `email` with `linkRequired`; the screen displays
+this fixed address and asks only for the CRM password. The email input is omitted,
+and the address stays in the in-memory continuation. It remains available after authentication and requires explicit **Connect Google
 account** confirmation before sending `/api/auth/google/link` with the current CRM
 bearer token. Success clears the continuation and opens the existing session's
 portal. Cancelling after password sign-in keeps the CRM session; cancelling before
@@ -56,7 +58,8 @@ continuations cannot submit. Username conflicts and network/API errors display
 English messages and permit retrying while the continuation remains valid.
 
 [Frontend interaction tests](../../../../../mobile/tests/features/auth/sign-in/google-continuation-flow.test.tsx)
-cover routing, consent, linking, registration, role selection, validation, retries,
+cover routing, consent, linking with the fixed verified email and no email input,
+registration, role selection, validation, retries,
 expiry, cancellation, and duplicate submissions with controlled HTTP responses.
 [Registration API tests](../../../../../mobile/tests/features/auth/google-register/register-with-google.test.ts)
 cover role mapping, both session transports, response validation, and backend errors.
@@ -119,7 +122,7 @@ Anonymous. Send `{"idToken":"<Google ID token>"}` as application/json. The token
 | `status` | Response | Next client action |
 | --- | --- | --- |
 | `signedIn` | `accessToken` and `expiresAt`, with refresh credentials delivered using the selected transport | Store the CRM session and open the portal for the account's role. |
-| `linkRequired` | `continuationToken` and `continuationExpiresAtUtc` | Authenticate to the matching CRM account, prompt for confirmation, and submit the link request. |
+| `linkRequired` | `continuationToken`, `continuationExpiresAtUtc`, and Google-verified `email` | Show the fixed email, collect only the CRM password, prompt for confirmation, and submit the link request. |
 | `registrationRequired` | `continuationToken` and `continuationExpiresAtUtc` | Collect the user's role and profile details, then submit registration. |
 
 ### `/api/auth/google/link`

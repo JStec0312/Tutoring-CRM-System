@@ -57,6 +57,6 @@ alt SignedIn
     end
     Controller --> Client: 200 signedIn, access token and expiry\nNative mode also includes refresh fields in JSON
 else Continue
-    Controller --> Client: 200 linkRequired or registrationRequired\ncontinuationToken and continuationExpiresAtUtc
+    Controller --> Client: 200 linkRequired or registrationRequired\ncontinuationToken and continuationExpiresAtUtc\nverified email for linkRequired
 end
 @enduml

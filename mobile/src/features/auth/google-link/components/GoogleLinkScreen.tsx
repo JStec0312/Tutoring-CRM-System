@@ -50,7 +50,7 @@ export function GoogleLinkScreen() {
     }
   }
 
-  if (!continuation || continuation.status !== "linkRequired" || isGoogleContinuationExpired(continuation)) {
+  if (!continuation || continuation.status !== "linkRequired" || !continuation.email || isGoogleContinuationExpired(continuation)) {
     return (
       <FormScreen title="Google sign-in">
         <FormError message="This linking attempt has expired or is no longer available. Start Google sign-in again." />
@@ -64,13 +64,14 @@ export function GoogleLinkScreen() {
       {!isAuthenticated && (
         <>
           <Text style={formStyles.description}>
-            Sign in to your existing CRM account using the same email address as your Google account.
+            Enter the password for your CRM account: {continuation.email}
           </Text>
           <PasswordSignInForm
             pending={pending}
             onPendingChange={setPending}
             onSubmit={signIn}
             submitLabel="Sign in to continue"
+            fixedEmail={continuation.email}
           />
         </>
       )}

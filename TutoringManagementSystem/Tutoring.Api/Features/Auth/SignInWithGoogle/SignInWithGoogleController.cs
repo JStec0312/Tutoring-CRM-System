@@ -34,7 +34,8 @@ public sealed class SignInWithGoogleController(ISender sender, IOptions<RefreshT
             return Ok(new SignInWithGoogleResponse(
                 Status: continuation.RequiresLink ? "linkRequired" : "registrationRequired",
                 ContinuationToken: continuation.Token,
-                ContinuationExpiresAtUtc: continuation.ExpiresAtUtc));
+                ContinuationExpiresAtUtc: continuation.ExpiresAtUtc,
+                Email: continuation.Email));
         }
 
         // If continuation is not required, the user has successfully signed in.

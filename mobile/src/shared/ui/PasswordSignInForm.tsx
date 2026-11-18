@@ -10,9 +10,10 @@ type Props = {
   onPendingChange: (pending: boolean) => void;
   onSubmit: (credentials: LoginCredentials) => Promise<void>;
   submitLabel?: string;
+  fixedEmail?: string;
 };
 
-export function PasswordSignInForm({ pending, onPendingChange, onSubmit, submitLabel = "Sign in" }: Props) {
+export function PasswordSignInForm({ pending, onPendingChange, onSubmit, submitLabel = "Sign in", fixedEmail }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +22,16 @@ export function PasswordSignInForm({ pending, onPendingChange, onSubmit, submitL
   async function handleSubmit() {
     if (pending || submitting.current) return;
 
-    if (!email.trim() || !password) {
+    let loginEmail = email;
+    if (fixedEmail) {
+      loginEmail = fixedEmail;
+      if (!password) {
+        setError("Enter your password.");
+        return;
+      }
+    }
+
+    if (!loginEmail.trim() || !password) {
       setError("Enter your email address and password.");
       return;
     }
@@ -30,7 +40,7 @@ export function PasswordSignInForm({ pending, onPendingChange, onSubmit, submitL
     onPendingChange(true);
     setError(null);
     try {
-      await onSubmit({ email: email.trim(), password });
+      await onSubmit({ email: loginEmail.trim(), password });
       setPassword("");
     } catch (error) {
       setError(getSignInError(error));
@@ -42,16 +52,18 @@ export function PasswordSignInForm({ pending, onPendingChange, onSubmit, submitL
 
   return (
     <>
-      <FormField
-        label="Email address"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        autoCorrect={false}
-        keyboardType="email-address"
-        autoComplete="email"
-        editable={!pending}
-      />
+      {!fixedEmail && (
+        <FormField
+          label="Email address"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          autoComplete="username"
+          editable={!pending}
+        />
+      )}
       <FormField
         label="Password"
         value={password}

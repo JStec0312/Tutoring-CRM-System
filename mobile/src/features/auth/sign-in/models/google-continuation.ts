@@ -1,5 +1,6 @@
 export type GoogleContinuation = {
   status: "linkRequired" | "registrationRequired";
+  email?: string;
   continuationToken: string;
   continuationExpiresAtUtc: string;
 };

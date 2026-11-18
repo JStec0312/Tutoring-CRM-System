@@ -44,13 +44,15 @@ it("accepts a browser session without a JSON refresh token and normalizes backen
 });
 
 it.each(["linkRequired", "registrationRequired"])("returns %s without accepting it as a session", async (status) => {
-  const body = { status, continuationToken: "a".repeat(64), continuationExpiresAtUtc: futureDate() };
+  const body: Record<string, unknown> = { status, continuationToken: "a".repeat(64), continuationExpiresAtUtc: futureDate() };
+  if (status === "linkRequired") body.email = "matching@example.com";
   await expect(signInWithGoogle(fixture(body).api, "google-token", false)).resolves.toEqual(body);
 });
 
 it.each([
   null,
   { status: "unknown" },
+  { status: "linkRequired", continuationToken: "a".repeat(64), continuationExpiresAtUtc: futureDate() },
   { status: "signedIn", accessToken: "crm", expiresAt: "2020-01-01T00:00:00Z" },
   { status: "signedIn", accessToken: "crm", expiresAt: "invalid" },
   { status: "linkRequired", continuationToken: "short", continuationExpiresAtUtc: futureDate() },

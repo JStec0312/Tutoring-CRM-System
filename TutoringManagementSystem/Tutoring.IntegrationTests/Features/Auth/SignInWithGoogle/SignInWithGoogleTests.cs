@@ -79,6 +79,10 @@ public sealed class SignInWithGoogleTests(IntegrationTestFixture fixture) : Inte
 
         var result = await ReadSuccessAsync(response);
         Assert.Equal(existingAccount ? "linkRequired" : "registrationRequired", result.Status);
+        if (existingAccount)
+            Assert.Equal(Email, result.Email);
+        else
+            Assert.Null(result.Email);
         Assert.Null(result.AccessToken);
         Assert.Null(result.RefreshToken);
         Assert.False(response.Headers.Contains("Set-Cookie"));
