@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Image, Pressable, StyleSheet } from "react-native";
 
 type Props = {
   pending: boolean;
@@ -9,30 +9,29 @@ export function GoogleSignInButton({ pending, onPress }: Props) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel="Sign in with Google"
       accessibilityState={{ busy: pending, disabled: pending }}
       disabled={pending}
       onPress={onPress}
-      style={[styles.googleButton, pending && styles.pending]}
+      style={[styles.button, pending && styles.pending]}
     >
-      <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      <Image
+        source={{ uri: "/images/google-sign-in-light.png" }}
+        alt=""
+        accessible={false}
+        style={styles.image}
+        resizeMode="contain"
+      />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  googleButton: {
-    minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    borderColor: "#94a3b8",
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
+  button: {
+    alignSelf: "center",
+    width: 216,
+    height: 48,
   },
   pending: { opacity: 0.6 },
-  googleButtonText: {
-    color: "#0f172a",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  image: { width: "100%", height: "100%" },
 });

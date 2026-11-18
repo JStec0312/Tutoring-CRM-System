@@ -15,6 +15,14 @@ which serializes credential changes, finishes pending sign-out, stores native re
 credentials, synchronizes browser tabs, and updates roles for portal routing.
 Password sign-in uses the same session acceptance path.
 
+The sign-in screen uses the Google-branded button from the native SDK on Android
+and iOS. Its `signInBehavior="none"` delegates presses to the existing challenge
+and nonce flow; the button does not start a separate sign-in request. Web uses the
+unmodified light button PNG from [Google's official asset bundle](https://developers.google.com/static/identity/images/signin-assets.zip),
+stored in `mobile/public/images/google-sign-in-light.png`, preserving its aspect
+ratio and providing an accessible button label. Both variants block presses while
+an authentication operation is pending.
+
 The Google ID token stays in a local variable only while the exchange is running.
 It is not retained in a ref, UI, or browser storage. Cancellation does not call the
 exchange endpoint. Invalid credentials, inactive accounts, unavailable verification,
@@ -41,6 +49,8 @@ account** confirmation before sending `/api/auth/google/link` with the current C
 bearer token. Success clears the continuation and opens the existing session's
 portal. Cancelling after password sign-in keeps the CRM session; cancelling before
 sign-in returns to the sign-in page. There is no account-switch action on this screen.
+The confirmation text uses `aria-live="polite"`, supported by React Native on
+Android and web; `accessibilityRole="status"` is not supported by Android.
 
 [GoogleRegistrationScreen](../../../../../mobile/src/features/auth/google-register/components/GoogleRegistrationScreen.tsx)
 contains a separate registration form requiring a Student/Tutor role and username.
@@ -200,6 +210,17 @@ CRM account can link to at most one Google identity. Google identity uses the st
 Google `sub`, not the displayed email address. Uniqueness violations return
 `409 Auth.GoogleAccountLinkConflict`, including competing requests. The frontend
 provider message applies only when a Google link exists and the account has no password.
+
+### Android OAuth configuration
+
+The Android package is `com.turotingcrm.mobile` in `mobile/app.json`. Existing
+native folders must be synchronized with `npx expo prebuild --platform android --no-install` from `mobile` before rebuilding after a package/config change.
+Register an Android OAuth client in the same Google Cloud project as the Web
+client, using the actual APK package and signing certificate SHA-1. Local debug
+and EAS builds can use different certificates; verify each build's certificate.
+For the local debug key, run `keytool -list -v -keystore android/app/debug.keystore -alias androiddebugkey -storepass android` from `mobile`. Keep using the Web OAuth
+client ID in `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and the backend audience setting.
+Google sign-in requires a native development build, not Expo Go.
 
 ### Configuration and migrations
 
