@@ -20,7 +20,6 @@ export function SignInForm() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
-  const googleIdToken = useRef<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   async function handleSignIn() {
@@ -31,7 +30,6 @@ export function SignInForm() {
       return;
     }
 
-    googleIdToken.current = null;
     setNotice(null);
     submitting.current = true;
     setPending(true);
@@ -49,7 +47,6 @@ export function SignInForm() {
   async function handleGoogleSignIn() {
     if (submitting.current) return;
 
-    googleIdToken.current = null;
     setNotice(null);
     submitting.current = true;
     setPending(true);
@@ -60,8 +57,6 @@ export function SignInForm() {
       if (!idToken) {
         return;
       }
-
-      googleIdToken.current = idToken;
 
       await signInWith(async () => {
         const response = await signInWithGoogle(api, idToken, Platform.OS !== "web");
@@ -81,7 +76,6 @@ export function SignInForm() {
     } catch (error) {
       setError(getGoogleSignInError(error));
     } finally {
-      googleIdToken.current = null;
       submitting.current = false;
       setPending(false);
     }

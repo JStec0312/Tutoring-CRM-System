@@ -2,7 +2,31 @@
 
 ## Scope
 
-The client obtains a Google ID token and exchanges it for a CRM session or a short-lived continuation. An active account linked to the Google subject can sign in. An existing CRM account with a matching email can be linked after the user authenticates to that account. A new user can register as a Tutor or Student using the email verified by Google. This document describes the implemented backend and the client calls it expects. The Expo sign-in screen now acquires a Google ID token using a fresh backend nonce, with web and native adapters, cancellation, and error handling. Exchanging that ID token for a CRM session and handling linking or registration remain pending. See the [frontend setup and verification notes](../../../../../mobile/src/features/auth/sign-in/README.md). [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
+The client obtains a Google ID token and exchanges it for a CRM session or a short-lived continuation. An active account linked to the Google subject can sign in. An existing CRM account with a matching email can be linked after the user authenticates to that account. A new user can register as a Tutor or Student using the email verified by Google. This document describes the implemented backend and the client calls it expects. The Expo sign-in screen acquires a Google ID token using a fresh backend nonce and exchanges it for a CRM session. Successful sign-in reuses shared session storage, refresh, and role-based routing. Linking and registration outcomes currently display messages without completing the continuations; their forms remain pending. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
+
+## Frontend session exchange
+
+[SignInForm](../../../../../mobile/src/features/auth/sign-in/components/SignInForm.tsx)
+exchanges the Google ID token through [sign-in-with-google](../../../../../mobile/src/features/auth/sign-in/api/sign-in-with-google.ts).
+The response parser validates the status and required session or continuation fields.
+Native requests send `useNativeSession: true`; browser requests retain the existing
+refresh-cookie transport. Successful responses enter the shared session manager,
+which serializes credential changes, finishes pending sign-out, stores native refresh
+credentials, synchronizes browser tabs, and updates roles for portal routing.
+Password sign-in uses the same session acceptance path.
+
+The Google ID token stays in a local variable only while the exchange is running.
+It is not retained in a ref, UI, or browser storage. Cancellation does not call the
+exchange endpoint. Invalid credentials, inactive accounts, unavailable verification,
+network failures, and rate limiting produce English messages and allow retrying.
+`linkRequired` and `registrationRequired` keep the user anonymous and display a
+message. Their continuation tokens are validated but not retained at this stage;
+completing either flow will require another Google attempt until the continuation
+screens are implemented.
+
+Frontend tests cover both session transports, continuation results, malformed and
+expired responses, API errors, and sign-out during token exchange. Google SDK tests
+use mocks; they do not establish that live Google consent or native builds work.
 
 ## Sequence diagrams
 
