@@ -49,6 +49,7 @@ export function useAuth() {
     ...snapshot,
     isAuthenticated: snapshot.status === "authenticated",
     signIn: manager.signIn,
+    signInWith: manager.signInWith,
     signOut: manager.signOut,
   };
 }

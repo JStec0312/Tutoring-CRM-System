@@ -1,8 +1,19 @@
 import { Pressable, StyleSheet, Text } from "react-native";
 
-export function GoogleSignInButton() {
+type Props = {
+  pending: boolean;
+  onPress: () => void;
+};
+
+export function GoogleSignInButton({ pending, onPress }: Props) {
   return (
-    <Pressable accessibilityRole="button" style={styles.googleButton}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ busy: pending, disabled: pending }}
+      disabled={pending}
+      onPress={onPress}
+      style={[styles.googleButton, pending && styles.pending]}
+    >
       <Text style={styles.googleButtonText}>Sign in with Google</Text>
     </Pressable>
   );
@@ -18,6 +29,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
   },
+  pending: { opacity: 0.6 },
   googleButtonText: {
     color: "#0f172a",
     fontSize: 16,

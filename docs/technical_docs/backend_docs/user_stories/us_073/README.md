@@ -2,7 +2,7 @@
 
 ## Scope
 
-The client obtains a Google ID token and exchanges it for a CRM session or a short-lived continuation. An active account linked to the Google subject can sign in. An existing CRM account with a matching email can be linked after the user authenticates to that account. A new user can register as a Tutor or Student using the email verified by Google. This document describes the implemented backend and the client calls it expects. Integration into the Expo sign-in screen remains pending. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
+The client obtains a Google ID token and exchanges it for a CRM session or a short-lived continuation. An active account linked to the Google subject can sign in. An existing CRM account with a matching email can be linked after the user authenticates to that account. A new user can register as a Tutor or Student using the email verified by Google. This document describes the implemented backend and the client calls it expects. The Expo sign-in screen now acquires a Google ID token using a fresh backend nonce, with web and native adapters, cancellation, and error handling. Exchanging that ID token for a CRM session and handling linking or registration remain pending. See the [frontend setup and verification notes](../../../../../mobile/src/features/auth/sign-in/README.md). [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
 
 ## Sequence diagrams
 

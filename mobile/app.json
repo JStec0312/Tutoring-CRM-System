@@ -3,7 +3,8 @@
     "expo-secure-store",
     "expo-router",
     "expo-status-bar",
-    "expo-sharing"
+    "expo-sharing",
+    "expo-web-browser"
   ],
   "android": {
     "package": "com.turotingcrm.mobile"
