@@ -106,3 +106,10 @@ Each item is a `StudentLessonHistoryResponse` containing:
 - aggregation of lessons from multiple agreements between the same tutor and student.
 
 Each scenario uses an HTTP request, the real ASP.NET Core pipeline, the test database, and the HTTP response; the handler is not mocked or invoked directly.
+
+
+## Student lesson history
+
+The student workspace adds `GET /api/students/me/agreements/{agreementId}/lessons`. The authenticated Student must own the agreement through `Student.UserAccountId`; foreign and missing agreements return `404 Students.AgreementNotFound`. An owned agreement without lessons returns `200 []`. Results include all lesson statuses in descending start-time order, planned topic and optional cancellation reason. Private tutor notes are not included.
+
+See [student workspace contracts, authorization, sequence diagram and tests](../../../frontend_docs/student-workspace.md).

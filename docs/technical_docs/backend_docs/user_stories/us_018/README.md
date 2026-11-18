@@ -70,3 +70,10 @@ PlantUML source: [get_tutoring_agreement_balance.puml](diagrams/get_tutoring_agr
 - zero totals when the billing account is absent,
 - identical `404 Not Found` behavior for a missing or foreign agreement,
 - unauthenticated and non-tutor access.
+
+
+## Student charge read model
+
+The student workspace adds `GET /api/students/me/agreements/{agreementId}/charges`, requiring the Student role and ownership through `Student.UserAccountId`. It returns active charge amounts and currencies, lesson IDs/start times and `paidAtUtc`. The frontend sums unpaid active charges separately per currency. No billing account returns `200 []`; foreign/missing agreements return `404 Students.AgreementNotFound`. The screen is read-only; it does not use tutor payment-editing endpoints or infer due dates.
+
+See [student workspace contracts, authorization, sequence diagram and tests](../../../frontend_docs/student-workspace.md).

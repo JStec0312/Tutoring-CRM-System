@@ -1,0 +1,23 @@
+@startuml
+actor Student
+participant "Student screen" as Screen
+participant "ApiClient / session" as Client
+participant "Student controller" as Controller
+participant "MediatR handler" as Handler
+database "TutoringDbContext" as Database
+Student -> Screen: Open overview, agreement, lesson or charges
+Screen -> Client: GET /api/students/me/...
+Client -> Controller: Bearer access token
+Controller -> Controller: Require Student role and valid sub
+Controller -> Handler: Send query with authenticated AccountId
+Handler -> Database: No-tracking query scoped to Student.UserAccountId
+alt Owned resource
+Database --> Handler: Student-visible fields only
+Handler --> Controller: Response DTO
+Controller --> Screen: 200 response
+else Missing or foreign resource
+Handler --> Controller: Existing NotFound exception
+Controller --> Screen: 404 ProblemDetails
+end
+Screen --> Student: Data, empty state or error with retry
+@enduml

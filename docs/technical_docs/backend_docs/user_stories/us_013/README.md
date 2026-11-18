@@ -224,3 +224,10 @@ This keeps calendar presentation rules outside the domain and allows the same AP
 - lesson data returned by the calendar API,
 - tutor outcome filtering, lesson cost estimates, and rejection of student callers for that filter,
 - the tutor lesson detail note payload and access checks for unauthenticated, student, and foreign tutor callers.
+
+
+## Student workspace reads
+
+Student screens now use `GET /api/students/me/agreements`, `GET /api/students/me/agreements/{agreementId}/lessons`, and `GET /api/students/me/lessons/{lessonId}`. These require the Student role and scope reads to the authenticated student. Agreement history includes all lesson statuses and planned topics. Lesson details include current schedule, cancellation reason and an explicitly labeled rate estimate, while private tutor notes are excluded. Missing and foreign records share 404 behavior. The student calendar continues to use `/api/calendar` without `tutorOnly` or `awaitingOutcome`.
+
+See [student workspace contracts, authorization, sequence diagram and tests](../../../frontend_docs/student-workspace.md).

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" role="img" aria-labelledby="title desc">
+<title id="title">Student workspace read flow</title><desc id="desc">A student screen calls the authenticated API. The controller requires the student role, and the handler scopes read queries to the student's account before returning data or a not-found response.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="none" stroke="#333"/></marker></defs>
+<rect width="1000" height="500" fill="white"/>
+<g fill="#eee" stroke="#333"><rect x="25" y="20" width="150" height="45"/><rect x="225" y="20" width="150" height="45"/><rect x="425" y="20" width="150" height="45"/><rect x="625" y="20" width="150" height="45"/><rect x="825" y="20" width="150" height="45"/></g>
+<g font-family="sans-serif" font-size="14" fill="#222" text-anchor="middle"><text x="100" y="48">Student screen</text><text x="300" y="48">ApiClient / session</text><text x="500" y="48">Student controller</text><text x="700" y="48">MediatR handler</text><text x="900" y="48">TutoringDbContext</text></g>
+<g stroke="#999" stroke-dasharray="5 5"><path d="M100 65V470M300 65V470M500 65V470M700 65V470M900 65V470"/></g>
+<g stroke="#333" marker-end="url(#arrow)" fill="none"><path d="M100 115H300M300 165H500M500 230H700M700 290H900M900 350H700M700 400H500M500 450H100"/></g>
+<g font-family="sans-serif" font-size="13" fill="#222" text-anchor="middle"><text x="200" y="105">GET student resource</text><text x="400" y="155">Bearer access token</text><text x="500" y="196">Require Student role + valid sub</text><text x="600" y="220">Query + AccountId</text><text x="800" y="280">Filter by student's account</text><text x="800" y="340">Owned data / no match</text><text x="600" y="390">DTO / NotFound exception</text><text x="300" y="440">200 student-visible data / 404 ProblemDetails</text></g>
+</svg>
