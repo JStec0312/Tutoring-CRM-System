@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Tutoring.Api.Features.Auth.Exceptions;
 using Tutoring.Domain.Common;
 using Tutoring.Infrastructure.Authentication.Passwords;
 using Tutoring.Infrastructure.Mailing;
@@ -45,6 +46,13 @@ public sealed class RequestPasswordResetHandler(
 
             return;
         }
+        if (userAccount.PasswordHash is null &&
+            await dbContext.GoogleSignInAccountLinks.AnyAsync(
+                link => link.AccountId == userAccount.Id, cancellationToken))
+        {
+            throw new GoogleAccountHasNoPasswordException();
+        }
+
         // deactivate old tokens
         var now = timeProvider.GetUtcNow();
         var activeTokens = await dbContext.PasswordResetTokens

@@ -2,6 +2,9 @@ import { ApiError } from "@/shared/api/api-error";
 
 export function getRequestPasswordResetError(error: unknown): string {
   if (error instanceof ApiError) {
+    if (error.code === "Auth.GoogleAccountHasNoPassword") {
+      return "To konto jest połączone z Google i nie ma ustawionego hasła. Zaloguj się przez Google.";
+    }
     if (error.code === "Email.InvalidEmailAddressFormat") {
       return "Podaj poprawny adres e-mail.";
     }

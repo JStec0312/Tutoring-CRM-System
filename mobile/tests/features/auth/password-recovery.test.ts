@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { requestPasswordReset } from "@/features/auth/forgot-password/api/request-password-reset";
+import { getRequestPasswordResetError } from "@/features/auth/forgot-password/models/request-password-reset-error";
 import { resetPassword } from "@/features/auth/reset-password/api/reset-password";
 import { getResetPasswordError } from "@/features/auth/reset-password/models/reset-password-error";
 import { createApiClient } from "@/shared/api/api-client";
@@ -48,4 +49,13 @@ describe("password recovery", () => {
 
     await expect(result).resolves.toMatchObject({ invalidLink: true });
   });
+});
+
+it("explains that a Google-only account should sign in with Google", async () => {
+  const api = createApiClient({
+    baseUrl: "https://example.com",
+    fetcher: async () => Response.json({ code: "Auth.GoogleAccountHasNoPassword" }, { status: 409 }),
+  });
+  await expect(requestPasswordReset(api, "google@example.com").catch(getRequestPasswordResetError))
+    .resolves.toBe("To konto jest połączone z Google i nie ma ustawionego hasła. Zaloguj się przez Google.");
 });

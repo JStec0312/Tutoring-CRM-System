@@ -131,20 +131,19 @@ public sealed class RegisterWithGoogleTests(IntegrationTestFixture fixture) : In
     }
 
     [Fact]
-    public async Task Register_PasswordlessAccount_CanSetPasswordThroughReset()
+    public async Task Register_PasswordlessAccount_ShouldUseGoogleInsteadOfPasswordReset()
     {
         await SeedContinuationAsync();
         using var registration = await Client.PostAsJsonAsync(Endpoint, CreateRequest());
         Assert.Equal(HttpStatusCode.Created, registration.StatusCode);
 
         using var resetRequest = await RequestPasswordResetAsync(Email);
-        Assert.True(resetRequest.IsSuccessStatusCode);
-        var resetEvent = await GetPasswordResetEventAsync(Email);
-        using var reset = await ResetPasswordAsync(resetEvent.ResetToken, Password);
-        Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
-
-        var session = await LoginAsync(Email, Password);
-        Assert.NotEmpty(session.Login.AccessToken);
+        Assert.Equal(HttpStatusCode.Conflict, resetRequest.StatusCode);
+        await AssertProblemCodeAsync(resetRequest, "Auth.GoogleAccountHasNoPassword");
+        Assert.False(await ExecuteDbAsync(db => db.PasswordResetTokens.AnyAsync()));
+        Assert.False(await ExecuteDbAsync(db => db.OutboxMessages.AnyAsync()));
+        var account = await ExecuteDbAsync(db => db.UserAccounts.SingleAsync());
+        Assert.Null(account.PasswordHash);
     }
 
     private static RegisterWithGoogleRequest CreateRequest() =>
