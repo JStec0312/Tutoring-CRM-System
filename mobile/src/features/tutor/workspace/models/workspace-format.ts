@@ -32,7 +32,7 @@ export function shortDate(date: string | Date) {
   return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(new Date(date));
 }
 
-export function lessonTime(lesson: CalendarLesson) {
+export function lessonTime(lesson: { startsAtUtc: string; endsAtUtc: string }) {
   return `${timeLabel(lesson.startsAtUtc)}–${timeLabel(lesson.endsAtUtc)}`;
 }
 

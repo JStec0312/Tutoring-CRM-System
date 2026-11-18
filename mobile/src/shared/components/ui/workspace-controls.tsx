@@ -1,18 +1,21 @@
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps } from 'react-native';
 import type { PropsWithChildren } from 'react';
 
-export function WorkspaceButton({ label, onPress, primary = false, disabled = false }: {
+export function WorkspaceButton({ label, onPress, primary = false, disabled = false, accessibilityLabel, textOnly = false }: {
   label: string;
+  accessibilityLabel?: string;
+  textOnly?: boolean;
   onPress: () => void;
   primary?: boolean;
   disabled?: boolean;
 }) {
   return <Pressable
     accessibilityRole="button"
+    accessibilityLabel={accessibilityLabel}
     accessibilityState={{ disabled }}
     disabled={disabled}
     onPress={onPress}
-    style={({ pressed }) => [styles.button, primary && styles.primary, (pressed || disabled) && styles.dimmed]}
+    style={({ pressed }) => [styles.button, primary && styles.primary, textOnly && styles.textOnly, (pressed || disabled) && styles.dimmed]}
   >
     <Text style={[styles.body, primary && styles.primaryText]}>{label}</Text>
   </Pressable>;
@@ -61,6 +64,7 @@ const styles = StyleSheet.create({
     minHeight: 44, paddingVertical: 10, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center',
     borderColor: '#898989', borderWidth: 1, borderRadius: 8, backgroundColor: '#e3e3e3',
   },
+  textOnly: { backgroundColor: 'transparent', borderWidth: 0, paddingHorizontal: 0, alignItems: 'flex-start' },
   primary: { backgroundColor: '#292929', borderColor: '#292929' },
   primaryText: { color: '#fff' },
   dimmed: { opacity: 0.6 },

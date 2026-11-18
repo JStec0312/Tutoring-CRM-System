@@ -1,1 +1,1 @@
-export { StudentDashboard as default } from "@/features/student/StudentDashboard";
+export { StudentOverviewScreen as default } from '@/features/student/overview/components/overview-screen';

@@ -5,7 +5,7 @@ import type { CalendarLesson } from '../../calendar/api/get-calendar';
 import { lessonTime, shortDate } from '../../workspace/models/workspace-format';
 
 export function AgreementLessonPicker({ lessons, selected, onSelect, optional = false, disabled = false }: {
-  lessons: CalendarLesson[];
+  lessons: Pick<CalendarLesson, 'lessonId' | 'startsAtUtc' | 'endsAtUtc' | 'status'>[];
   selected?: string;
   onSelect: (lessonId?: string) => void;
   optional?: boolean;
@@ -14,7 +14,7 @@ export function AgreementLessonPicker({ lessons, selected, onSelect, optional = 
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const selectedLesson = lessons.find(lesson => lesson.lessonId === selected);
-  const label = (lesson: CalendarLesson) => `${shortDate(lesson.startsAtUtc)} · ${lessonTime(lesson)} · ${lesson.status}`;
+  const label = (lesson: (typeof lessons)[number]) => `${shortDate(lesson.startsAtUtc)} · ${lessonTime(lesson)} · ${lesson.status}`;
   const matches = [...lessons].reverse().filter(lesson => label(lesson).toLowerCase().includes(search.trim().toLowerCase()));
   function select(id?: string) {
     onSelect(id);

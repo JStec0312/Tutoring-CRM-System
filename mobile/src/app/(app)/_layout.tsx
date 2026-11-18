@@ -14,7 +14,7 @@ export default function AppLayout() {
         <Stack.Screen name="(tutor)" />
       </Stack.Protected>
       <Stack.Protected guard={portal === "/student"} redirectTo={portal ?? "/"}>
-        <Stack.Screen name="(student)/student" />
+        <Stack.Screen name="(student)" />
       </Stack.Protected>
       <Stack.Protected guard={false} redirectTo={portal ?? "/"}>
         <Stack.Screen name="(parent)/parent" />
