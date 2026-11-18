@@ -30,6 +30,15 @@ alt account not found
     MediatR --> LoginController : exception
     LoginController --> GlobalExceptionHandler : exception propagates
     GlobalExceptionHandler --> Client : 401 ProblemDetails
+else active account without password and linked to Google
+    LoginHandler -> TutoringDbContext : Check GoogleSignInAccountLinks
+    TutoringDbContext -> Database : SELECT Google link for CRM account
+    Database --> TutoringDbContext : Link exists
+    TutoringDbContext --> LoginHandler : true
+    LoginHandler --> MediatR : GoogleAccountHasNoPasswordException
+    MediatR --> LoginController : exception
+    LoginController --> GlobalExceptionHandler : exception propagates
+    GlobalExceptionHandler --> Client : 409 Auth.GoogleAccountHasNoPassword\nSign in with Google
 else account found
     LoginHandler -> PasswordHasher : Verify(password, hash)
     PasswordHasher --> LoginHandler : valid / invalid

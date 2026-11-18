@@ -3,6 +3,8 @@ import { ApiError } from "@/shared/api/api-error";
 export function getSignInError(error: unknown): string {
   if (error instanceof ApiError) {
     switch (error.code) {
+      case "Auth.GoogleAccountHasNoPassword":
+        return "This account uses Google sign-in and has no password. Sign in with Google.";
       case "Auth.InvalidCredentials":
         return "Invalid email address or password.";
       case "Auth.InactiveAccount.":

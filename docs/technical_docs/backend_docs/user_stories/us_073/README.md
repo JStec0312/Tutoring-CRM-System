@@ -166,7 +166,7 @@ With an unlinked Google subject, the handler validates the verified email using 
 
 `CompleteGoogleAccountLinkHandler` hashes the continuation token and looks for a valid row assigned to the JWT's CRM account ID. It checks the account's current email and active status. It deletes the continuation by its hash and requires one affected row, then inserts the Google subject and CRM account ID into `GoogleSignInAccountLinks`. Both changes commit together. SQL Server's uniqueness constraints determine the winner of competing link requests.
 
-`RegisterWithGoogleHandler` reads a valid continuation whose account ID is null and claims it by deleting the row by hash. It checks for an existing CRM email or Google link, then validates the username and optional phone number against existing profiles. It creates an active `UserAccount` with no password, assigns the selected role, and creates the corresponding Tutor or Student record. A Google-verified email is sufficient for registration regardless of domain. The account, role, profile, Google link, refresh token, and continuation deletion commit together. Forgot password requests for active Google-linked accounts without a password return `409 Auth.GoogleAccountHasNoPassword` and direct the user to Google sign-in. No reset token or email event is created. Google-linked accounts that already have a password can still reset it.
+`RegisterWithGoogleHandler` reads a valid continuation whose account ID is null and claims it by deleting the row by hash. It checks for an existing CRM email or Google link, then validates the username and optional phone number against existing profiles. It creates an active `UserAccount` with no password, assigns the selected role, and creates the corresponding Tutor or Student record. A Google-verified email is sufficient for registration regardless of domain. The account, role, profile, Google link, refresh token, and continuation deletion commit together. Password login attempts on web and native endpoints return `409 Auth.GoogleAccountHasNoPassword` for active Google-linked accounts without a password; the shared frontend login form names Google as the provider. Forgot password requests for active Google-linked accounts without a password return `409 Auth.GoogleAccountHasNoPassword` and direct the user to Google sign-in. No reset token or email event is created. Google-linked accounts that already have a password can still reset it.
 
 The link and register handlers both require one row to be deleted. That lets only one concurrent request claim the same continuation. If a later check or save fails, disposal of the transaction rolls the deletion back. Expired and successfully consumed continuations require a new Google sign-in attempt.
 
@@ -190,6 +190,13 @@ The default cookie is `refresh_token` with `HttpOnly`, `Secure`, `SameSite=Stric
 | `GoogleSignInAccountLinks` | Case-sensitive Google subject as primary key and a unique CRM account foreign key. Each side can be linked once. |
 | `UserAccounts`, `UserAccountRoles`, `Tutors`, `Students` | The CRM identity and its role. Accounts created through Google start with a null `PasswordHash`. |
 | `RefreshTokens` | CRM refresh-token hash, family ID, expiry, and request metadata. |
+
+The Google link is one-to-one: `GoogleSubject` is the primary key and `AccountId`
+has a unique index. One Google identity can link to at most one CRM account, and one
+CRM account can link to at most one Google identity. Google identity uses the stable
+Google `sub`, not the displayed email address. Uniqueness violations return
+`409 Auth.GoogleAccountLinkConflict`, including competing requests. The frontend
+provider message applies only when a Google link exists and the account has no password.
 
 ### Configuration and migrations
 

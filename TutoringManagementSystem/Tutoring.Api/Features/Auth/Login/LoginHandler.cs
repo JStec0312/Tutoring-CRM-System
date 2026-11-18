@@ -32,6 +32,13 @@ public sealed class LoginHandler(
             throw new InvalidCredentialsException();
         }
 
+        if (userAccount.IsActive && userAccount.PasswordHash is null &&
+            await dbContext.GoogleSignInAccountLinks.AnyAsync(
+                link => link.AccountId == userAccount.Id, cancellationToken))
+        {
+            throw new GoogleAccountHasNoPasswordException();
+        }
+
         var passwordIsValid = userAccount.PasswordHash is not null && passwordHasher.Verify(
             request.Password,
             userAccount.PasswordHash.Value);

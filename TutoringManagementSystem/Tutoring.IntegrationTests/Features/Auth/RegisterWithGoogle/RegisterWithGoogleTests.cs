@@ -60,8 +60,8 @@ public sealed class RegisterWithGoogleTests(IntegrationTestFixture fixture) : In
         Assert.False(await ExecuteDbAsync(db => db.OutboxMessages.AnyAsync()));
 
         using var passwordLogin = await Client.PostAsJsonAsync("/api/auth/login", new { Email, Password });
-        Assert.Equal(HttpStatusCode.Unauthorized, passwordLogin.StatusCode);
-        await AssertProblemCodeAsync(passwordLogin, "Auth.InvalidCredentials");
+        Assert.Equal(HttpStatusCode.Conflict, passwordLogin.StatusCode);
+        await AssertProblemCodeAsync(passwordLogin, "Auth.GoogleAccountHasNoPassword");
     }
 
     [Fact]
