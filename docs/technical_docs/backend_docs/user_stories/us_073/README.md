@@ -2,7 +2,7 @@
 
 ## Scope
 
-The client obtains a Google ID token and exchanges it for a CRM session or a short-lived continuation. An active account linked to the Google subject can sign in. An existing CRM account with a matching email can be linked after the user authenticates to that account. A new user can register as a Tutor or Student using the email verified by Google. This document describes the implemented backend and the client calls it expects. The Expo sign-in screen acquires a Google ID token using a fresh backend nonce and exchanges it for a CRM session. Successful sign-in reuses shared session storage, refresh, and role-based routing. Linking and registration outcomes currently display messages without completing the continuations; their forms remain pending. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
+The client obtains a Google ID token and exchanges it for a CRM session or a short-lived continuation. An active account linked to the Google subject can sign in. An existing CRM account with a matching email can be linked after the user authenticates to that account. A new user can register as a Tutor or Student using the email verified by Google. This document describes the implemented backend and the client calls it expects. The Expo sign-in screen acquires a Google ID token using a fresh backend nonce and exchanges it for a CRM session. Successful sign-in reuses shared session storage, refresh, and role-based routing. The frontend completes account linking after CRM password sign-in and explicit confirmation. New users complete Google registration by choosing a role and username, then enter the portal with the issued CRM session. [GitHub issue #167](https://github.com/JStec0312/Tutoring-CRM-System/issues/167)
 
 ## Frontend session exchange
 
@@ -19,14 +19,48 @@ The Google ID token stays in a local variable only while the exchange is running
 It is not retained in a ref, UI, or browser storage. Cancellation does not call the
 exchange endpoint. Invalid credentials, inactive accounts, unavailable verification,
 network failures, and rate limiting produce English messages and allow retrying.
-`linkRequired` and `registrationRequired` keep the user anonymous and display a
-message. Their continuation tokens are validated but not retained at this stage;
-completing either flow will require another Google attempt until the continuation
-screens are implemented.
+`linkRequired` opens `/link-google`, while `registrationRequired` opens
+`/register-google`. Both use the in-memory
+[GoogleContinuationProvider](../../../../../mobile/src/features/auth/sign-in/models/GoogleContinuationProvider.tsx).
+The status distinguishes the continuation purpose. Tokens never go in route params
+or browser storage and are removed on expiry, cancellation, or completion.
+Refreshing the page requires starting Google sign-in again.
 
 Frontend tests cover both session transports, continuation results, malformed and
 expired responses, API errors, and sign-out during token exchange. Google SDK tests
 use mocks; they do not establish that live Google consent or native builds work.
+
+### Frontend account linking and registration
+
+[GoogleLinkScreen](../../../../../mobile/src/features/auth/google-link/components/GoogleLinkScreen.tsx)
+reuses the shared password form to authenticate to the matching CRM account. It
+remains available after authentication and requires explicit **Connect Google
+account** confirmation before sending `/api/auth/google/link` with the current CRM
+bearer token. Success clears the continuation and opens the existing session's
+portal. Cancelling after password sign-in keeps the CRM session; cancelling before
+sign-in returns to the sign-in page. There is no account-switch action on this screen.
+
+[GoogleRegistrationScreen](../../../../../mobile/src/features/auth/google-register/components/GoogleRegistrationScreen.tsx)
+contains a separate registration form requiring a Student/Tutor role and username.
+It does not collect email or password: the backend reads the Google-verified email
+from the continuation. Optional profile fields are omitted at this stage.
+[registerWithGoogle](../../../../../mobile/src/features/auth/google-register/api/register-with-google.ts)
+sends the continuation and form data to `/api/auth/google/register` anonymously,
+with `useNativeSession: true` on native platforms. The returned `signedIn` response
+is validated and accepted through the shared session manager, including native
+refresh-token storage and browser refresh cookies, then the role portal opens.
+
+The role picker is shared with password registration. Pending operations block
+duplicate submissions and cancellation. Expired, missing, or wrong-purpose
+continuations cannot submit. Username conflicts and network/API errors display
+English messages and permit retrying while the continuation remains valid.
+
+[Frontend interaction tests](../../../../../mobile/tests/features/auth/sign-in/google-continuation-flow.test.tsx)
+cover routing, consent, linking, registration, role selection, validation, retries,
+expiry, cancellation, and duplicate submissions with controlled HTTP responses.
+[Registration API tests](../../../../../mobile/tests/features/auth/google-register/register-with-google.test.ts)
+cover role mapping, both session transports, response validation, and backend errors.
+These tests use Google SDK mocks and do not establish live Google/database behavior.
 
 ## Sequence diagrams
 

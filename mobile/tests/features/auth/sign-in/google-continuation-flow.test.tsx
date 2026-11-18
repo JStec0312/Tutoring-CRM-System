@@ -17,8 +17,9 @@ vi.mock("expo-router", () => ({
 vi.mock("@/features/auth/sign-in/services/request-google-id-token", () => ({ requestGoogleIdToken: googleIdToken }));
 
 import { SignInForm } from "@/features/auth/sign-in/components/SignInForm";
+import { GoogleRegistrationScreen } from "@/features/auth/google-register/components/GoogleRegistrationScreen";
 import { GoogleLinkScreen } from "@/features/auth/google-link/components/GoogleLinkScreen";
-import { GoogleLinkProvider, useGoogleLink } from "@/features/auth/google-link/models/GoogleLinkProvider";
+import { GoogleContinuationProvider, useGoogleContinuation } from "@/features/auth/sign-in/models/GoogleContinuationProvider";
 import { createApiClient } from "@/shared/api/api-client";
 import { ApiProvider } from "@/shared/api/api-context";
 import { AuthProvider } from "@/shared/session/AuthProvider";
@@ -36,19 +37,31 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-async function setup(initialPage = "/sign-in", linkResponse?: () => Promise<Response>) {
+async function setup({ initialPage = "/sign-in", linkResponse, googleStatus = "linkRequired", registrationResponse }: {
+  initialPage?: string;
+  linkResponse?: () => Promise<Response>;
+  googleStatus?: "linkRequired" | "registrationRequired";
+  registrationResponse?: () => Promise<Response>;
+} = {}) {
   let currentEmail: string | null = null;
+  let currentRole = "Tutor";
   const issued = () => ({
-    accessToken: "header." + btoa(JSON.stringify({ sub: currentEmail, role: "Tutor" })) + ".signature",
+    accessToken: "header." + btoa(JSON.stringify({ sub: currentEmail, role: currentRole })) + ".signature",
     expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
   });
   const fetcher = vi.fn(async (url: RequestInfo | URL, options?: RequestInit) => {
     const path = new URL(String(url)).pathname;
     if (path === "/api/auth/google/sign-in") {
       return Response.json({
-        status: "linkRequired", continuationToken: "a".repeat(64),
+        status: googleStatus, continuationToken: "a".repeat(64),
         continuationExpiresAtUtc: new Date(Date.now() + 300_000).toISOString(),
       });
+    }
+    if (path === "/api/auth/google/register") {
+      if (registrationResponse) return registrationResponse();
+      currentEmail = "new@example.com";
+      currentRole = JSON.parse(String(options?.body)).role;
+      return Response.json({ status: "signedIn", ...issued() }, { status: 201 });
     }
     if (path === "/api/auth/login") {
       const credentials = JSON.parse(String(options?.body));
@@ -90,6 +103,7 @@ async function setup(initialPage = "/sign-in", linkResponse?: () => Promise<Resp
     const [page, setPage] = useState(initialPage);
     replace.mockImplementation(setPage);
     if (page === "/link-google") return <GoogleLinkScreen />;
+    if (page === "/register-google") return <GoogleRegistrationScreen />;
     if (page === "/") return <p>Portal opened</p>;
     return <SignInForm />;
   }
@@ -98,13 +112,14 @@ async function setup(initialPage = "/sign-in", linkResponse?: () => Promise<Resp
     render(
       <AuthProvider manager={manager}>
         <ApiProvider client={api}>
-          <GoogleLinkProvider><Pages /></GoogleLinkProvider>
+          <GoogleContinuationProvider><Pages /></GoogleContinuationProvider>
         </ApiProvider>
       </AuthProvider>,
     );
   });
   const linkCalls = () => fetcher.mock.calls.filter(([url]) => String(url).endsWith("/api/auth/google/link"));
-  return { manager, fetcher, linkCalls };
+  const registrationCalls = () => fetcher.mock.calls.filter(([url]) => String(url).endsWith("/api/auth/google/register"));
+  return { manager, fetcher, linkCalls, registrationCalls };
 }
 
 async function startLinking() {
@@ -130,6 +145,7 @@ it("authenticates before confirmation and links only after an explicit click", a
   await signIn();
   expect(manager.getSnapshot().status).toBe("authenticated");
   expect(linkCalls()).toHaveLength(0);
+  expect(screen.queryByRole("button", { name: "Use a different CRM account" })).toBeNull();
   expect(screen.queryByText("Portal opened")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Connect Google account" }));
   await screen.findByText("Portal opened");
@@ -167,22 +183,9 @@ it("cancels after authentication while keeping the CRM session", async () => {
   expect(linkCalls()).toHaveLength(0);
 });
 
-it("allows switching from a wrong CRM account without discarding the continuation", async () => {
-  await setup();
-  await startLinking();
-  await signIn("wrong@example.com");
-  fireEvent.click(screen.getByRole("button", { name: "Connect Google account" }));
-  await screen.findByText(/If this attempt has expired/);
-  fireEvent.click(screen.getByRole("button", { name: "Use a different CRM account" }));
-  await screen.findByRole("button", { name: "Sign in to continue" });
-  await signIn();
-  fireEvent.click(screen.getByRole("button", { name: "Connect Google account" }));
-  await screen.findByText("Portal opened");
-});
-
 it("prevents duplicate linking while the request is pending", async () => {
   const pending = Promise.withResolvers<Response>();
-  const { linkCalls } = await setup("/sign-in", () => pending.promise);
+  const { linkCalls } = await setup({ linkResponse: () => pending.promise });
   await startLinking();
   await signIn();
   const confirm = screen.getByRole("button", { name: "Connect Google account" });
@@ -205,7 +208,7 @@ it("does not link if the continuation expires before confirmation", async () => 
 });
 
 it("handles refreshing or opening the route without a continuation", async () => {
-  const { linkCalls } = await setup("/link-google");
+  const { linkCalls } = await setup({ initialPage: "/link-google" });
   expect(screen.getByText(/expired or is no longer available/)).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Connect Google account" })).toBeNull();
   expect(linkCalls()).toHaveLength(0);
@@ -213,9 +216,10 @@ it("handles refreshing or opening the route without a continuation", async () =>
 
 it("removes the in-memory continuation automatically at expiry", () => {
   vi.useFakeTimers();
-  const wrapper = ({ children }: PropsWithChildren) => <GoogleLinkProvider>{children}</GoogleLinkProvider>;
-  const { result } = renderHook(useGoogleLink, { wrapper });
+  const wrapper = ({ children }: PropsWithChildren) => <GoogleContinuationProvider>{children}</GoogleContinuationProvider>;
+  const { result } = renderHook(useGoogleContinuation, { wrapper });
   act(() => result.current.setContinuation({
+    status: "linkRequired",
     continuationToken: "a".repeat(64),
     continuationExpiresAtUtc: new Date(Date.now() + 1000).toISOString(),
   }));
@@ -228,7 +232,7 @@ it("keeps the linking screen available after a backend conflict and allows retry
   const response = vi.fn()
     .mockResolvedValueOnce(Response.json({ code: "Auth.GoogleAccountLinkConflict" }, { status: 409 }))
     .mockResolvedValueOnce(new Response(null, { status: 204 }));
-  const { linkCalls } = await setup("/sign-in", response);
+  const { linkCalls } = await setup({ linkResponse: response });
   await startLinking();
   await signIn();
   fireEvent.click(screen.getByRole("button", { name: "Connect Google account" }));
@@ -242,14 +246,16 @@ it("keeps the linking screen available after a backend conflict and allows retry
 
 it("does not let an older expiry timer clear a newer continuation", () => {
   vi.useFakeTimers();
-  const wrapper = ({ children }: PropsWithChildren) => <GoogleLinkProvider>{children}</GoogleLinkProvider>;
-  const { result } = renderHook(useGoogleLink, { wrapper });
+  const wrapper = ({ children }: PropsWithChildren) => <GoogleContinuationProvider>{children}</GoogleContinuationProvider>;
+  const { result } = renderHook(useGoogleContinuation, { wrapper });
   act(() => result.current.setContinuation({
+    status: "linkRequired",
     continuationToken: "a".repeat(64),
     continuationExpiresAtUtc: new Date(Date.now() + 1000).toISOString(),
   }));
   act(() => vi.advanceTimersByTime(500));
   act(() => result.current.setContinuation({
+    status: "linkRequired",
     continuationToken: "b".repeat(64),
     continuationExpiresAtUtc: new Date(Date.now() + 3000).toISOString(),
   }));
@@ -257,4 +263,106 @@ it("does not let an older expiry timer clear a newer continuation", () => {
   expect(result.current.continuation?.continuationToken).toBe("b".repeat(64));
   act(() => vi.advanceTimersByTime(2401));
   expect(result.current.continuation).toBeNull();
+});
+
+async function startRegistration() {
+  fireEvent.click(screen.getByRole("button", { name: "Sign in with Google" }));
+  await screen.findByRole("button", { name: "Create account" });
+}
+
+it("opens Google registration instead of a notice and creates the account after form submission", async () => {
+  const { manager, registrationCalls } = await setup({ googleStatus: "registrationRequired" });
+  await startRegistration();
+  expect(replace).toHaveBeenCalledWith("/register-google");
+  expect(screen.queryByLabelText("Email address")).toBeNull();
+  expect(screen.queryByLabelText("Password")).toBeNull();
+  expect(registrationCalls()).toHaveLength(0);
+  fireEvent.click(screen.getByRole("radio", { name: "Student" }));
+  fireEvent.change(screen.getByLabelText("Username"), { target: { value: " new-student " } });
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+  await screen.findByText("Portal opened");
+  expect(manager.getSnapshot().status).toBe("authenticated");
+  expect(manager.getSnapshot().roles).toEqual(["Student"]);
+  expect(JSON.parse(String(registrationCalls()[0][1]?.body))).toEqual({
+    continuationToken: "a".repeat(64), role: "Student", userName: "new-student", useNativeSession: false,
+  });
+  act(() => replace("/register-google"));
+  expect(screen.getByText(/registration attempt has expired or is no longer available/)).toBeTruthy();
+});
+
+it("validates role and username without sending a registration request", async () => {
+  const { registrationCalls } = await setup({ googleStatus: "registrationRequired" });
+  await startRegistration();
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+  expect(screen.getByText("Choose an account type.")).toBeTruthy();
+  fireEvent.click(screen.getByRole("radio", { name: "Tutor" }));
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+  expect(screen.getByText("Enter a username.")).toBeTruthy();
+  expect(registrationCalls()).toHaveLength(0);
+});
+
+it("keeps registration available after a taken username and allows correcting it", async () => {
+  const response = vi.fn()
+    .mockResolvedValueOnce(Response.json({ code: "Username.AlreadyTaken" }, { status: 409 }))
+    .mockResolvedValueOnce(Response.json({
+      status: "signedIn", accessToken: "crm-access", expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+    }, { status: 201 }));
+  const { registrationCalls } = await setup({ googleStatus: "registrationRequired", registrationResponse: response });
+  await startRegistration();
+  fireEvent.click(screen.getByRole("radio", { name: "Tutor" }));
+  fireEvent.change(screen.getByLabelText("Username"), { target: { value: "taken" } });
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+  await screen.findByText("This username is already taken. Choose another one.");
+  const submit = screen.getByRole("button", { name: "Create account" });
+  await waitFor(() => expect(submit.hasAttribute("disabled")).toBe(false));
+  fireEvent.change(screen.getByLabelText("Username"), { target: { value: "available" } });
+  fireEvent.click(submit);
+  await screen.findByText("Portal opened");
+  expect(registrationCalls()).toHaveLength(2);
+});
+
+it("cancels registration and discards its continuation", async () => {
+  const { registrationCalls } = await setup({ googleStatus: "registrationRequired" });
+  await startRegistration();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  await screen.findByRole("button", { name: "Sign in with Google" });
+  act(() => replace("/register-google"));
+  expect(screen.getByText(/registration attempt has expired or is no longer available/)).toBeTruthy();
+  expect(registrationCalls()).toHaveLength(0);
+});
+
+it("does not use a linking continuation to register an account", async () => {
+  const { registrationCalls } = await setup();
+  await startLinking();
+  act(() => replace("/register-google"));
+  expect(screen.queryByRole("button", { name: "Create account" })).toBeNull();
+  expect(registrationCalls()).toHaveLength(0);
+});
+
+it("does not send registration after the continuation expires", async () => {
+  const { registrationCalls } = await setup({ googleStatus: "registrationRequired" });
+  await startRegistration();
+  fireEvent.click(screen.getByRole("radio", { name: "Tutor" }));
+  fireEvent.change(screen.getByLabelText("Username"), { target: { value: "new-tutor" } });
+  const now = Date.now();
+  vi.spyOn(Date, "now").mockReturnValue(now + 360_000);
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+  await screen.findByText(/registration attempt has expired or is no longer available/);
+  expect(registrationCalls()).toHaveLength(0);
+});
+
+it("blocks duplicate registration while waiting for the backend", async () => {
+  const pending = Promise.withResolvers<Response>();
+  const { registrationCalls } = await setup({ googleStatus: "registrationRequired", registrationResponse: () => pending.promise });
+  await startRegistration();
+  fireEvent.click(screen.getByRole("radio", { name: "Tutor" }));
+  fireEvent.change(screen.getByLabelText("Username"), { target: { value: "new-tutor" } });
+  const submit = screen.getByRole("button", { name: "Create account" });
+  fireEvent.click(submit);
+  fireEvent.click(submit);
+  await waitFor(() => expect(registrationCalls()).toHaveLength(1));
+  await act(async () => pending.resolve(Response.json({
+    status: "signedIn", accessToken: "crm-access", expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+  }, { status: 201 })));
+  await screen.findByText("Portal opened");
 });

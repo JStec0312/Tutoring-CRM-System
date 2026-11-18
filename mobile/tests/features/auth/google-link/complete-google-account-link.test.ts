@@ -6,6 +6,7 @@ import { createApiClient } from "@/shared/api/api-client";
 import { ApiError } from "@/shared/api/api-error";
 
 const continuation = () => ({
+  status: "linkRequired" as const,
   continuationToken: "a".repeat(64),
   continuationExpiresAtUtc: new Date(Date.now() + 300_000).toISOString(),
 });

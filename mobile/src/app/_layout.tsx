@@ -8,7 +8,7 @@ import {
   useSessionManager,
 } from "@/shared/session/AuthProvider";
 
-import { GoogleLinkProvider } from "@/features/auth/google-link/models/GoogleLinkProvider";
+import { GoogleContinuationProvider } from "@/features/auth/sign-in/models/GoogleContinuationProvider";
 
 import { createApiClient } from "@/shared/api/api-client";
 import { ApiProvider } from "@/shared/api/api-context";
@@ -81,6 +81,7 @@ function AppNavigator() {
       >
         <Stack.Screen name="(auth)/sign-in" />
         <Stack.Screen name="(auth)/register" />
+        <Stack.Screen name="(auth)/register-google" />
       </Stack.Protected>
 
       <Stack.Protected
@@ -103,9 +104,9 @@ export default function RootLayout() {
   return (
     <AuthProvider manager={manager}>
       <ApiBridge>
-        <GoogleLinkProvider>
+        <GoogleContinuationProvider>
           <AppNavigator />
-        </GoogleLinkProvider>
+        </GoogleContinuationProvider>
       </ApiBridge>
     </AuthProvider>
   );

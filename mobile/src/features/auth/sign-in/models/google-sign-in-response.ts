@@ -1,12 +1,9 @@
 import type { IssuedSession } from "@/shared/session/session-api";
+import type { GoogleContinuation } from "./google-continuation";
 
 export type GoogleSignInResponse =
   | {
       status: "signedIn";
       session: IssuedSession;
     }
-  | {
-      status: "linkRequired" | "registrationRequired";
-      continuationToken: string;
-      continuationExpiresAtUtc: string;
-    };
+  | GoogleContinuation;

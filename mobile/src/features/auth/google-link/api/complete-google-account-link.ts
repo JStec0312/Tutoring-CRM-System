@@ -1,9 +1,9 @@
 import type { ApiClient } from "@/shared/api/api-client";
 
-import { isGoogleLinkExpired, type GoogleLinkContinuation } from "../models/google-link-continuation";
+import { isGoogleContinuationExpired, type GoogleContinuation } from "../../sign-in/models/google-continuation";
 
-export function completeGoogleAccountLink(api: ApiClient, continuation: GoogleLinkContinuation) {
-  if (isGoogleLinkExpired(continuation)) {
+export function completeGoogleAccountLink(api: ApiClient, continuation: GoogleContinuation) {
+  if (continuation.status !== "linkRequired" || isGoogleContinuationExpired(continuation)) {
     throw new Error("Google.LinkExpired");
   }
 

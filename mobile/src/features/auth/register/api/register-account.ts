@@ -1,11 +1,12 @@
 import type { ApiClient } from "@/shared/api/api-client";
+import type { RegistrationRole } from "@/shared/session/registration-role";
+
+export type { RegistrationRole } from "@/shared/session/registration-role";
 
 const endpoints = {
   student: "/api/auth/register/student",
   tutor: "/api/auth/register/tutor",
 } as const;
-
-export type RegistrationRole = keyof typeof endpoints;
 
 export function registerAccount(
   api: ApiClient,

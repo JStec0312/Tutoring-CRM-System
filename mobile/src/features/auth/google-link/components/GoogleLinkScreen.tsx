@@ -9,14 +9,14 @@ import { FormScreen, FormSubmit, formStyles } from "@/shared/ui/FormScreen";
 import { FormTextButton } from "@/shared/ui/FormTextButton";
 import { PasswordSignInForm } from "@/shared/ui/PasswordSignInForm";
 import { completeGoogleAccountLink } from "../api/complete-google-account-link";
-import { useGoogleLink } from "../models/GoogleLinkProvider";
-import { isGoogleLinkExpired } from "../models/google-link-continuation";
+import { useGoogleContinuation } from "../../sign-in/models/GoogleContinuationProvider";
+import { isGoogleContinuationExpired } from "../../sign-in/models/google-continuation";
 import { getGoogleLinkError } from "../models/google-link-error";
 
 export function GoogleLinkScreen() {
   const api = useApi();
-  const { isAuthenticated, signIn, signOut } = useAuth();
-  const { continuation, setContinuation } = useGoogleLink();
+  const { isAuthenticated, signIn } = useAuth();
+  const { continuation, setContinuation } = useGoogleContinuation();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitting = useRef(false);
@@ -50,23 +50,7 @@ export function GoogleLinkScreen() {
     }
   }
 
-  async function handleChangeAccount() {
-    if (pending || submitting.current) return;
-
-    submitting.current = true;
-    setPending(true);
-    setError(null);
-    try {
-      await signOut();
-    } catch (error) {
-      setError(getGoogleLinkError(error));
-    } finally {
-      submitting.current = false;
-      setPending(false);
-    }
-  }
-
-  if (!continuation || isGoogleLinkExpired(continuation)) {
+  if (!continuation || continuation.status !== "linkRequired" || isGoogleContinuationExpired(continuation)) {
     return (
       <FormScreen title="Google sign-in">
         <FormError message="This linking attempt has expired or is no longer available. Start Google sign-in again." />
@@ -96,7 +80,6 @@ export function GoogleLinkScreen() {
             Connect the Google account you just selected to the CRM account you are signed in to?
           </Text>
           <FormSubmit label="Connect Google account" pending={pending} onPress={handleConfirm} />
-          <FormTextButton label="Use a different CRM account" disabled={pending} onPress={handleChangeAccount} />
         </>
       )}
       <FormError message={error} />

@@ -1,9 +1,10 @@
-export type GoogleLinkContinuation = {
+export type GoogleContinuation = {
+  status: "linkRequired" | "registrationRequired";
   continuationToken: string;
   continuationExpiresAtUtc: string;
 };
 
-export function isGoogleLinkExpired(continuation: GoogleLinkContinuation): boolean {
+export function isGoogleContinuationExpired(continuation: GoogleContinuation): boolean {
   const expiresAt = Date.parse(continuation.continuationExpiresAtUtc);
   return !Number.isFinite(expiresAt) || expiresAt <= Date.now();
 }
