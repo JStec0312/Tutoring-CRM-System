@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 
-import { getSignInError } from "@/features/auth/sign-in/models/sign-in-error";
+import { getSignInError } from "@/shared/session/sign-in-error";
 import { ApiError } from "@/shared/api/api-error";
 
 it("shows the email confirmation message for the inactive account code returned by the API", () => {
