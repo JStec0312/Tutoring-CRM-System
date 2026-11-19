@@ -9,9 +9,9 @@ import { useAuth } from '@/shared/session/AuthProvider';
 const destinations = [
   { label: 'Overview', href: '/student' },
   { label: 'Calendar', href: '/student/calendar' },
+  { label: 'My lessons', href: '/student/lessons' },
   { label: 'My tutors', href: '/student/tutors' },
   { label: 'Settlements', href: '/student/payments' },
-  { label: 'Materials', href: '/student/materials' },
   { label: 'Notifications', href: '/student/notifications' },
   { label: 'Profile', href: '/student/profile' },
 ] as const;
@@ -25,7 +25,7 @@ export function StudentWorkspace({ children }: PropsWithChildren) {
   for (const destination of destinations.slice(1)) {
     if (pathname.startsWith(destination.href)) current = destination.href;
   }
-  if (pathname.startsWith('/student/lessons')) current = '/student/calendar';
+  if (pathname.startsWith('/student/materials')) current = '/student/lessons';
 
   const navigation = <ScrollView horizontal={compact} role="navigation" accessibilityLabel="Student workspace"
     style={[styles.navigation, compact && styles.bottomNavigation]}

@@ -1,0 +1,19 @@
+@startuml
+actor User
+participant "My lessons screen" as Screen
+participant "GetMyLessonsController" as Controller
+participant "GetMyLessonsHandler" as Handler
+database SQLServer
+User -> Screen: Select page or view
+Screen -> Controller: GET /api/lessons + JWT
+Controller -> Controller: Validate query, sub and requested role
+Controller -> Handler: Query with authenticated AccountId
+Handler -> SQLServer: Count role-owned, filtered lessons
+SQLServer --> Handler: totalCount
+Handler -> SQLServer: Order by start + ID, Skip, Take
+SQLServer --> Handler: Current page lessons only
+Handler -> SQLServer: Active charges for page lesson IDs
+SQLServer --> Handler: Actual paid/unpaid charges
+Handler --> Screen: items, effective page, pageSize, totalCount
+Screen --> User: Lesson cards, role actions and pagination
+@enduml

@@ -77,3 +77,8 @@ PlantUML source: [get_tutoring_agreement_balance.puml](diagrams/get_tutoring_agr
 The student workspace adds `GET /api/students/me/agreements/{agreementId}/charges`, requiring the Student role and ownership through `Student.UserAccountId`. It returns active charge amounts and currencies, lesson IDs/start times and `paidAtUtc`. The frontend sums unpaid active charges separately per currency. No billing account returns `200 []`; foreign/missing agreements return `404 Students.AgreementNotFound`. The screen is read-only; it does not use tutor payment-editing endpoints or infer due dates.
 
 See [student workspace contracts, authorization, sequence diagram and tests](../../../frontend_docs/student-workspace.md).
+
+
+## Paginated My lessons
+
+`GET /api/lessons` adds role-scoped server pagination and All/Upcoming/Past views. Results contain current lesson topics and actual active paid/unpaid charges. Only tutors can record payments; the student list is read-only. See [contracts, ownership, sequence and tests](../../../frontend_docs/lessons.md).

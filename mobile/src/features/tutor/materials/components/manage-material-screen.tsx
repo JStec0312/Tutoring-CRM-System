@@ -38,8 +38,11 @@ function ManageMaterialScreen({ attach }: { attach: boolean }) {
   const material = query.data?.material;
   const canAttach = query.data?.lessons.some(lesson => lesson.lessonId === lessonId);
   function back() {
-    if (router.canGoBack()) router.back();
-    else router.replace({ pathname: '/tutor/materials', params: { agreementId } });
+    if (initialLesson) {
+      router.replace({ pathname: '/tutor/lessons/[lessonId]', params: { lessonId: initialLesson } });
+    } else {
+      router.replace({ pathname: '/tutor/lessons', params: { agreementId } });
+    }
   }
 
   async function confirm() {
@@ -67,7 +70,7 @@ function ManageMaterialScreen({ attach }: { attach: boolean }) {
     <View style={ui.row}>
       {material && !deleted && <WorkspaceButton primary label={attach ? 'Attach material' : 'Confirm deletion'}
         disabled={mutation.busy || (attach && !canAttach)} onPress={() => void mutation.run(confirm)} />}
-      <WorkspaceButton label={deleted ? 'Back to materials' : attach ? 'Cancel' : 'Keep material'}
+      <WorkspaceButton label={deleted ? 'Back to lesson' : attach ? 'Cancel' : 'Keep material'}
         disabled={mutation.busy} onPress={back} />
     </View>
   </TutorPage>;

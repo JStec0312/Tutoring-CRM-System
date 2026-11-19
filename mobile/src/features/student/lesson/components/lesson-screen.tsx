@@ -24,7 +24,7 @@ export function StudentLessonScreen() {
   const lesson = query.data?.lesson;
   let estimate = '';
   if (lesson?.estimatedAmount != null && lesson.currency) estimate = ` · ${money(lesson.estimatedAmount, lesson.currency)} estimated`;
-  return <StudentPage code="S03" title="Lesson details">
+  return <StudentPage code="S03" title="Lesson details & materials">
     <StudentQueryFeedback {...query} />
     {lesson && <>
       <Text style={ui.body}>{lesson.subject} with {tutorName(lesson)} / {shortDate(lesson.startsAtUtc)} · {timeLabel(lesson.startsAtUtc)}–{timeLabel(lesson.endsAtUtc)}</Text>
@@ -45,7 +45,7 @@ export function StudentLessonScreen() {
             <View key={material.materialId} style={ui.stack}>
               <MaterialDownloadButton material={material} />
               {!material.lessonId && <WorkspaceButton textOnly label="Attach to lesson →" onPress={() => router.push({
-                pathname: '/student/materials/[materialId]/attach', params: { materialId: material.materialId, agreementId: lesson.tutoringAgreementId },
+                pathname: '/student/materials/[materialId]/attach', params: { materialId: material.materialId, agreementId: lesson.tutoringAgreementId, lessonId },
               })} />}
             </View>] };
         })} />

@@ -81,8 +81,8 @@ export function AgreementScreen() {
         <WorkspaceCard title="Payments"
           detail={unpaid ? `${unpaid} unpaid · ${quantity(overdue[0].unpaidLessonCount, 'charge')}` : 'No unpaid charges.'}
           onPress={() => router.push({ pathname: '/tutor/payments', params: { agreementId } })} />
-        <WorkspaceCard title="Materials" detail={`${quantity(materialCount, 'file')} shared within this agreement`}
-          onPress={() => router.push({ pathname: '/tutor/materials', params: { agreementId } })} />
+        <WorkspaceCard title="Lessons & materials" detail={`${quantity(materialCount, 'file')} shared within this agreement`}
+          onPress={() => router.push({ pathname: '/tutor/lessons', params: { agreementId } })} />
         <WorkspaceButton label="Agreement settings" disabled={agreement.status === 'Ended'}
           onPress={() => setPanel(panel === 'settings' ? undefined : 'settings')} />
         {panel === 'settings' && <AgreementSettings agreement={agreement} agreementId={agreementId} reload={query.reload} />}

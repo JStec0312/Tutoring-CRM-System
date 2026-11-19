@@ -4,7 +4,7 @@ The Expo application implements the student screens S01–S06 and shared screens
 
 ## Structure
 
-Routes live in [`mobile/src/app/(app)/(student)`](<../../../mobile/src/app/(app)/(student)/>). Screen code is grouped by use case under [`features/student`](../../../mobile/src/features/student): `overview`, `calendar`, `tutors`, `lesson`, `payments`, `materials`, `notifications`, `profile`, and `workspace`. Each feature owns its components, API functions and any required models, following the tutor workspace structure.
+Routes live in [`mobile/src/app/(app)/(student)`](<../../../mobile/src/app/(app)/(student)/>). Screen code is grouped by use case under [`features/student`](../../../mobile/src/features/student): `overview`, `calendar`, `tutors`, `lessons`, `lesson`, `payments`, `materials`, `notifications`, `profile`, and `workspace`. Each feature owns its components, API functions and any required models, following the tutor workspace structure.
 
 The student layout wraps its routes in `StudentWorkspace`. The authenticated app layout protects the entire student route group. Shared session handling and `ApiClient` supply authentication and refresh behavior. Common controls, profile/password forms, query/mutation hooks, material operations, file saving, and the agreement lesson picker are reused. Screens contain no demo data.
 
@@ -12,13 +12,14 @@ The student layout wraps its routes in `StudentWorkspace`. The authenticated app
 
 | Route | Behavior |
 | --- | --- |
-| `/student` | Next scheduled lesson within a year, agreement-specific outstanding amounts, and up to three newest material records per agreement. Agreements without lessons remain visible. |
+| `/student` | Next scheduled lesson within a year, agreement-specific outstanding amounts, and a link to My lessons. Agreements without lessons remain visible. |
 | `/student/calendar` | Local-time day/week/month views, previous/next/today navigation, tutor/subject filters, and lesson navigation. The client sends UTC range boundaries without tutor-only filters. |
 | `/student/tutors` | Tutor agreements, rates and statuses; selecting an agreement loads its lesson history. |
 | `/student/lessons/{lessonId}` | Current schedule, planned topic, status, optional rate estimate and cancellation reason; agreement-level and lesson-specific shared materials. |
 | `/student/lessons/{lessonId}/cancel` | Required reason, separate review and confirmation steps, duplicate-submit protection, API error feedback, and refreshed lesson details. |
 | `/student/payments` | Actual active charges for the selected agreement, paid/unpaid state and separate outstanding totals for each currency. Payment editing stays with the tutor. |
-| `/student/materials` | Select an agreement, download files, upload a PDF/JPG/PNG up to 20 MB, optionally associate an upload with a lesson, and attach an unassigned material to a lesson from the same agreement. No delete action. |
+| `/student/lessons` | Paginated lessons with All/Upcoming/Past filters, payment status, materials and cancellation actions. No student payment mutation. |
+| `/student/materials` | Legacy redirect to My lessons or the specified lesson. Upload and attachment workflows are opened from lesson details. |
 | `/student/notifications` | Upcoming scheduled lessons and cancelled lessons with lesson dates within seven days either side of today. Dates shown are lesson dates. This is a current-calendar summary, not a persisted notification inbox. |
 | `/student/profile` | Shared first-name, last-name and phone forms, password change and sign-out. Separate name fields follow the existing profile API. |
 
@@ -52,3 +53,6 @@ The UI does not label charges as overdue because the read contract contains no d
 - [`student-flows.test.tsx`](../../../mobile/tests/features/student/student-flows.test.tsx): cancellation confirmation and errors, agreement switching, and query retry behavior.
 
 Browser verification uses controlled API responses separately from backend integration tests; it does not establish a live browser-to-development-database session. Native Android/iOS execution is not covered by the web checks.
+
+
+See [My lessons for both roles](lessons.md) for the paginated API, shared structure and updated material navigation.

@@ -7,7 +7,7 @@ import { validateMaterial } from '@/features/student/materials/models/validate-m
 import { getStudentNotifications } from '@/features/student/notifications/api/get-notifications';
 
 describe('student workspace data', () => {
-  it('loads agreements without lessons and keeps charges and materials in their agreement', async () => {
+  it('loads agreements without lessons and keeps charges in their agreement', async () => {
     const get = vi.fn(async (path: string) => {
       if (path === '/api/students/me/agreements') return [{ agreementId: 'math' }, { agreementId: 'physics' }];
       if (path.startsWith('/api/calendar?')) return [
@@ -24,7 +24,8 @@ describe('student workspace data', () => {
     expect(result.next?.lessonId).toBe('next');
     expect(result.summaries).toHaveLength(2);
     expect(result.summaries[1].next).toBeUndefined();
-    expect(result.summaries[0].materials[0].materialId).toBe('math-file');
+    expect(result.summaries[0].charges[0].amount).toBe(80);
+    expect(get.mock.calls.some(([path]) => path.startsWith('/api/learning-materials'))).toBe(false);
     expect(get.mock.calls.every(([path]) => !path.startsWith('/api/tutors/'))).toBe(true);
   });
 

@@ -8,7 +8,6 @@ import { studentLessonRoute } from '../../workspace/models/student-routes';
 import { agreementLabel, tutorName } from '../../tutors/api/agreements';
 import { outstandingByCurrency } from '../../payments/api/charges';
 import { money, shortDate, timeLabel } from '@/features/tutor/workspace/models/workspace-format';
-import { MaterialDownloadButton } from '../../materials/components/material-download-button';
 import { loadStudentOverview } from '../api/load-overview';
 
 export function StudentOverviewScreen() {
@@ -35,12 +34,7 @@ export function StudentOverviewScreen() {
           return { key: agreement.agreementId, cells: [agreementLabel(agreement), nextLabel, outstanding || 'Nothing outstanding'] };
         })} />
       {query.data.summaries.length === 0 && <Text style={ui.body}>No tutoring agreements yet. Ask your tutor for an invitation.</Text>}
-      <Text role="heading" aria-level={2} style={ui.sectionHeading}>Latest materials</Text>
-      <StudentTable label="Latest learning materials" headings={['Material', 'Agreement', 'Action']}
-        rows={query.data.summaries.flatMap(({ agreement, materials }) => materials.slice(0, 3).map(material => ({
-          key: material.materialId, cells: [material.title, agreementLabel(agreement), <MaterialDownloadButton key={material.materialId} material={material} />],
-        })))} />
-      {query.data.summaries.every(summary => summary.materials.length === 0) && <Text style={ui.body}>No shared materials yet.</Text>}
+      <WorkspaceButton label="Open my lessons" onPress={() => router.navigate('/student/lessons')} />
     </>}
   </StudentPage>;
 }

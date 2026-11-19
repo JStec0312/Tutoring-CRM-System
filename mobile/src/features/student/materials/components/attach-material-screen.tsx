@@ -12,10 +12,10 @@ import { StudentPage, StudentQueryFeedback } from '../../workspace/components/st
 import { getStudentLessons } from '../../lesson/api/lessons';
 
 export function StudentAttachMaterialScreen() {
-  const { agreementId, materialId } = useLocalSearchParams<{ agreementId?: string; materialId: string }>();
+  const { agreementId, materialId, lessonId: initialLesson } = useLocalSearchParams<{ agreementId?: string; materialId: string; lessonId?: string }>();
   const router = useRouter();
   const api = useApi();
-  const [lessonId, setLessonId] = useState<string>();
+  const [lessonId, setLessonId] = useState<string | undefined>(initialLesson);
   const mutation = useWorkspaceMutation();
   const load = useCallback(async (client: ApiClient, signal: AbortSignal) => {
     if (!agreementId) return undefined;
@@ -24,7 +24,13 @@ export function StudentAttachMaterialScreen() {
     return { material, lessons };
   }, [agreementId, materialId]);
   const query = useWorkspaceQuery(load);
-  function back() { router.replace({ pathname: '/student/materials', params: { agreementId } }); }
+  function back() {
+    if (initialLesson) {
+      router.replace({ pathname: '/student/lessons/[lessonId]', params: { lessonId: initialLesson } });
+    } else {
+      router.replace({ pathname: '/student/lessons', params: { agreementId } });
+    }
+  }
   async function attach() {
     if (!query.data?.material || !lessonId || !query.data.lessons.some(lesson => lesson.lessonId === lessonId)) return;
     await attachMaterial(api, materialId, lessonId);
@@ -32,7 +38,7 @@ export function StudentAttachMaterialScreen() {
   }
   return <StudentPage title="Attach material to lesson">
     <StudentQueryFeedback {...query} />
-    {!agreementId && <Text style={ui.body}>Choose a material from Materials first.</Text>}
+    {!agreementId && <Text style={ui.body}>Open a lesson to choose a material first.</Text>}
     {query.data && !query.data.material && <Text role="alert" style={ui.error}>Material not found in this agreement.</Text>}
     {query.data?.material && <>
       <Text style={ui.body}>{query.data.material.title}</Text>

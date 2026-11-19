@@ -231,3 +231,8 @@ This keeps calendar presentation rules outside the domain and allows the same AP
 Student screens now use `GET /api/students/me/agreements`, `GET /api/students/me/agreements/{agreementId}/lessons`, and `GET /api/students/me/lessons/{lessonId}`. These require the Student role and scope reads to the authenticated student. Agreement history includes all lesson statuses and planned topics. Lesson details include current schedule, cancellation reason and an explicitly labeled rate estimate, while private tutor notes are excluded. Missing and foreign records share 404 behavior. The student calendar continues to use `/api/calendar` without `tutorOnly` or `awaitingOutcome`.
 
 See [student workspace contracts, authorization, sequence diagram and tests](../../../frontend_docs/student-workspace.md).
+
+
+## Paginated My lessons
+
+`GET /api/lessons` adds role-scoped server pagination and All/Upcoming/Past views. Results contain current lesson topics and actual active paid/unpaid charges. Only tutors can record payments; the student list is read-only. See [contracts, ownership, sequence and tests](../../../frontend_docs/lessons.md).

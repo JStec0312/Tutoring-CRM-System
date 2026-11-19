@@ -4,7 +4,7 @@ import { useAuth } from '@/shared/session/AuthProvider';
 import { TutorPage } from './tutor-workspace';
 
 const links: { label: string; to: Href }[] = [
-  { label: 'Materials', to: '/tutor/materials' },
+  { label: 'Payments', to: '/tutor/payments' },
   { label: 'Statistics', to: '/tutor/statistics' },
   { label: 'Notifications', to: '/tutor/notifications' },
   { label: 'Profile & security', to: '/tutor/profile' },

@@ -90,17 +90,17 @@ export function LessonScreen() {
       {lesson.status === 'Completed' && <WorkspaceButton label="Payments" onPress={() => router.push({
         pathname: '/tutor/payments', params: { lessonId },
       })} />}
-      <Text accessibilityRole="header" style={ui.sectionHeading}>Attached materials</Text>
-      <MaterialList agreementId={lesson.tutoringAgreementId} lessonId={lessonId} attachedOnly />
-      <WorkspaceButton label="Attach material" onPress={() => router.push({
-        pathname: '/tutor/materials', params: { agreementId: lesson.tutoringAgreementId, lessonId },
+      <Text accessibilityRole="header" style={ui.sectionHeading}>Materials</Text>
+      <WorkspaceButton label="Upload material" onPress={() => router.push({
+        pathname: '/tutor/materials/upload', params: { agreementId: lesson.tutoringAgreementId, lessonId },
       })} />
+      <MaterialList agreementId={lesson.tutoringAgreementId} lessonId={lessonId} lessonContext />
       <WorkspaceButton label="Open agreement" onPress={() => router.push(agreementRoute(lesson.tutoringAgreementId))} />
     </>}
     {!!error && <Text accessibilityRole="alert" style={ui.error}>{error}</Text>}
     <WorkspaceButton label="Back" disabled={saving} onPress={() => {
       if (router.canGoBack()) router.back();
-      else router.replace('/tutor/calendar');
+      else router.replace('/tutor/lessons');
     }} />
   </TutorPage>;
 }

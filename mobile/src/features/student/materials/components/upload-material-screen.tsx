@@ -28,7 +28,7 @@ export function StudentUploadMaterialScreen() {
   const query = useWorkspaceQuery(load);
   function back() {
     if (initialLesson) router.replace({ pathname: '/student/lessons/[lessonId]', params: { lessonId: initialLesson } });
-    else router.replace({ pathname: '/student/materials', params: { agreementId } });
+    else router.replace({ pathname: '/student/lessons', params: { agreementId } });
   }
   async function chooseFile() {
     const result = await getDocumentAsync({ type: ['application/pdf', 'image/jpeg', 'image/png'], base64: false, copyToCacheDirectory: true });
@@ -52,7 +52,7 @@ export function StudentUploadMaterialScreen() {
   if (asset) fileLabel = 'Choose another file';
   return <StudentPage title="Upload learning material">
     <StudentQueryFeedback {...query} />
-    {!agreementId && <Text style={ui.body}>Choose an agreement from Materials first.</Text>}
+    {!agreementId && <Text style={ui.body}>Open a lesson before uploading a material.</Text>}
     {query.data && <>
       <AgreementLessonPicker lessons={query.data} selected={lessonId} onSelect={setLessonId} optional disabled={mutation.busy} />
       <WorkspaceField label="Material title" value={title} onChangeText={setTitle} maxLength={200} editable={!mutation.busy} />

@@ -31,8 +31,11 @@ export function UploadMaterialScreen() {
   const query = useTutorQuery(load);
 
   function back() {
-    if (router.canGoBack()) router.back();
-    else router.replace({ pathname: '/tutor/materials', params: { agreementId } });
+    if (initialLesson) {
+      router.replace({ pathname: '/tutor/lessons/[lessonId]', params: { lessonId: initialLesson } });
+    } else {
+      router.replace({ pathname: '/tutor/lessons', params: { agreementId } });
+    }
   }
 
   async function chooseFile() {
