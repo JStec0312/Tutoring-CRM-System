@@ -10,6 +10,7 @@ import {
 
 import { GoogleContinuationProvider } from "@/features/auth/sign-in/models/GoogleContinuationProvider";
 
+import { resolveApiBaseUrl } from "@/shared/api/api-base-url";
 import { createApiClient } from "@/shared/api/api-client";
 import { ApiProvider } from "@/shared/api/api-context";
 
@@ -19,7 +20,15 @@ import { withSessionLock } from "@/shared/session/session-lock";
 import { createSessionManager } from "@/shared/session/session-manager";
 import { sessionSync } from "@/shared/session/session-sync";
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
+let webOrigin: string | undefined;
+if (Platform.OS === "web" && typeof window !== "undefined") {
+  webOrigin = window.location.origin;
+}
+const BASE_URL = resolveApiBaseUrl(
+  process.env.EXPO_PUBLIC_API_URL ?? "",
+  process.env.EXPO_PUBLIC_WEB_API_URL,
+  webOrigin,
+);
 
 const credentials = Platform.OS === "web" ? "include" : "omit";
 

@@ -40,8 +40,8 @@ const paid: LessonListItem = { ...scheduled, lessonId: 'paid', status: 'Complete
   charges: [{ chargeId: 'charge-2', amount: 80, currency: 'PLN', paidAtUtc: '2026-11-18T12:00:00Z' }] };
 const cancelled = { ...scheduled, lessonId: 'cancelled', status: 'Cancelled', cancellationReason: 'School trip' };
 
-beforeEach(() => { vi.clearAllMocks(); navigation.initial = {}; });
-afterEach(cleanup);
+beforeEach(() => { vi.clearAllMocks(); vi.stubEnv('EXPO_PUBLIC_LESSONS_PAGE_SIZE', '4'); navigation.initial = {}; });
+afterEach(() => { cleanup(); vi.unstubAllEnvs(); });
 
 function setup(tutor: boolean, post = vi.fn().mockResolvedValue(undefined)) {
   let recorded = false;
